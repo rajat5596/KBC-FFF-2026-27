@@ -93,3 +93,21 @@ function buyPlan(amt) {
     
     window.open(paymentLink, '_blank');
 }
+function checkPremiumStatus(userData, mobileNumber) {
+    const today = new Date();
+    const expiry = new Date(userData.expiryDate);
+
+    // अगर आज की तारीख एक्सपायरी से बड़ी है
+    if (today > expiry) {
+        // प्रीमियम खत्म! डेटाबेस अपडेट करें
+        firebase.database().ref('users/' + mobileNumber).update({
+            isPremium: false,
+            plan: 'free'
+        });
+        
+        alert("आपका प्रीमियम प्लान समाप्त हो गया है। कृपया प्रैक्टिस जारी रखने के लिए रिचार्ज करें।");
+        return 'free';
+    }
+    
+    return userData.plan;
+}
