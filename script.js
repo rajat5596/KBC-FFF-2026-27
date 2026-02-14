@@ -81,5 +81,5 @@ function showMenu(name) {
 // प्रीमियम प्लान पर क्लिक (Razorpay लिंक यहाँ जोड़ें)
 function buyPlan(amt) {
     alert("₹" + amt + " के भुगतान के लिए Razorpay पर भेजा जा रहा है...");
-    // window.location.href = "YOUR_RAZORPAY_LINK";
+    // window.location.href = "https://rzp.io/rzp/I5geGyLS";
 }
