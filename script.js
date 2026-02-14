@@ -78,8 +78,12 @@ function showMenu(name) {
     document.getElementById('welcome-msg').innerText = "स्वागत है, " + name;
 }
 
-// प्रीमियम प्लान पर क्लिक (Razorpay लिंक यहाँ जोड़ें)
 function buyPlan(amt) {
-    alert("₹" + amt + " के भुगतान के लिए Razorpay पर भेजा जा रहा है...");
-    // window.location.href = "https://rzp.io/rzp/I5geGyLS";
+    // हमने कमेंट (//) हटा दिया है और window.open इस्तेमाल किया है
+    const paymentLink = "https://rzp.io/rzp/I5geGyLS";
+    
+    alert("₹" + amt + " के भुगतान के लिए Razorpay पर भेजा जा रहा है। पेमेंट के बाद स्क्रीनशॉट ले लें।");
+    
+    // यह लाइन अब एक्टिव है
+    window.open(paymentLink, '_blank');
 }
