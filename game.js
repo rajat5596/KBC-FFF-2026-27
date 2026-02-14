@@ -120,3 +120,24 @@ function handleLimitReached() {
 if (questionsPlayed >= 10) {
     handleLimitReached();
 }
+async function loadUserQuestions(userPlan) {
+    let questionUrl = '';
+
+    // प्लान के हिसाब से फाइल का रास्ता तय करें
+    if (userPlan === 'platinum') questionUrl = 'platinum_mega_bank.json';
+    else if (userPlan === 'gold') questionUrl = 'gold_questions.json';
+    else if (userPlan === 'silver') questionUrl = 'silver_questions.json';
+    else {
+        console.log("Loading Free Questions");
+        return allFreeQuestions; // यह आपकी questions.js से आएगा
+    }
+
+    try {
+        const response = await fetch(questionUrl);
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("सवालों को लोड करने में दिक्कत हुई:", error);
+        return allFreeQuestions;
+    }
+}
