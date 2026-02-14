@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>KBC FFF मास्टर - Rajat Classes</title>
+    
+    <meta name="theme-color" content="#1a2a6c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <link rel="stylesheet" href="style.css">
     
+    <link rel="manifest" href="manifest.json?v=1.0">
+
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="main-container">
-        <div id="top-ad" style="margin-bottom: 10px; text-align: center;">
+        <div id="top-ad" style="margin-bottom: 10px; text-align: center; min-height: 50px;">
             <script type="text/javascript">
-                atOptions = {
-                    'key' : '8bb7bd31447ffb74a3ebec1be09202fe',
-                    'format' : 'iframe',
-                    'height' : 50,
-                    'width' : 320,
-                    'params' : {}
-                };
+                atOptions = { 'key' : '8bb7bd31447ffb74a3ebec1be09202fe', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
             </script>
             <script type="text/javascript" src="https://www.highperformanceformat.com/8bb7bd31447ffb74a3ebec1be09202fe/invoke.js"></script>
         </div>
@@ -31,16 +31,16 @@
         
         <div id="login-section">
             <input type="text" id="username" placeholder="अपना नाम लिखें" required>
-            <input type="number" id="mobile" placeholder="मोबाइल नंबर (बिना +91 के)" required>
+            <input type="number" id="mobile" placeholder="मोबाइल नंबर" required>
             <div id="recaptcha-container"></div>
             <button id="auth-btn" onclick="sendOTP()" class="start-btn">OTP भेजें</button>
         </div>
 
         <div id="menu-section" style="display: none;">
-            <p id="welcome-msg" style="font-size: 1.2rem; font-weight: bold;"></p>
+            <p id="welcome-msg" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;"></p>
             <button onclick="window.location.href='game.html'" class="menu-btn">मुफ्त प्रैक्टिस (10 सवाल)</button>
-            <hr>
-            <h3>प्रीमियम सब्सक्रिप्शन लें</h3>
+            <hr style="border: 0.5px solid #ffd700; opacity: 0.5; margin: 20px 0;">
+            <h3 style="color: #ffd700; margin-bottom: 10px;">प्रीमियम सब्सक्रिप्शन लें</h3>
             <div class="plans">
                 <button class="plan-btn" onclick="buyPlan(49)">सिल्वर (₹49) - 500 सवाल</button>
                 <button class="plan-btn" onclick="buyPlan(99)">गोल्ड (₹99) - 1500 सवाल</button>
@@ -48,22 +48,16 @@
             </div>
         </div>
 
-        <div id="bottom-ad" style="margin-top: 20px; text-align: center;">
+        <div id="bottom-ad" style="margin-top: 20px; text-align: center; min-height: 50px;">
             <script type="text/javascript">
-                atOptions = {
-                    'key' : '8bb7bd31447ffb74a3ebec1be09202fe',
-                    'format' : 'iframe',
-                    'height' : 50,
-                    'width' : 320,
-                    'params' : {}
-                };
+                atOptions = { 'key' : '8bb7bd31447ffb74a3ebec1be09202fe', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
             </script>
             <script type="text/javascript" src="https://www.highperformanceformat.com/8bb7bd31447ffb74a3ebec1be09202fe/invoke.js"></script>
         </div>
     </div>
 
     <script src="script.js"></script>
-
+    
     <script src="https://pl28712423.effectivegatecpm.com/e8/d4/74/e8d4747620e17e5817130756fb7c22ff.js"></script>
 </body>
 </html>
