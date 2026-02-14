@@ -79,11 +79,10 @@ function showMenu(name) {
 }
 
 function buyPlan(amt) {
-    // हमने कमेंट (//) हटा दिया है और window.open इस्तेमाल किया है
     const paymentLink = "https://rzp.io/rzp/I5geGyLS";
     
-    alert("₹" + amt + " के भुगतान के लिए Razorpay पर भेजा जा रहा है। पेमेंट के बाद स्क्रीनशॉट ले लें।");
+    // यूजर को निर्देश दें कि उसे पेज पर क्या करना है
+    alert("आपने " + amt + " वाला प्लान चुना है। अगले पेज पर अपने प्लान के सामने '+' दबाकर उसे सेलेक्ट करें।");
     
-    // यह लाइन अब एक्टिव है
     window.open(paymentLink, '_blank');
 }
