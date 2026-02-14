@@ -5,44 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KBC FFF मास्टर - Rajat Classes</title>
     <link rel="stylesheet" href="style.css">
-</head>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-
-<script>
-  // आपका दिया हुआ Firebase Config
-  const firebaseConfig = {
-    apiKey: "AIzaSyCFccfNZzNSTcfBCYEh3kcXPjI4HRETCa0",
-    authDomain: "fatehpur-hubs-a3a9f.firebaseapp.com",
-    databaseURL: "https://fatehpur-hubs-a3a9f-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "fatehpur-hubs-a3a9f",
-    storageBucket: "fatehpur-hubs-a3a9f.firebasestorage.app",
-    messagingSenderId: "294360741451",
-    appId: "1:294360741451:web:5a4a6ac0838f8542fabfce",
-    measurementId: "G-MQRT3L94RM"
-  };
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
-</script>
     
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
 <body>
     <div class="main-container">
+        <div id="top-ad" style="margin-bottom: 10px;">
+            </div>
+
         <h1 class="logo">KBC 2026</h1>
         <h2 class="title">Fastest Finger First मास्टर</h2>
         
         <div id="login-section">
             <input type="text" id="username" placeholder="अपना नाम लिखें" required>
-            <input type="number" id="mobile" placeholder="मोबाइल नंबर" required>
+            <input type="number" id="mobile" placeholder="मोबाइल नंबर (बिना +91 के)" required>
             <div id="recaptcha-container"></div>
-            <button onclick="saveUser()" class="start-btn">लॉगिन करें</button>
+            <button id="auth-btn" onclick="sendOTP()" class="start-btn">OTP भेजें</button>
         </div>
 
         <div id="menu-section" style="display: none;">
-            <p id="welcome-msg"></p>
-            <button onclick="startFreeGame()" class="menu-btn">मुफ्त प्रैक्टिस (10 सवाल)</button>
+            <p id="welcome-msg" style="font-size: 1.2rem; font-weight: bold;"></p>
+            <button onclick="window.location.href='game.html'" class="menu-btn">मुफ्त प्रैक्टिस (10 सवाल)</button>
             <hr>
             <h3>प्रीमियम सब्सक्रिप्शन लें</h3>
             <div class="plans">
@@ -51,7 +36,11 @@
                 <button class="plan-btn" onclick="buyPlan(199)">प्लैटिनम (₹199) - अनलिमिटेड</button>
             </div>
         </div>
+
+        <div id="bottom-ad" style="margin-top: 20px;">
+            </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
