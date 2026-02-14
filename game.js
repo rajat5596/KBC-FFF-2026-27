@@ -97,3 +97,15 @@ function checkSequence() {
         loadNewQuestion();
     }, 3500);
 }
+// यूजर का स्टेटस चेक करें (यह डेटा Firebase से आएगा)
+let isPremiumUser = false; 
+
+function checkGameLimit() {
+    if (!isPremiumUser && questionsPlayed >= 10) {
+        alert("आपकी मुफ्त लिमिट खत्म हो गई है। आगे खेलने के लिए प्रीमियम लें!");
+        window.location.href = "index.html";
+    } else {
+        // प्रीमियम यूजर के लिए कोई लिमिट नहीं
+        loadNextQuestion();
+    }
+}
