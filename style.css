@@ -1,115 +1,121 @@
+/* 1. बेसिक सेटिंग्स - स्क्रॉल रोकने के लिए */
 html, body {
     width: 100%;
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow-x: hidden; /* साइड स्क्रॉल बंद करने के लिए */
+    overflow: hidden; /* स्क्रीन को फिक्स कर देगा */
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    background: #000; /* एड्स के पीछे का रंग */
 }
 
-.main-container {
-    width: 100vw; /* Viewport Width - पूरी चौड़ाई */
-    min-height: 100vh; /* Viewport Height - पूरी लंबाई */
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    border-radius: 0; /* किनारों को गोल न रखें ताकि फुल स्क्रीन लगे */
-    box-sizing: border-box;
-}
-/* style.css - पूरा बदल दें */
 body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: radial-gradient(circle, #1a2a6c, #b21f1f, #fdbb2d); /* KBC वाला प्रीमियम फील */
-    background-attachment: fixed;
+    background: radial-gradient(circle, #1a2a6c, #000000); /* KBC डार्क थीम */
     color: white;
-    text-align: center;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
 }
 
+/* 2. मुख्य डिब्बा - जो पूरी स्क्रीन घेरेगा */
 .main-container {
-    width: 90%;
-    max-width: 400px;
-    background: rgba(0, 0, 50, 0.85); /* डार्क ट्रांसपेरेंट लुक */
-    padding: 20px;
-    border-radius: 20px;
-    box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); /* गोल्डन चमक */
-    border: 2px solid #ffd700;
+    width: 100vw;
+    height: 100vh;
+    max-width: 500px; /* मोबाइल के लिए बेस्ट साइज */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* एड्स ऊपर-नीचे रहेंगे */
+    align-items: center;
+    padding: 10px 0;
+    box-sizing: border-box;
+    background: rgba(0, 0, 40, 0.7);
+    border: 1px solid rgba(255, 215, 0, 0.2);
 }
 
+/* 3. लोगो और हेडर */
 .logo {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     color: #ffd700;
-    text-shadow: 2px 2px 10px #000;
-    margin-bottom: 5px;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+    margin: 0;
 }
 
 .title {
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: #00d4ff;
-    margin-bottom: 25px;
+    margin-top: -5px;
+    letter-spacing: 1px;
 }
 
-/* इनपुट फील्ड्स */
+/* 4. इनपुट फील्ड्स */
 input {
-    width: 90%;
+    width: 85%;
     padding: 12px;
     margin: 10px 0;
-    border-radius: 25px;
-    border: 1px solid #ffd700;
-    background: #fff;
-    color: #333;
+    border-radius: 10px;
+    border: 2px solid #1cb5e0;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
     font-size: 1rem;
-    outline: none;
+    text-align: center;
 }
 
-/* बटन स्टाइल - असली ऐप जैसा */
+/* 5. प्रोफेशनल 3D बटन स्टाइल */
 button {
-    width: 95%;
+    width: 90%;
     padding: 15px;
-    margin: 12px 0;
-    font-size: 1.1rem;
+    margin: 8px 0;
+    font-size: 1rem;
     font-weight: bold;
     color: white;
-    background: linear-gradient(to right, #000046, #1cb5e0);
-    border: 2px solid #ffd700;
-    border-radius: 50px;
+    background: linear-gradient(145deg, #000046, #1cb5e0);
+    border: 1.5px solid #ffd700;
+    border-radius: 12px;
     cursor: pointer;
-    transition: 0.3s;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+    transition: 0.2s;
+    box-shadow: 0 5px 0 #0056b3, 0 8px 15px rgba(0, 0, 0, 0.4); /* 3D Effect */
+    position: relative;
 }
 
 button:active {
-    transform: scale(0.95);
+    transform: translateY(4px); /* दबने वाला अहसास */
+    box-shadow: 0 2px 0 #0056b3;
 }
 
+/* अलग-अलग बटनों के रंग */
 .start-btn {
-    background: linear-gradient(to right, #11998e, #38ef7d); /* ग्रीन बटन */
+    background: linear-gradient(145deg, #11998e, #38ef7d);
+    box-shadow: 0 5px 0 #0e7a71, 0 8px 15px rgba(0, 0, 0, 0.3);
 }
 
 .menu-btn {
-    background: linear-gradient(to right, #4e54c8, #8f94fb);
+    background: linear-gradient(145deg, #4e54c8, #8f94fb);
+    box-shadow: 0 5px 0 #3a4099, 0 8px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* प्रीमियम प्लान्स के लिए अलग स्टाइल */
 .plan-btn {
-    background: linear-gradient(to right, #41295a, #2f0743);
-    margin: 5px 0;
-    font-size: 0.95rem;
+    background: linear-gradient(145deg, #2c3e50, #41295a);
+    font-size: 0.9rem;
+    padding: 12px;
 }
 
-hr {
-    border: 0;
-    height: 1px;
-    background: #ffd700;
-    margin: 20px 0;
+/* 6. एड्स के सेक्शन */
+#top-ad, #bottom-ad {
+    width: 100%;
+    min-height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
 }
 
-h3 {
-    color: #ffd700;
-    margin-top: 10px;
+/* 7. लॉगिन और मेनू को बीच में लाने के लिए */
+#login-section, #menu-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1; /* यह खाली जगह को भर देगा */
 }
