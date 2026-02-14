@@ -1,0 +1,47 @@
+body {
+    background: radial-gradient(circle, #001f4d 0%, #000000 100%);
+    color: #FFD700;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.main-container {
+    background: rgba(0, 0, 0, 0.8);
+    padding: 30px;
+    border: 3px solid #FFD700;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 0 20px #FFD700;
+    width: 90%;
+    max-width: 400px;
+}
+
+input {
+    width: 90%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: none;
+}
+
+.start-btn, .menu-btn, .plan-btn {
+    background: linear-gradient(to bottom, #FFD700, #b8860b);
+    color: black;
+    border: none;
+    padding: 12px 20px;
+    font-weight: bold;
+    border-radius: 25px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.plan-btn {
+    font-size: 14px;
+    background: linear-gradient(to bottom, #3b82f6, #1e3a8a);
+    color: white;
+}

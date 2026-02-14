@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBC FFF मास्टर - Rajat Classes</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-container">
+        <h1 class="logo">KBC 2026</h1>
+        <h2 class="title">Fastest Finger First मास्टर</h2>
+        
+        <div id="login-section">
+            <input type="text" id="username" placeholder="अपना नाम लिखें" required>
+            <input type="number" id="mobile" placeholder="मोबाइल नंबर" required>
+            <button onclick="saveUser()" class="start-btn">लॉगिन करें</button>
+        </div>
+
+        <div id="menu-section" style="display: none;">
+            <p id="welcome-msg"></p>
+            <button onclick="startFreeGame()" class="menu-btn">मुफ्त प्रैक्टिस (10 सवाल)</button>
+            <hr>
+            <h3>प्रीमियम सब्सक्रिप्शन लें</h3>
+            <div class="plans">
+                <button class="plan-btn" onclick="buyPlan(49)">सिल्वर (₹49) - 500 सवाल</button>
+                <button class="plan-btn" onclick="buyPlan(99)">गोल्ड (₹99) - 1500 सवाल</button>
+                <button class="plan-btn" onclick="buyPlan(199)">प्लैटिनम (₹199) - अनलिमिटेड</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
