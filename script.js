@@ -14,16 +14,19 @@ firebase.initializeApp(firebaseConfig);
 
 // Recaptcha Verifier
 window.onload = function() {
+    // Recaptcha को तैयार करें
     window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
         'size': 'invisible'
     });
     
-    // चेक करें कि यूजर पहले से लॉगिन है या नहीं
+    // अगर आप चाहते हैं कि हर बार लॉगिन पेज आए (टेस्टिंग के लिए), 
+    // तो नीचे की 4 लाइनों को अभी के लिए हटा (delete) दें:
     const savedUser = localStorage.getItem('kbc_user');
     if (savedUser) {
         showMenu(savedUser);
     }
 };
+
 
 // 1. OTP भेजने का फंक्शन
 function sendOTP() {
