@@ -6,6 +6,28 @@
     <title>KBC FFF मास्टर - Rajat Classes</title>
     <link rel="stylesheet" href="style.css">
 </head>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+  // आपका दिया हुआ Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyCFccfNZzNSTcfBCYEh3kcXPjI4HRETCa0",
+    authDomain: "fatehpur-hubs-a3a9f.firebaseapp.com",
+    databaseURL: "https://fatehpur-hubs-a3a9f-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "fatehpur-hubs-a3a9f",
+    storageBucket: "fatehpur-hubs-a3a9f.firebasestorage.app",
+    messagingSenderId: "294360741451",
+    appId: "1:294360741451:web:5a4a6ac0838f8542fabfce",
+    measurementId: "G-MQRT3L94RM"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+</script>
+    
 <body>
     <div class="main-container">
         <h1 class="logo">KBC 2026</h1>
