@@ -97,15 +97,26 @@ function checkSequence() {
         loadNewQuestion();
     }, 3500);
 }
-// यूजर का स्टेटस चेक करें (यह डेटा Firebase से आएगा)
-let isPremiumUser = false; 
+// यह फंक्शन तब चलेगा जब 10 सवाल पूरे हो जाएंगे
+function handleLimitReached() {
+    const paymentLink = "https://rzp.io/rzp/I5geGyLS"; // आपका Razorpay लिंक
+    
+    // एक बेहतरीन और प्रोफेशनल मैसेज
+    const msg = "बधाई हो! आपने 10 सवालों की मुफ्त प्रैक्टिस पूरी कर ली है।\n\n" +
+                "🚀 अपनी प्रैक्टिस जारी रखने और 1.5 लाख+ सवालों का एक्सेस पाने के लिए अभी प्रीमियम प्लान चुनें।\n\n" +
+                "✅ No Ads\n✅ Unlimited Practice\n✅ Daily New Questions\n\n" +
+                "पेमेंट करने के लिए 'OK' दबाएँ और अपना पसंदीदा प्लान चुनें!";
 
-function checkGameLimit() {
-    if (!isPremiumUser && questionsPlayed >= 10) {
-        alert("आपकी मुफ्त लिमिट खत्म हो गई है। आगे खेलने के लिए प्रीमियम लें!");
-        window.location.href = "index.html";
+    if (confirm(msg)) {
+        // OK दबाते ही सीधा पेमेंट पेज खुलेगा
+        window.location.href = paymentLink; 
     } else {
-        // प्रीमियम यूजर के लिए कोई लिमिट नहीं
-        loadNextQuestion();
+        // अगर यूजर कैंसिल करता है तो उसे वापस होम पेज पर भेज दें
+        window.location.href = "index.html";
     }
+}
+
+// जहाँ सवाल चेक होते हैं, वहां इसे ऐसे बुलाएँ:
+if (questionsPlayed >= 10) {
+    handleLimitReached();
 }
