@@ -1,4 +1,4 @@
-// --- Audio Files ---
+// --- ऑडियो फाइल्स ---
 const bgMusic = new Audio('audio/background.mp3');
 const clockSound = new Audio('audio/clock.mp3');
 const lockSound = new Audio('audio/lock.mp3');
@@ -13,27 +13,29 @@ let questionsPlayed = 0;
 let currentQuestionsPool = []; 
 let userPlan = 'free'; 
 
-// --- Logic: Pehle Pool Load Hoga Phir Game Shuru Hoga ---
+// --- 1. सबसे पहले पेज लोड होने पर डेटा चेक करें ---
 window.onload = function() {
+    console.log("App loading...");
+    
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
-            try {
-                const snapshot = await firebase.database().ref('users/' + user.phoneNumber).once('value');
-                const userData = snapshot.val();
-                if (userData && userData.plan) {
-                    userPlan = userData.plan;
-                    if (userData.expiry && new Date() > new Date(userData.expiry)) {
-                        userPlan = 'free';
-                    }
+            console.log("User logged in:", user.phoneNumber);
+            const snapshot = await firebase.database().ref('users/' + user.phoneNumber).once('value');
+            const userData = snapshot.val();
+            if (userData && userData.plan) {
+                userPlan = userData.plan;
+                if (userData.expiry && new Date() > new Date(userData.expiry)) {
+                    userPlan = 'free';
                 }
-            } catch (err) { console.log("Firebase Error"); }
+            }
         }
-        // Sabse pehle questions load honge
-        await loadQuestionsByPlan();
+        // प्लान पता चलने के बाद फाइल लोड करें
+        initGame();
     });
 };
 
-async function loadQuestionsByPlan() {
+// --- 2. सही फाइल से डेटा उठाना ---
+async function initGame() {
     let fileName = ''; 
     if (userPlan === 'silver') fileName = 'silver_questions.json';
     else if (userPlan === 'gold') fileName = 'gold_questions.json';
@@ -42,49 +44,54 @@ async function loadQuestionsByPlan() {
     if (fileName !== '') {
         try {
             const response = await fetch(fileName);
-            let data = await response.json();
-            // SHUFFLE: Sawalon ko phentna taaki repeat na ho
+            const data = await response.json();
+            // SHUFFLE: सवालों को फेंटना (ताकि रिपीट न हों)
             currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-            startGame();
+            console.log("Premium questions loaded");
+            loadNewQuestion();
         } catch (e) {
-            loadFreeQuestions();
+            console.error("JSON load error, falling back to free");
+            setupFreeQuestions();
         }
     } else {
-        loadFreeQuestions();
+        setupFreeQuestions();
     }
 }
 
-function loadFreeQuestions() {
-    if (typeof fffQuestions !== 'undefined') {
-        // FREE SAWAl Shuffle
+function setupFreeQuestions() {
+    // यहाँ चेक करें कि fffQuestions (question.js से) मौजूद है या नहीं
+    if (typeof fffQuestions !== 'undefined' && fffQuestions.length > 0) {
         currentQuestionsPool = [...fffQuestions].sort(() => Math.random() - 0.5);
-        startGame();
-    }
-}
-
-function startGame() {
-    if (currentQuestionsPool.length > 0) {
+        console.log("Free questions loaded");
         loadNewQuestion();
+    } else {
+        // अगर 2 सेकंड बाद भी लोड न हो, तो फिर से कोशिश करें
+        console.log("Waiting for question.js...");
+        setTimeout(setupFreeQuestions, 1000);
     }
 }
 
+// --- 3. नया सवाल दिखाना ---
 function loadNewQuestion() {
+    // फ्री यूजर लिमिट
     if (userPlan === 'free' && questionsPlayed >= 10) {
         handleLimitReached();
         return;
     }
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        alert("Sawal khatm ho gaye hain!");
+        alert("सारे सवाल खत्म हो गए हैं!");
         window.location.href = "index.html";
         return;
     }
 
-    // SHIFT: Pehla sawal nikalna taaki wo repeat na ho
+    // .shift() से पहला सवाल बाहर निकालें (ताकि दोबारा न आए)
     currentQuestion = currentQuestionsPool.shift(); 
     
     userSequence = "";
     timeLeft = 20;
+    
+    // स्क्रीन पर डेटा डालना
     document.getElementById('timer').innerText = timeLeft;
     document.getElementById('question-text').innerText = currentQuestion.question;
     document.getElementById('result').innerText = "";
@@ -98,9 +105,11 @@ function loadNewQuestion() {
     document.getElementById('options-container').innerHTML = optionsHTML;
 
     bgMusic.currentTime = 0;
-    bgMusic.play().catch(e => {});
+    bgMusic.play().catch(e => console.log("Music click required"));
     startTimer();
 }
+
+// --- बाकी जरूरी फंक्शन (टाइमर, चेकिंग आदि) ---
 
 function startTimer() {
     if (timerId) clearInterval(timerId);
@@ -152,7 +161,7 @@ function checkSequence() {
 
 function handleLimitReached() {
     const paymentLink = "https://rzp.io/rzp/I5geGyLS"; 
-    if (confirm("10 muft sawal pure ho gaye! Aage khelne ke liye premium lein?")) {
+    if (confirm("10 सवाल पूरे! प्रीमियम प्रैक्टिस शुरू करें?")) {
         window.location.href = paymentLink; 
     } else {
         window.location.href = "index.html";
