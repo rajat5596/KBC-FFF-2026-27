@@ -1,4 +1,4 @@
-// ऑडियो फाइल्स पाथ
+// --- ऑडियो फाइल्स (जैसे थे वैसे ही) ---
 const bgMusic = new Audio('audio/background.mp3');
 const clockSound = new Audio('audio/clock.mp3');
 const lockSound = new Audio('audio/lock.mp3');
@@ -9,32 +9,83 @@ let userSequence = "";
 let timeLeft = 20;
 let timerId;
 let currentQuestion = {};
-let questionsPlayed = 0; // कितने सवाल खेल लिए उसका हिसाब
+let questionsPlayed = 0; 
+let currentQuestionsPool = []; // सवालों का खजाना यहाँ लोड होगा
+let userPlan = 'free'; // डिफ़ॉल्ट प्लान
 
+// --- 1. पेज लोड होते ही यूजर का प्लान चेक करना ---
 window.onload = function() {
-    loadNewQuestion();
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+            // Firebase से यूजर का डेटा लाना
+            const snapshot = await firebase.database().ref('users/' + user.phoneNumber).once('value');
+            const userData = snapshot.val();
+            
+            if (userData && userData.plan) {
+                userPlan = userData.plan;
+                // चेक करें कि प्लान 30 दिन से ज्यादा पुराना तो नहीं (Expiry Check)
+                if (userData.expiry && new Date() > new Date(userData.expiry)) {
+                    userPlan = 'free';
+                }
+            }
+            // प्लान के हिसाब से फाइल लोड करना
+            await loadQuestionsByPlan();
+        } else {
+            // अगर लॉगिन नहीं है तो होम पेज पर भेजें
+            window.location.href = "index.html"; 
+        }
+    });
 };
 
+// --- 2. प्लान के हिसाब से सही JSON फाइल चुनना ---
+async function loadQuestionsByPlan() {
+    let fileName = ''; 
+    
+    if (userPlan === 'silver') fileName = 'silver_questions.json';
+    else if (userPlan === 'gold') fileName = 'gold_questions.json';
+    else if (userPlan === 'platinum') fileName = 'platinum_question_json'; // आपकी फाइल का नाम
+
+    // अगर कोई प्रीमियम प्लान है तो फाइल फेच (Fetch) करें
+    if (fileName !== '') {
+        try {
+            const response = await fetch(fileName);
+            currentQuestionsPool = await response.json();
+            console.log(userPlan + " के सवाल लोड हो गए हैं।");
+            loadNewQuestion();
+        } catch (e) {
+            console.error("फाइल लोड नहीं हुई, फ्री सवाल चला रहे हैं।", e);
+            currentQuestionsPool = fffQuestions; 
+            loadNewQuestion();
+        }
+    } else {
+        // फ्री यूजर के लिए question.js वाले सवाल
+        currentQuestionsPool = fffQuestions;
+        loadNewQuestion();
+    }
+}
+
+// --- 3. नया सवाल दिखाना ---
 function loadNewQuestion() {
-    // 10 सवाल की लिमिट चेक (सिर्फ फ्री यूजर्स के लिए)
-    if (localStorage.getItem('is_premium') !== 'true' && questionsPlayed >= 10) {
-        alert("आपकी मुफ्त प्रैक्टिस सीमा (10 सवाल) समाप्त हो गई है। कृपया प्रीमियम लें!");
-        window.location.href = "index.html";
+    // फ्री यूजर के लिए 10 सवालों की लिमिट
+    if (userPlan === 'free' && questionsPlayed >= 10) {
+        handleLimitReached();
         return;
     }
 
-    // question.js से रैंडम सवाल चुनना
-    const randomIndex = Math.floor(Math.random() * fffQuestions.length);
-    currentQuestion = fffQuestions[randomIndex];
+    if (!currentQuestionsPool || currentQuestionsPool.length === 0) return;
+
+    // पूल में से रैंडम सवाल चुनना
+    const randomIndex = Math.floor(Math.random() * currentQuestionsPool.length);
+    currentQuestion = currentQuestionsPool[randomIndex];
     
-    // रीसेट सेटिंग्स
+    // रीसेट सेटिंग्स (पुराना लॉजिक)
     userSequence = "";
     timeLeft = 20;
     document.getElementById('timer').innerText = timeLeft;
     document.getElementById('question-text').innerText = currentQuestion.question;
     document.getElementById('result').innerText = "";
     
-    // ऑप्शन्स बटन बनाना
+    // ऑप्शंस बटन बनाना
     let optionsHTML = "";
     for (let key in currentQuestion.options) {
         optionsHTML += `<button class="option-btn" id="btn-${key}" onclick="selectOption('${key}')">
@@ -43,12 +94,12 @@ function loadNewQuestion() {
     }
     document.getElementById('options-container').innerHTML = optionsHTML;
 
-    // म्यूजिक रीसेट और प्ले
     bgMusic.currentTime = 0;
     bgMusic.play();
     startTimer();
 }
 
+// --- 4. टाइमर फंक्शन ---
 function startTimer() {
     clockSound.currentTime = 0;
     clockSound.play();
@@ -57,11 +108,12 @@ function startTimer() {
         document.getElementById('timer').innerText = timeLeft;
         if (timeLeft <= 0) {
             clearInterval(timerId);
-            checkSequence(); // टाइम खत्म तो ऑटो चेक
+            checkSequence(); 
         }
     }, 1000);
 }
 
+// --- 5. ऑप्शन सेलेक्ट करना ---
 function selectOption(key) {
     if (!userSequence.includes(key)) {
         userSequence += key;
@@ -72,6 +124,7 @@ function selectOption(key) {
     }
 }
 
+// --- 6. जवाब चेक करना ---
 function checkSequence() {
     clearInterval(timerId);
     bgMusic.pause();
@@ -90,54 +143,24 @@ function checkSequence() {
         resultPara.innerText = "गलत! सही क्रम: " + currentQuestion.correct;
     }
 
-    questionsPlayed++; // सवाल गिनती बढ़ाएं
+    questionsPlayed++;
 
-    // 3 सेकंड के इंतजार के बाद अगला सवाल अपने आप लोड होगा
+    // अगला सवाल लोड करना
     setTimeout(() => {
         loadNewQuestion();
     }, 3500);
 }
-// यह फंक्शन तब चलेगा जब 10 सवाल पूरे हो जाएंगे
+
+// --- 7. लिमिट खत्म होने पर मैसेज ---
 function handleLimitReached() {
-    const paymentLink = "https://rzp.io/rzp/I5geGyLS"; // आपका Razorpay लिंक
-    
-    // एक बेहतरीन और प्रोफेशनल मैसेज
+    const paymentLink = "https://rzp.io/rzp/I5geGyLS"; 
     const msg = "बधाई हो! आपने 10 सवालों की मुफ्त प्रैक्टिस पूरी कर ली है।\n\n" +
-                "🚀 अपनी प्रैक्टिस जारी रखने और 1.5 लाख+ सवालों का एक्सेस पाने के लिए अभी प्रीमियम प्लान चुनें।\n\n" +
-                "✅ No Ads\n✅ Unlimited Practice\n✅ Daily New Questions\n\n" +
-                "पेमेंट करने के लिए 'OK' दबाएँ और अपना पसंदीदा प्लान चुनें!";
+                "🚀 अनलिमिटेड प्रैक्टिस और हजारों सवालों के लिए अभी प्रीमियम प्लान चुनें।\n\n" +
+                "पेमेंट करने के लिए 'OK' दबाएँ!";
 
     if (confirm(msg)) {
-        // OK दबाते ही सीधा पेमेंट पेज खुलेगा
         window.location.href = paymentLink; 
     } else {
-        // अगर यूजर कैंसिल करता है तो उसे वापस होम पेज पर भेज दें
         window.location.href = "index.html";
-    }
-}
-
-// जहाँ सवाल चेक होते हैं, वहां इसे ऐसे बुलाएँ:
-if (questionsPlayed >= 10) {
-    handleLimitReached();
-}
-async function loadUserQuestions(userPlan) {
-    let questionUrl = '';
-
-    // प्लान के हिसाब से फाइल का रास्ता तय करें
-    if (userPlan === 'platinum') questionUrl = 'platinum_mega_bank.json';
-    else if (userPlan === 'gold') questionUrl = 'gold_questions.json';
-    else if (userPlan === 'silver') questionUrl = 'silver_questions.json';
-    else {
-        console.log("Loading Free Questions");
-        return allFreeQuestions; // यह आपकी questions.js से आएगा
-    }
-
-    try {
-        const response = await fetch(questionUrl);
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error("सवालों को लोड करने में दिक्कत हुई:", error);
-        return allFreeQuestions;
     }
 }
