@@ -1,4 +1,4 @@
-// --- Audio Files ---
+// --- Audio Files (Safe & Sound) ---
 const bgMusic = new Audio('audio/background.mp3');
 const clockSound = new Audio('audio/clock.mp3');
 const lockSound = new Audio('audio/lock.mp3');
@@ -13,11 +13,9 @@ let questionsPlayed = 0;
 let currentQuestionsPool = []; 
 let userPlan = 'free'; 
 
-// --- Logic: Page load hone par sabse pehle sawal dikhana ---
+// --- Logic: Page load hone par sawal dikhana ---
 window.onload = function() {
-    console.log("Game Loading...");
-    
-    // Pehle hi free questions load kar dete hain taaki screen khali na dikhe
+    // Sabse pehle free questions load kar dete hain
     if (typeof fffQuestions !== 'undefined') {
         currentQuestionsPool = fffQuestions;
         loadNewQuestion();
@@ -25,22 +23,19 @@ window.onload = function() {
 
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
-            console.log("User logged in:", user.phoneNumber);
             try {
                 const snapshot = await firebase.database().ref('users/' + user.phoneNumber).once('value');
                 const userData = snapshot.val();
                 
                 if (userData && userData.plan) {
                     userPlan = userData.plan;
-                    console.log("Plan found:", userPlan);
                     
-                    // Expiry Check
+                    // Plan Expire ho gaya ho to wapas free kar dein
                     if (userData.expiry && new Date() > new Date(userData.expiry)) {
                         userPlan = 'free';
-                        console.log("Plan expired, back to free.");
                     }
                     
-                    // Agar premium hai to naye sawal load karein
+                    // Agar user premium hai to uska pool update karein
                     if (userPlan !== 'free') {
                         await loadQuestionsByPlan();
                     }
@@ -48,54 +43,47 @@ window.onload = function() {
             } catch (err) {
                 console.error("Firebase error:", err);
             }
-        } else {
-            console.log("No user logged in, staying on free plan.");
-            userPlan = 'free';
         }
     });
 };
 
+// --- Aapki GitHub Files ke hisaab se files load karna ---
 async function loadQuestionsByPlan() {
     let fileName = ''; 
+    
+    // Aapke GitHub ke filenames yahan set hain
     if (userPlan === 'silver') fileName = 'silver_questions.json';
     else if (userPlan === 'gold') fileName = 'gold_questions.json';
-    else if (userPlan === 'platinum') fileName = 'platinum_question_json';
+    else if (userPlan === 'platinum') fileName = 'platinum_question_json'; // Bina .json ke
 
     if (fileName !== '') {
         try {
-            console.log("Fetching premium file:", fileName);
             const response = await fetch(fileName);
             const data = await response.json();
             if (data && data.length > 0) {
                 currentQuestionsPool = data;
-                console.log("Premium questions loaded successfully.");
-                loadNewQuestion(); // Naye premium sawal ke saath reload
+                loadNewQuestion(); // Naye pool ke saath reload
             }
         } catch (e) {
-            console.error("JSON fetch error:", e);
+            console.error("File load error:", e);
         }
     }
 }
 
 function loadNewQuestion() {
-    // 10 sawal ki limit (Sirf free users ke liye)
+    // 10 sawal ki limit check
     if (userPlan === 'free' && questionsPlayed >= 10) {
         handleLimitReached();
         return;
     }
 
-    if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        console.log("Pool empty, waiting...");
-        return;
-    }
+    if (!currentQuestionsPool || currentQuestionsPool.length === 0) return;
 
     const randomIndex = Math.floor(Math.random() * currentQuestionsPool.length);
     currentQuestion = currentQuestionsPool[randomIndex];
     
     userSequence = "";
     timeLeft = 20;
-    
-    // UI Update
     document.getElementById('timer').innerText = timeLeft;
     document.getElementById('question-text').innerText = currentQuestion.question;
     document.getElementById('result').innerText = "";
@@ -109,12 +97,11 @@ function loadNewQuestion() {
     document.getElementById('options-container').innerHTML = optionsHTML;
 
     bgMusic.currentTime = 0;
-    bgMusic.play().catch(e => console.log("Music play blocked by browser"));
+    bgMusic.play().catch(e => {});
     startTimer();
 }
 
-// --- Baaki functions (Timer, Option, Check, Limit) ---
-
+// --- Standard Game Functions ---
 function startTimer() {
     if (timerId) clearInterval(timerId);
     clockSound.currentTime = 0;
@@ -165,7 +152,7 @@ function checkSequence() {
 
 function handleLimitReached() {
     const paymentLink = "https://rzp.io/rzp/I5geGyLS"; 
-    const msg = "Aapne 10 muft sawal pure kar liye hain. Aage khelne ke liye Premium lein!";
+    const msg = "Muft practice khatm! Unlimited premium sawalon ke liye OK dabayein.";
     if (confirm(msg)) {
         window.location.href = paymentLink; 
     } else {
