@@ -1,4 +1,4 @@
-// --- Audio Files (Puraane path ke hisaab se) ---
+// --- Audio Files ---
 const bgMusic = new Audio('audio/background.mp3');
 const clockSound = new Audio('audio/clock.mp3');
 const lockSound = new Audio('audio/lock.mp3');
@@ -13,35 +13,28 @@ let questionsPlayed = 0;
 let currentQuestionsPool = []; 
 let userPlan = 'free'; 
 
-// --- Logic: Page load hone par sabse pehle sawal ready karna ---
+// --- Logic: Pehle Pool Load Hoga Phir Game Shuru Hoga ---
 window.onload = function() {
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             try {
                 const snapshot = await firebase.database().ref('users/' + user.phoneNumber).once('value');
                 const userData = snapshot.val();
-                
                 if (userData && userData.plan) {
                     userPlan = userData.plan;
-                    // Check karein kahin plan expire to nahi ho gaya
                     if (userData.expiry && new Date() > new Date(userData.expiry)) {
                         userPlan = 'free';
                     }
                 }
-            } catch (err) {
-                console.error("Firebase data error:", err);
-            }
+            } catch (err) { console.log("Firebase Error"); }
         }
-        // Plan check karne ke baad sawal load karein
+        // Sabse pehle questions load honge
         await loadQuestionsByPlan();
     });
 };
 
-// --- Sawalon ko load aur Shuffle (Phentna) karne ka logic ---
 async function loadQuestionsByPlan() {
     let fileName = ''; 
-    
-    // Aapke GitHub filenames ke hisaab se
     if (userPlan === 'silver') fileName = 'silver_questions.json';
     else if (userPlan === 'gold') fileName = 'gold_questions.json';
     else if (userPlan === 'platinum') fileName = 'platinum_question_json';
@@ -50,11 +43,10 @@ async function loadQuestionsByPlan() {
         try {
             const response = await fetch(fileName);
             let data = await response.json();
-            // Sawalon ko shuffle karein taaki repeat na hon
+            // SHUFFLE: Sawalon ko phentna taaki repeat na ho
             currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-            loadNewQuestion();
+            startGame();
         } catch (e) {
-            console.error("Premium file load failed:", e);
             loadFreeQuestions();
         }
     } else {
@@ -62,34 +54,35 @@ async function loadQuestionsByPlan() {
     }
 }
 
-// Free questions load karne ka function
 function loadFreeQuestions() {
     if (typeof fffQuestions !== 'undefined') {
-        // Free sawalon ko bhi shuffle karein
-        currentQuestionsPool = fffQuestions.sort(() => Math.random() - 0.5);
+        // FREE SAWAl Shuffle
+        currentQuestionsPool = [...fffQuestions].sort(() => Math.random() - 0.5);
+        startGame();
+    }
+}
+
+function startGame() {
+    if (currentQuestionsPool.length > 0) {
         loadNewQuestion();
     }
 }
 
-// --- Naya Sawal dikhane ka function ---
 function loadNewQuestion() {
-    // 10 sawal ki limit check (Sirf free users ke liye)
     if (userPlan === 'free' && questionsPlayed >= 10) {
         handleLimitReached();
         return;
     }
 
-    // Agar pool khali ho jaye (Sare sawal khatm ho jayein)
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        alert("Sawal khatm ho gaye hain! Kripya dobara koshish karein.");
+        alert("Sawal khatm ho gaye hain!");
         window.location.href = "index.html";
         return;
     }
 
-    // .shift() istemal karne se pehla sawal pool se nikal jayega aur dobara nahi aayega
+    // SHIFT: Pehla sawal nikalna taaki wo repeat na ho
     currentQuestion = currentQuestionsPool.shift(); 
     
-    // UI Reset
     userSequence = "";
     timeLeft = 20;
     document.getElementById('timer').innerText = timeLeft;
@@ -104,13 +97,11 @@ function loadNewQuestion() {
     }
     document.getElementById('options-container').innerHTML = optionsHTML;
 
-    // Audio Play
     bgMusic.currentTime = 0;
-    bgMusic.play().catch(e => console.log("Audio blocked by browser"));
+    bgMusic.play().catch(e => {});
     startTimer();
 }
 
-// --- Timer Function ---
 function startTimer() {
     if (timerId) clearInterval(timerId);
     clockSound.currentTime = 0;
@@ -125,7 +116,6 @@ function startTimer() {
     }, 1000);
 }
 
-// --- Option Selection ---
 function selectOption(key) {
     if (!userSequence.includes(key)) {
         userSequence += key;
@@ -138,7 +128,6 @@ function selectOption(key) {
     }
 }
 
-// --- Answer Verification ---
 function checkSequence() {
     clearInterval(timerId);
     bgMusic.pause();
@@ -158,15 +147,12 @@ function checkSequence() {
     }
 
     questionsPlayed++;
-    // 3.5 second baad naya sawal bina repeat hue
     setTimeout(loadNewQuestion, 3500);
 }
 
-// --- Limit Reached Popup ---
 function handleLimitReached() {
     const paymentLink = "https://rzp.io/rzp/I5geGyLS"; 
-    const msg = "मुफ्त प्रैक्टिस सीमा (10 सवाल) समाप्त!\n\nअनलिमिटेड प्रैक्टिस के लिए प्रीमियम प्लान चुनें।";
-    if (confirm(msg)) {
+    if (confirm("10 muft sawal pure ho gaye! Aage khelne ke liye premium lein?")) {
         window.location.href = paymentLink; 
     } else {
         window.location.href = "index.html";
