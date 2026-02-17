@@ -13,13 +13,10 @@ let questionsPlayed = 0;
 let currentQuestionsPool = []; 
 let userPlan = 'free'; 
 
-// --- 1. सबसे पहले पेज लोड होने पर डेटा चेक करें ---
+// --- 1. पेज लोड होते ही डेटा तैयार करना ---
 window.onload = function() {
-    console.log("App loading...");
-    
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
-            console.log("User logged in:", user.phoneNumber);
             const snapshot = await firebase.database().ref('users/' + user.phoneNumber).once('value');
             const userData = snapshot.val();
             if (userData && userData.plan) {
@@ -29,13 +26,13 @@ window.onload = function() {
                 }
             }
         }
-        // प्लान पता चलने के बाद फाइल लोड करें
-        initGame();
+        // प्लान चेक करने के बाद सवाल लोड करना
+        loadFinalQuestions();
     });
 };
 
-// --- 2. सही फाइल से डेटा उठाना ---
-async function initGame() {
+// --- 2. सवालों को लोड और 'SHUFFLE' करना (ताकि रिपीट न हों) ---
+async function loadFinalQuestions() {
     let fileName = ''; 
     if (userPlan === 'silver') fileName = 'silver_questions.json';
     else if (userPlan === 'gold') fileName = 'gold_questions.json';
@@ -44,54 +41,47 @@ async function initGame() {
     if (fileName !== '') {
         try {
             const response = await fetch(fileName);
-            const data = await response.json();
-            // SHUFFLE: सवालों को फेंटना (ताकि रिपीट न हों)
+            let data = await response.json();
+            // यहाँ सवालों को फेंटा जा रहा है (Shuffle)
             currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-            console.log("Premium questions loaded");
             loadNewQuestion();
         } catch (e) {
-            console.error("JSON load error, falling back to free");
-            setupFreeQuestions();
+            useDefaultFreeQuestions();
         }
     } else {
-        setupFreeQuestions();
+        useDefaultFreeQuestions();
     }
 }
 
-function setupFreeQuestions() {
-    // यहाँ चेक करें कि fffQuestions (question.js से) मौजूद है या नहीं
-    if (typeof fffQuestions !== 'undefined' && fffQuestions.length > 0) {
+function useDefaultFreeQuestions() {
+    // अगर question.js फाइल लोड हो गई है
+    if (typeof fffQuestions !== 'undefined') {
+        // फ्री सवालों को भी फेंट दिया (Shuffle)
         currentQuestionsPool = [...fffQuestions].sort(() => Math.random() - 0.5);
-        console.log("Free questions loaded");
         loadNewQuestion();
     } else {
-        // अगर 2 सेकंड बाद भी लोड न हो, तो फिर से कोशिश करें
-        console.log("Waiting for question.js...");
-        setTimeout(setupFreeQuestions, 1000);
+        // अगर लोड नहीं हुई तो आधा सेकंड इंतज़ार करके फिर कोशिश करेगा
+        setTimeout(useDefaultFreeQuestions, 500);
     }
 }
 
 // --- 3. नया सवाल दिखाना ---
 function loadNewQuestion() {
-    // फ्री यूजर लिमिट
     if (userPlan === 'free' && questionsPlayed >= 10) {
         handleLimitReached();
         return;
     }
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        alert("सारे सवाल खत्म हो गए हैं!");
-        window.location.href = "index.html";
+        alert("सारे सवाल खत्म हो गए हैं! पेज रिफ्रेश करें।");
         return;
     }
 
-    // .shift() से पहला सवाल बाहर निकालें (ताकि दोबारा न आए)
+    // .shift() का मतलब है लिस्ट का पहला सवाल निकालो और उसे लिस्ट से हटा दो (No Repeat)
     currentQuestion = currentQuestionsPool.shift(); 
     
     userSequence = "";
     timeLeft = 20;
-    
-    // स्क्रीन पर डेटा डालना
     document.getElementById('timer').innerText = timeLeft;
     document.getElementById('question-text').innerText = currentQuestion.question;
     document.getElementById('result').innerText = "";
@@ -105,12 +95,11 @@ function loadNewQuestion() {
     document.getElementById('options-container').innerHTML = optionsHTML;
 
     bgMusic.currentTime = 0;
-    bgMusic.play().catch(e => console.log("Music click required"));
+    bgMusic.play().catch(e => {});
     startTimer();
 }
 
-// --- बाकी जरूरी फंक्शन (टाइमर, चेकिंग आदि) ---
-
+// --- बाकी गेम के फंक्शन ---
 function startTimer() {
     if (timerId) clearInterval(timerId);
     clockSound.currentTime = 0;
@@ -144,7 +133,6 @@ function checkSequence() {
     lockSound.play();
 
     const resultPara = document.getElementById('result');
-    
     if (userSequence === currentQuestion.correct) {
         correctSound.play();
         resultPara.style.color = "#00FF00";
@@ -161,7 +149,7 @@ function checkSequence() {
 
 function handleLimitReached() {
     const paymentLink = "https://rzp.io/rzp/I5geGyLS"; 
-    if (confirm("10 सवाल पूरे! प्रीमियम प्रैक्टिस शुरू करें?")) {
+    if (confirm("10 मुफ्त सवाल पूरे! आगे के लिए प्रीमियम लें?")) {
         window.location.href = paymentLink; 
     } else {
         window.location.href = "index.html";
