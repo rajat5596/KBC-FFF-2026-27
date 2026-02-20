@@ -87,29 +87,27 @@ function showMenu(name) {
 
 function buyPlan(amt) {
     const paymentLink = "https://rzp.io/rzp/I5geGyLS";
+    const savedPhone = localStorage.getItem('kbc_phone') || "apna number";
     
-    // यूजर को निर्देश दें कि उसे पेज पर क्या करना है
-    alert("आपने " + amt + " वाला प्लान चुना है। अगले पेज पर अपने प्लान के सामने '+' दबाकर उसे सेलेक्ट करें।");
+    alert(`✅ ₹\( {amt} वाला प्लान चुना!\n\nअगले पेज पर:\n1. अपना नाम डालें\n2. **जरूर** वही मोबाइल नंबर डालें जो लॉगिन में इस्तेमाल किया था ( \){savedPhone})\n3. प्लान के सामने '+' दबाकर Pay करें`);
     
     window.open(paymentLink, '_blank');
 }
 function checkPremiumStatus(userData, mobileNumber) {
-    const today = new Date();
-    const expiry = new Date(userData.expiryDate);
+    if (!userData || !userData.expiry) return 'free';
 
-    // अगर आज की तारीख एक्सपायरी से बड़ी है
+    const today = new Date();
+    const expiry = new Date(userData.expiry);
+
     if (today > expiry) {
-        // प्रीमियम खत्म! डेटाबेस अपडेट करें
         firebase.database().ref('users/' + mobileNumber).update({
-            isPremium: false,
-            plan: 'free'
+            plan: 'free',
+            status: 'expired'
         });
-        
-        alert("आपका प्रीमियम प्लान समाप्त हो गया है। कृपया प्रैक्टिस जारी रखने के लिए रिचार्ज करें।");
+        alert("आपका प्रीमियम प्लान समाप्त हो गया है। कृपया रिचार्ज करें।");
         return 'free';
     }
-    
-    return userData.plan;
+    return userData.plan || 'free';
 }
 // पेमेंट के बाद ऑटो-अपडेट करने वाला लॉजिक
 window.addEventListener('load', () => {
