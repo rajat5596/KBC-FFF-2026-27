@@ -115,35 +115,4 @@ function checkPremiumStatus(userData, mobileNumber) {
     return userData.plan || 'free';
 }
 // पेमेंट के बाद ऑटो-अपडेट करने वाला लॉजिक
-window.addEventListener('load', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const payId = urlParams.get('razorpay_payment_id');
-    const amount = urlParams.get('payment_amount'); // Razorpay अमाउंट भेजता है
-
-    if (payId) {
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                let selectedPlan = 'free';
-                
-                // राशि के आधार पर प्लान का नाम तय करें
-                // ₹49 = 4900, ₹99 = 9900, ₹199 = 19900
-                if (amount == "4900" || amount == "49") selectedPlan = 'silver';
-                else if (amount == "9900" || amount == "99") selectedPlan = 'gold';
-                else if (amount == "19900" || amount == "199") selectedPlan = 'platinum';
-
-                const expiry = new Date();
-                expiry.setDate(expiry.getDate() + 30); // 30 दिन का समय
-
-                firebase.database().ref('users/' + user.phoneNumber).update({
-                    plan: selectedPlan,
-                    expiry: expiry.toISOString(),
-                    last_payment_id: payId
-                }).then(() => {
-                    alert("बधाई हो! आपका " + selectedPlan.toUpperCase() + " प्लान एक्टिवेट हो गया है।");
-                    // लिंक साफ करने के लिए ताकि बार-बार अलर्ट न आए
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                });
-            }
-        });
-    }
-});
+// window.addEventListener('load', () => { ... });  // Disabled - using Pipedream webhook only now
