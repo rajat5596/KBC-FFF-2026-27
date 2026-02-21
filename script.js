@@ -127,19 +127,23 @@ function logout() {
     });
 }
 
-// User login state check karna
-// Logout Function - Fix for Compat Version
+// --- 1. LOGOUT KO FAST BANANE KE LIYE ---
 function logout() {
+    // Pehle local storage aur session saaf karo taaki purana status turant hate
+    localStorage.clear();
+    sessionStorage.clear();
+
     firebase.auth().signOut().then(() => {
-        console.log("Logged Out Successfully");
-        window.location.reload();
+        console.log("Logged Out");
+        // replace() se page reload karne par session puri tarah khatam ho jata hai
+        window.location.replace("index.html");
     }).catch((error) => {
         console.error("Logout Error:", error);
-        alert("Logout nahi ho paya, fir se koshish karein.");
+        window.location.reload();
     });
 }
 
-// User login state aur Premium Check
+// --- 2. PREMIUM STATUS AUR LOGIN CHECK ---
 firebase.auth().onAuthStateChanged((user) => {
     const loginSection = document.getElementById('login-section');
     const menuSection = document.getElementById('menu-section');
@@ -150,11 +154,11 @@ firebase.auth().onAuthStateChanged((user) => {
         if(loginSection) loginSection.style.display = 'none';
         if(menuSection) menuSection.style.display = 'block';
 
-        // 1. Phone number clean karein (Database match ke liye)
+        // Phone number se +91 hatayein taaki database se match ho sake
         const phone = user.phoneNumber.replace("+91", "").replace("+", "");
-        console.log("Checking Data for:", phone);
+        console.log("Fetching data for:", phone);
         
-        // 2. Database se Real-time Data check karein
+        // Database se data real-time mangwayein
         firebase.database().ref('users/' + phone).on('value', (snapshot) => {
             const data = snapshot.val();
             const name = localStorage.getItem('username') || "यूजर";
@@ -162,10 +166,11 @@ firebase.auth().onAuthStateChanged((user) => {
             if(welcomeMsg) welcomeMsg.innerText = "नमस्ते, " + name;
 
             if (data && data.plan) {
-                // Plan aur Expiry dikhana
+                // Trim() extra space ko hata dega agar database mein galti se space ho
                 let currentPlan = data.plan.trim().toUpperCase();
                 let expiryText = "";
                 
+                // Expiry date dikhane ke liye
                 if (data.expiry) {
                     const dateObj = new Date(data.expiry);
                     expiryText = " (वैधता: " + dateObj.toLocaleDateString('hi-IN') + ")";
@@ -173,18 +178,19 @@ firebase.auth().onAuthStateChanged((user) => {
 
                 if(planElement) {
                     planElement.innerText = "आपका प्लान: " + currentPlan + expiryText;
-                    planElement.style.color = "#00ff00";
+                    planElement.style.color = "#00ff00"; // Green color
                     planElement.style.display = "block";
                 }
             } else {
+                // Agar koi plan database mein nahi hai
                 if(planElement) {
                     planElement.innerText = "आपका प्लान: FREE (मुफ्त)";
-                    planElement.style.color = "#ffcc00";
+                    planElement.style.color = "#ffcc00"; // Yellow color
                     planElement.style.display = "block";
                 }
             }
         }, (error) => {
-            console.error("Database Read Error:", error);
+            console.error("Database Error:", error);
         });
     } else {
         if(loginSection) loginSection.style.display = 'block';
