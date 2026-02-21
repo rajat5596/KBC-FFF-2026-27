@@ -202,33 +202,30 @@ function handleLimitReached() {
     }
 }
 // ===== PREMIUM CHECK - REAL TIME (Webhook ke baad yeh kaam karega) =====
-firebase.auth().onAuthStateChanged((user) => {
+firebase.auth().onAuthStateChanged(async (user) => {
     if (user) {
-        const phone = user.phoneNumber;   // +919889904191 aayega
+        try {
+            // Hum +91 hata rahe hain taaki database ke 9889904191 se match ho sake
+            const cleanPhone = user.phoneNumber.replace("+91", "").replace("+", "");
+            console.log("Checking plan for:", cleanPhone);
 
-        firebase.database().ref('users/' + phone).on('value', (snapshot) => {
-            const data = snapshot.val();
-            console.log("🔥 Firebase se naya data aaya:", data);   // Console mein dekhne ke liye
+            const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
+            const userData = snapshot.val();
+            
+            if (userData && userData.plan) {
+                // Space hatane ke liye .trim() ka use kiya hai
+                userPlan = userData.plan.trim().toLowerCase(); 
+                console.log("Plan Found:", userPlan);
 
-            if (data && data.plan && data.plan !== 'free') {
-                const expiryDate = new Date(data.expiry);
-                if (expiryDate > new Date()) {
-                    // PREMIUM ACTIVE!
-                    userPlan = data.plan;
-                    console.log("✅ Premium Active:", userPlan);
-
-                    // UI mein show kar do
-                    document.getElementById('welcome-msg').innerText = 
-                        "स्वागत है, " + name + " (" + userPlan.toUpperCase() + ")";
-
-                    // Premium questions load karo
-                    loadPremiumQuestions(userPlan);   // agar yeh function hai to call kar
-
-                    // Limit wala message hide kar do
-                    document.getElementById('limit-message') && 
-                        (document.getElementById('limit-message').style.display = 'none');
+                if (userData.expiry && new Date() > new Date(userData.expiry)) {
+                    userPlan = 'free';
+                    console.log("Plan Expired!");
                 }
             }
-        });
+        } catch (error) {
+            console.log("Firebase error:", error);
+            userPlan = 'free';
+        }
     }
+    loadFinalQuestions();
 });
