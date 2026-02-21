@@ -37,16 +37,22 @@
         </div>
 
         <div id="menu-section" style="display: none;">
-            <p id="welcome-msg" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;"></p>
-            <button onclick="window.location.href='game.html'" class="menu-btn">मुफ्त प्रैक्टिस (10 सवाल)</button>
-            <hr style="border: 0.5px solid #ffd700; opacity: 0.5; margin: 20px 0;">
-            <h3 style="color: #ffd700; margin-bottom: 10px;">प्रीमियम सब्सक्रिप्शन लें</h3>
-            <div class="plans">
-                <button class="plan-btn" onclick="buySilver()">सिल्वर (₹49) - 500 सवाल</button>
-<button class="plan-btn" onclick="buyGold()">गोल्ड (₹99) - 1500 सवाल</button>
-<button class="plan-btn" onclick="buyPlatinum()">प्लैटिनम (₹199) - अनलिमिटेड</button>
-            </div>
-        </div>
+    <p id="welcome-msg" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;"></p>
+    <p id="plan-status" style="color: #00ff00; font-weight: bold; margin-bottom: 15px;"></p>
+    
+    <button onclick="logout()" style="background:red; color:white; padding:5px 10px; border-radius:5px; border:none; margin-bottom:15px; cursor:pointer;">Logout (लॉगआउट)</button>
+
+    <button onclick="window.location.href='game.html'" class="menu-btn">प्रैक्टिस शुरू करें</button>
+    
+    <hr style="border: 0.5px solid #ffd700; opacity: 0.5; margin: 20px 0;">
+    <h3 style="color: #ffd700; margin-bottom: 10px;">प्लान अपग्रेड करें</h3>
+    <div class="plans">
+        <button class="plan-btn" onclick="buySilver()">सिल्वर (₹49) - 500 सवाल</button>
+        <button class="plan-btn" onclick="buyGold()">गोल्ड (₹99) - 1500 सवाल</button>
+        <button class="plan-btn" onclick="buyPlatinum()">प्लैटिनम (₹199) - अनलिमिटेड</button>
+    </div>
+</div>
+
 
         <div id="bottom-ad" style="margin-top: 20px; text-align: center; min-height: 50px;">
             <script type="text/javascript">
