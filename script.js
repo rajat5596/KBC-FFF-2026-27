@@ -133,24 +133,34 @@ firebase.auth().onAuthStateChanged((user) => {
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('menu-section').style.display = 'block';
 
-        // 1. Phone number clean karein
+        // 1. Phone number clean karein (Database se match karne ke liye)
         const phone = user.phoneNumber.replace("+91", "").replace("+", "");
         
-        // 2. Database se plan aur naam check karein
+        // 2. Database se Data check karein
         firebase.database().ref('users/' + phone).on('value', (snapshot) => {
             const data = snapshot.val();
             const name = localStorage.getItem('username') || "यूजर";
             
             document.getElementById('welcome-msg').innerText = "नमस्ते, " + name;
 
+            const planElement = document.getElementById('plan-status');
+            
             if (data && data.plan) {
-                // Agar plan mil gaya (silver, gold, platinum)
-                document.getElementById('plan-status').innerText = "आपका प्लान: " + data.plan.toUpperCase();
-                document.getElementById('plan-status').style.color = "#00ff00"; // Green color
+                // Plan ka naam (Silver/Gold/Platinum)
+                let currentPlan = data.plan.trim().toUpperCase();
+                
+                // Expiry Date format karna (Readable banane ke liye)
+                let expiryText = "";
+                if (data.expiry) {
+                    const dateObj = new Date(data.expiry);
+                    expiryText = " (वैधता: " + dateObj.toLocaleDateString('hi-IN') + " तक)";
+                }
+
+                planElement.innerText = "आपका प्लान: " + currentPlan + expiryText;
+                planElement.style.color = "#00ff00"; // Green color
             } else {
-                // Agar koi plan nahi hai
-                document.getElementById('plan-status').innerText = "आपका प्लान: FREE (मुफ्त)";
-                document.getElementById('plan-status').style.color = "#ffcc00"; // Yellow color
+                planElement.innerText = "आपका प्लान: FREE (मुफ्त)";
+                planElement.style.color = "#ffcc00"; // Yellow color
             }
         });
     } else {
