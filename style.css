@@ -1,127 +1,110 @@
-/* 1. रीसेट + बेसिक सेटिंग्स */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin:0; padding:0; box-sizing:border-box; }
 
 html, body {
-    width: 100%;
-    height: 100%;
-    font-family: 'Segoe UI', Roboto, sans-serif;
-    background: #000;
-    color: white;
-    overflow-x: hidden; /* horizontal scroll band */
+    width:100%; height:100%;
+    font-family:'Segoe UI',sans-serif;
+    background:#000;
+    color:white;
+    overflow-x:hidden;
 }
 
-/* 2. बैकग्राउंड ग्रेडिएंट + स्क्रॉल सपोर्ट */
 body {
-    background: radial-gradient(circle at top, #1a2a6c, #000000);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    background:radial-gradient(circle at top, #1a2a6c, #000);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
 }
 
-/* 3. मुख्य कंटेनर - मोबाइल फ्रेंडली */
 .main-container {
-    width: 100%;
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 15px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    background: rgba(0, 0, 40, 0.6);
-    border-radius: 15px;
-    border: 1px solid rgba(255, 215, 0, 0.2);
+    width:100%;
+    max-width:500px;
+    margin:0 auto;
+    padding:15px;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    background:rgba(0,0,40,0.6);
+    border-radius:15px;
+    border:1px solid rgba(255,215,0,0.2);
 }
 
-/* 4. लोगो + टाइटल */
 .logo {
-    font-size: 2.5rem;
-    color: #ffd700;
-    text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
-    text-align: center;
-    margin: 20px 0 5px;
+    font-size:2.5rem;
+    color:#ffd700;
+    text-shadow:0 0 15px rgba(255,215,0,0.8);
+    text-align:center;
+    margin:20px 0 5px;
 }
 
 .title {
-    font-size: 1.1rem;
-    color: #00d4ff;
-    text-align: center;
-    margin-bottom: 20px;
+    font-size:1.1rem;
+    color:#00d4ff;
+    text-align:center;
+    margin-bottom:20px;
 }
 
-/* 5. इनपुट फील्ड्स */
 input {
-    width: 100%;
-    padding: 14px;
-    margin: 10px 0;
-    border-radius: 10px;
-    border: 2px solid #1cb5e0;
-    background: rgba(255, 255, 255, 0.08);
-    color: white;
-    font-size: 1.1rem;
-    text-align: center;
+    width:100%;
+    padding:14px;
+    margin:10px 0;
+    border-radius:10px;
+    border:2px solid #1cb5e0;
+    background:rgba(255,255,255,0.08);
+    color:white;
+    font-size:1.1rem;
+    text-align:center;
 }
 
-/* 6. प्रोफेशनल 3D बटन */
 button {
-    width: 100%;
-    padding: 16px;
-    margin: 10px 0;
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: white;
-    background: linear-gradient(145deg, #000046, #1cb5e0);
-    border: 2px solid #ffd700;
-    border-radius: 12px;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.2s ease;
-    box-shadow: 0 6px 0 #0056b3, 0 10px 20px rgba(0, 0, 0, 0.5);
-    position: relative;
+    width:100%;
+    padding:16px;
+    margin:10px 0;
+    font-size:1.1rem;
+    font-weight:bold;
+    color:white;
+    background:linear-gradient(145deg,#000046,#1cb5e0);
+    border:2px solid #ffd700;
+    border-radius:12px;
+    cursor:pointer;
+    text-transform:uppercase;
+    transition:all 0.2s;
+    box-shadow:0 6px 0 #0056b3,0 10px 20px rgba(0,0,0,0.5);
 }
 
 button:active {
-    transform: translateY(4px);
-    box-shadow: 0 2px 0 #0056b3;
+    transform:translateY(4px);
+    box-shadow:0 2px 0 #0056b3;
 }
 
-/* प्लान बटन अलग स्टाइल */
 .plan-btn {
-    background: linear-gradient(145deg, #2c3e50, #41295a);
-    font-size: 1rem;
-    padding: 14px;
+    background:linear-gradient(145deg,#2c3e50,#41295a);
+    font-size:1rem;
+    padding:14px;
 }
 
-/* 7. सेक्शन स्पेसिंग */
 #login-section, #menu-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    width: 100%;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:20px;
+    width:100%;
 }
 
-/* 8. एड्स सेक्शन */
 #top-ad, #bottom-ad {
-    width: 100%;
-    min-height: 60px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 10px;
-    margin: 10px 0;
+    width:100%;
+    min-height:60px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:rgba(0,0,0,0.5);
+    border-radius:10px;
+    margin:10px 0;
 }
 
-/* 9. मोबाइल रेस्पॉन्सिव */
-@media (max-width: 500px) {
-    .logo { font-size: 2rem; }
-    button { font-size: 1rem; padding: 14px; }
-    input { font-size: 1rem; padding: 12px; }
+@media (max-width:500px) {
+    .logo { font-size:2rem; }
+    button { font-size:1rem; padding:14px; }
 }
