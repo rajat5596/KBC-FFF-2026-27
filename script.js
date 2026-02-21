@@ -85,19 +85,6 @@ function showMenu(name) {
     document.getElementById('welcome-msg').innerText = "स्वागत है, " + name;
 }
 
-function buyPlatinum() {
-    const paymentLink = "https://rzp.io/rzp/I5geGyLS";  // yeh wahi link hai jo tum use kar rahe ho
-    
-    // Naam aur number already set
-    const name = "Rajat";
-    const phone = "9889904191";
-    
-    // Alert message jo user ko guide karega (payment page par kya daalna hai)
-    alert(`Platinum Plan (₹199) चुना गया!\n\nनाम: ${name}\nमोबाइल: ${phone}\n\nअगले पेज पर:\n1. नाम में "Rajat" लिखें\n2. मोबाइल नंबर में "9889904191" डालें\n3. Platinum प्लान के सामने '+' दबाकर Pay करें\n\nPayment सफल होने पर premium ऑटो एक्टिवेट हो जाएगा!`);
-    
-    // Payment link new tab mein kholo
-    window.open(paymentLink, '_blank');
-}
 function buySilver() {
     const paymentLink = "https://rzp.io/rzp/I5geGyLS";
     alert("सिल्वर प्लान चुना गया! नाम: Rajat, मोबाइल: 9889904191 डालें");
