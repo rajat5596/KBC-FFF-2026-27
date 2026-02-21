@@ -120,3 +120,41 @@ function checkPremiumStatus(userData, mobileNumber) {
 }
 // पेमेंट के बाद ऑटो-अपडेट करने वाला लॉजिक
 // window.addEventListener('load', () => { ... });  // Disabled - using Pipedream webhook only now
+// Logout Function
+function logout() {
+    firebase.auth().signOut().then(() => {
+        window.location.reload();
+    });
+}
+
+// User login state check karna
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('menu-section').style.display = 'block';
+
+        // 1. Phone number clean karein
+        const phone = user.phoneNumber.replace("+91", "").replace("+", "");
+        
+        // 2. Database se plan aur naam check karein
+        firebase.database().ref('users/' + phone).on('value', (snapshot) => {
+            const data = snapshot.val();
+            const name = localStorage.getItem('username') || "यूजर";
+            
+            document.getElementById('welcome-msg').innerText = "नमस्ते, " + name;
+
+            if (data && data.plan) {
+                // Agar plan mil gaya (silver, gold, platinum)
+                document.getElementById('plan-status').innerText = "आपका प्लान: " + data.plan.toUpperCase();
+                document.getElementById('plan-status').style.color = "#00ff00"; // Green color
+            } else {
+                // Agar koi plan nahi hai
+                document.getElementById('plan-status').innerText = "आपका प्लान: FREE (मुफ्त)";
+                document.getElementById('plan-status').style.color = "#ffcc00"; // Yellow color
+            }
+        });
+    } else {
+        document.getElementById('login-section').style.display = 'block';
+        document.getElementById('menu-section').style.display = 'none';
+    }
+});
