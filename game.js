@@ -201,3 +201,26 @@ function handleLimitReached() {
         window.location.href = "index.html";
     }
 }
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        const phone = user.phoneNumber; // +919889904191
+        firebase.database().ref('users/' + phone).on('value', (snapshot) => {
+            const data = snapshot.val();
+            console.log("Firebase data:", data); // Console mein dekhne ke liye
+            if (data && data.plan && data.plan !== 'free') {
+                const expiry = new Date(data.expiry);
+                if (expiry > new Date()) {
+                    // Premium active
+                    userPlan = data.plan;
+                    document.getElementById('premium-status').innerText = data.plan.toUpperCase();
+                    // Premium questions load karne ka code yahan call kar
+                    loadPremiumQuestions(data.plan);
+                } else {
+                    userPlan = 'free';
+                }
+            } else {
+                userPlan = 'free';
+            }
+        });
+    }
+});
