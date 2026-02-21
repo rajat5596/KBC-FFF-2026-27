@@ -128,43 +128,66 @@ function logout() {
 }
 
 // User login state check karna
-firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('menu-section').style.display = 'block';
+// Logout Function - Fix for Compat Version
+function logout() {
+    firebase.auth().signOut().then(() => {
+        console.log("Logged Out Successfully");
+        window.location.reload();
+    }).catch((error) => {
+        console.error("Logout Error:", error);
+        alert("Logout nahi ho paya, fir se koshish karein.");
+    });
+}
 
-        // 1. Phone number clean karein (Database se match karne ke liye)
+// User login state aur Premium Check
+firebase.auth().onAuthStateChanged((user) => {
+    const loginSection = document.getElementById('login-section');
+    const menuSection = document.getElementById('menu-section');
+    const planElement = document.getElementById('plan-status');
+    const welcomeMsg = document.getElementById('welcome-msg');
+
+    if (user) {
+        if(loginSection) loginSection.style.display = 'none';
+        if(menuSection) menuSection.style.display = 'block';
+
+        // 1. Phone number clean karein (Database match ke liye)
         const phone = user.phoneNumber.replace("+91", "").replace("+", "");
+        console.log("Checking Data for:", phone);
         
-        // 2. Database se Data check karein
+        // 2. Database se Real-time Data check karein
         firebase.database().ref('users/' + phone).on('value', (snapshot) => {
             const data = snapshot.val();
             const name = localStorage.getItem('username') || "यूजर";
             
-            document.getElementById('welcome-msg').innerText = "नमस्ते, " + name;
+            if(welcomeMsg) welcomeMsg.innerText = "नमस्ते, " + name;
 
-            const planElement = document.getElementById('plan-status');
-            
             if (data && data.plan) {
-                // Plan ka naam (Silver/Gold/Platinum)
+                // Plan aur Expiry dikhana
                 let currentPlan = data.plan.trim().toUpperCase();
-                
-                // Expiry Date format karna (Readable banane ke liye)
                 let expiryText = "";
+                
                 if (data.expiry) {
                     const dateObj = new Date(data.expiry);
-                    expiryText = " (वैधता: " + dateObj.toLocaleDateString('hi-IN') + " तक)";
+                    expiryText = " (वैधता: " + dateObj.toLocaleDateString('hi-IN') + ")";
                 }
 
-                planElement.innerText = "आपका प्लान: " + currentPlan + expiryText;
-                planElement.style.color = "#00ff00"; // Green color
+                if(planElement) {
+                    planElement.innerText = "आपका प्लान: " + currentPlan + expiryText;
+                    planElement.style.color = "#00ff00";
+                    planElement.style.display = "block";
+                }
             } else {
-                planElement.innerText = "आपका प्लान: FREE (मुफ्त)";
-                planElement.style.color = "#ffcc00"; // Yellow color
+                if(planElement) {
+                    planElement.innerText = "आपका प्लान: FREE (मुफ्त)";
+                    planElement.style.color = "#ffcc00";
+                    planElement.style.display = "block";
+                }
             }
+        }, (error) => {
+            console.error("Database Read Error:", error);
         });
     } else {
-        document.getElementById('login-section').style.display = 'block';
-        document.getElementById('menu-section').style.display = 'none';
+        if(loginSection) loginSection.style.display = 'block';
+        if(menuSection) menuSection.style.display = 'none';
     }
 });
