@@ -98,6 +98,23 @@ function buyPlatinum() {
     // Payment link new tab mein kholo
     window.open(paymentLink, '_blank');
 }
+function buySilver() {
+    const paymentLink = "https://rzp.io/rzp/I5geGyLS";
+    alert("सिल्वर प्लान चुना गया! नाम: Rajat, मोबाइल: 9889904191 डालें");
+    window.open(paymentLink, '_blank');
+}
+
+function buyGold() {
+    const paymentLink = "https://rzp.io/rzp/I5geGyLS";
+    alert("गोल्ड प्लान चुना गया! नाम: Rajat, मोबाइल: 9889904191 डालें");
+    window.open(paymentLink, '_blank');
+}
+
+function buyPlatinum() {
+    const paymentLink = "https://rzp.io/rzp/I5geGyLS";
+    alert("प्लैटिनम प्लान चुना गया! नाम: Rajat, मोबाइल: 9889904191 डालें");
+    window.open(paymentLink, '_blank');
+}
 function checkPremiumStatus(userData, mobileNumber) {
     if (!userData || !userData.expiry) return 'free';
 
