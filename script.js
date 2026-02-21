@@ -144,54 +144,44 @@ function logout() {
 }
 
 // --- 2. PREMIUM STATUS AUR LOGIN CHECK ---
-firebase.auth().onAuthStateChanged((user) => {
-    const loginSection = document.getElementById('login-section');
-    const menuSection = document.getElementById('menu-section');
-    const planElement = document.getElementById('plan-status');
-    const welcomeMsg = document.getElementById('welcome-msg');
+firebase.database().ref('users/' + phone).on('value', (snapshot) => {
+    const data = snapshot.val();
+    const name = localStorage.getItem('username') || "यूजर";
+    
+    // Welcome Message update karein
+    if(document.getElementById('welcome-msg')) {
+        document.getElementById('welcome-msg').innerText = "नमस्ते, " + name;
+    }
 
-    if (user) {
-        if(loginSection) loginSection.style.display = 'none';
-        if(menuSection) menuSection.style.display = 'block';
-
-        // Phone number se +91 hatayein taaki database se match ho sake
-        const phone = user.phoneNumber.replace("+91", "").replace("+", "");
-        console.log("Fetching data for:", phone);
-        
-        // Database se data real-time mangwayein
-        firebase.database().ref('users/' + phone).on('value', (snapshot) => {
-            const data = snapshot.val();
-            const name = localStorage.getItem('username') || "यूजर";
+    const statusBox = document.getElementById('plan-status');
+    if (statusBox) {
+        if (data && data.plan) {
+            // Database se plan mil gaya
+            let currentPlan = data.plan.trim().toUpperCase();
+            let expiryText = "";
             
-            if(welcomeMsg) welcomeMsg.innerText = "नमस्ते, " + name;
-
-            if (data && data.plan) {
-                // Trim() extra space ko hata dega agar database mein galti se space ho
-                let currentPlan = data.plan.trim().toUpperCase();
-                let expiryText = "";
-                
-                // Expiry date dikhane ke liye
-                if (data.expiry) {
-                    const dateObj = new Date(data.expiry);
-                    expiryText = " (वैधता: " + dateObj.toLocaleDateString('hi-IN') + ")";
-                }
-
-                if(planElement) {
-                    planElement.innerText = "आपका प्लान: " + currentPlan + expiryText;
-                    planElement.style.color = "#00ff00"; // Green color
-                    planElement.style.display = "block";
-                }
-            } else {
-                // Agar koi plan database mein nahi hai
-                if(planElement) {
-                    planElement.innerText = "आपका प्लान: FREE (मुफ्त)";
-                    planElement.style.color = "#ffcc00"; // Yellow color
-                    planElement.style.display = "block";
-                }
+            if (data.expiry) {
+                const dateObj = new Date(data.expiry);
+                expiryText = " (वैधता: " + dateObj.toLocaleDateString('hi-IN') + ")";
             }
-        }, (error) => {
-            console.error("Database Error:", error);
-        });
+
+            statusBox.innerText = "आपका प्लान: " + currentPlan + expiryText;
+            statusBox.style.color = "#00ff00"; // Green color
+            statusBox.style.display = "block"; // Force show
+            statusBox.style.backgroundColor = "rgba(0, 255, 0, 0.1)"; // Thoda highlight
+            statusBox.style.padding = "5px";
+            statusBox.style.margin = "10px 0";
+        } else {
+            // Free plan ke liye
+            statusBox.innerText = "आपका प्लान: FREE (मुफ्त)";
+            statusBox.style.color = "#ffcc00"; 
+            statusBox.style.display = "block";
+        }
+    }
+}, (error) => {
+    console.error("Database Error:", error);
+});
+
     } else {
         if(loginSection) loginSection.style.display = 'block';
         if(menuSection) menuSection.style.display = 'none';
