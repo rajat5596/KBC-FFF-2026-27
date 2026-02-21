@@ -201,25 +201,33 @@ function handleLimitReached() {
         window.location.href = "index.html";
     }
 }
+// ===== PREMIUM CHECK - REAL TIME (Webhook ke baad yeh kaam karega) =====
 firebase.auth().onAuthStateChanged((user) => {
     if (user) {
-        const phone = user.phoneNumber; // +919889904191
+        const phone = user.phoneNumber;   // +919889904191 aayega
+
         firebase.database().ref('users/' + phone).on('value', (snapshot) => {
             const data = snapshot.val();
-            console.log("Firebase data:", data); // Console mein dekhne ke liye
+            console.log("🔥 Firebase se naya data aaya:", data);   // Console mein dekhne ke liye
+
             if (data && data.plan && data.plan !== 'free') {
-                const expiry = new Date(data.expiry);
-                if (expiry > new Date()) {
-                    // Premium active
+                const expiryDate = new Date(data.expiry);
+                if (expiryDate > new Date()) {
+                    // PREMIUM ACTIVE!
                     userPlan = data.plan;
-                    document.getElementById('premium-status').innerText = data.plan.toUpperCase();
-                    // Premium questions load karne ka code yahan call kar
-                    loadPremiumQuestions(data.plan);
-                } else {
-                    userPlan = 'free';
+                    console.log("✅ Premium Active:", userPlan);
+
+                    // UI mein show kar do
+                    document.getElementById('welcome-msg').innerText = 
+                        "स्वागत है, " + name + " (" + userPlan.toUpperCase() + ")";
+
+                    // Premium questions load karo
+                    loadPremiumQuestions(userPlan);   // agar yeh function hai to call kar
+
+                    // Limit wala message hide kar do
+                    document.getElementById('limit-message') && 
+                        (document.getElementById('limit-message').style.display = 'none');
                 }
-            } else {
-                userPlan = 'free';
             }
         });
     }
