@@ -204,27 +204,18 @@ function handleLimitReached() {
 // ===== PREMIUM CHECK - REAL TIME (Webhook ke baad yeh kaam karega) =====
 firebase.auth().onAuthStateChanged(async (user) => {
     if (user) {
-        try {
-            // Hum +91 hata rahe hain taaki database ke 9889904191 se match ho sake
-            const cleanPhone = user.phoneNumber.replace("+91", "").replace("+", "");
-            console.log("Checking plan for:", cleanPhone);
+        // user.phoneNumber se '+91' hatana zaroori hai
+        const cleanPhone = user.phoneNumber.replace("+91", "").replace("+", "");
+        console.log("Database mein dhoond rahe hain:", cleanPhone);
 
-            const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
-            const userData = snapshot.val();
-            
-            if (userData && userData.plan) {
-                // Space hatane ke liye .trim() ka use kiya hai
-                userPlan = userData.plan.trim().toLowerCase(); 
-                console.log("Plan Found:", userPlan);
+        const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
+        const userData = snapshot.val();
 
-                if (userData.expiry && new Date() > new Date(userData.expiry)) {
-                    userPlan = 'free';
-                    console.log("Plan Expired!");
-                }
-            }
-        } catch (error) {
-            console.log("Firebase error:", error);
-            userPlan = 'free';
+        if (userData) {
+            console.log("Data mil gaya:", userData);
+            // .trim() lagayein taaki space ki wajah se galti na ho
+            userPlan = userData.plan.trim().toLowerCase(); 
+            console.log("Current Plan:", userPlan);
         }
     }
     loadFinalQuestions();
