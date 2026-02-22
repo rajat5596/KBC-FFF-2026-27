@@ -10,146 +10,142 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    
+
     <style>
-        /* Game-specific styles */
+    /* Game-specific styles */
+    .game-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    #timer {
+        font-size: 3rem;
+        color: #ffd700;
+        text-shadow: 0 0 20px #ffd700;
+        margin: 0;
+        padding: 10px 20px;
+        background: rgba(0,0,0,0.3);
+        border-radius: 50px;
+        border: 2px solid #ffd700;
+    }
+    
+    #user-plan-display {
+        padding: 8px 20px;
+        border-radius: 30px;
+        font-weight: bold;
+        font-size: 1rem;
+        border: 2px solid #ffd700;
+        box-shadow: 0 0 15px rgba(255,215,0,0.3);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    #question-text {
+        font-size: 1.5rem;
+        margin: 30px 0;
+        padding: 20px;
+        background: rgba(0,0,0,0.5);
+        border-radius: 15px;
+        border: 2px solid #00d4ff;
+        text-align: center;
+        line-height: 1.5;
+    }
+    
+    /* Options Container - FIXED */
+    #options-container {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 15px !important;
+        margin: 20px 0 !important;
+        background: red !important;  /* Test line - लाल background */
+        min-height: 100px !important;
+        border: 2px solid yellow !important; /* Test border */
+    }
+    
+    /* Option Buttons - FIXED */
+    .option-btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: blue !important;  /* Test line - नीले buttons */
+        color: white !important;
+        border: 2px solid #ffd700 !important;
+        padding: 15px !important;
+        font-size: 1.2rem !important;
+        border-radius: 12px !important;
+        cursor: pointer !important;
+        min-height: 80px !important;
+        width: 100% !important;
+        text-align: center !important;
+        word-break: break-word !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .option-btn:hover {
+        transform: scale(1.02) !important;
+        box-shadow: 0 0 15px #ffd700 !important;
+    }
+    
+    .option-btn.selected {
+        background: gold !important;
+        color: black !important;
+        border-color: #fff !important;
+    }
+    
+    .game-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 30px;
+        gap: 15px;
+    }
+    
+    #result {
+        font-size: 1.3rem;
+        padding: 15px;
+        border-radius: 10px;
+        background: rgba(0,0,0,0.5);
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .logout-btn {
+        background: linear-gradient(145deg, #c0392b, #e74c3c) !important;
+        border: 2px solid #fff !important;
+        padding: 12px 20px !important;
+        width: auto !important;
+        margin: 0 !important;
+    }
+    
+    .home-btn {
+        background: linear-gradient(145deg, #2c3e50, #34495e) !important;
+        border: 2px solid #ffd700 !important;
+        padding: 12px 20px !important;
+        width: auto !important;
+        margin: 0 !important;
+    }
+    
+    @media (max-width: 480px) {
+        #options-container {
+            grid-template-columns: 1fr !important;
+        }
+        
         .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
+            flex-direction: column;
         }
         
         #timer {
-            font-size: 3rem;
-            color: #ffd700;
-            text-shadow: 0 0 20px #ffd700;
-            margin: 0;
-            padding: 10px 20px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 50px;
-            border: 2px solid #ffd700;
-        }
-        
-        #user-plan-display {
-            padding: 8px 20px;
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 1rem;
-            border: 2px solid #ffd700;
-            box-shadow: 0 0 15px rgba(255,215,0,0.3);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            font-size: 2.5rem;
         }
         
         #question-text {
-            font-size: 1.5rem;
-            margin: 30px 0;
-            padding: 20px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 15px;
-            border: 2px solid #00d4ff;
-            text-align: center;
-            line-height: 1.5;
-        }
-        
-        #options-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin: 20px 0;
-        }
-        
-        .option-btn {
-            background: linear-gradient(145deg, #2c3e50, #3498db);
-            color: white;
-            border: 2px solid #ffd700;
-            padding: 15px;
             font-size: 1.2rem;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-height: 80px;
-            word-break: break-word;
         }
-        
-        .option-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 15px #ffd700;
-        }
-        
-        .option-btn.selected {
-            background: gold;
-            color: black;
-            border-color: #fff;
-        }
-        
-        .game-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 30px;
-            gap: 15px;
-        }
-        
-        #result {
-            font-size: 1.3rem;
-            padding: 15px;
-            border-radius: 10px;
-            background: rgba(0,0,0,0.5);
-            text-align: center;
-            margin-top: 20px;
-        }
-        #options-container {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 15px !important;
-    margin: 20px 0 !important;
-    background: red !important;  /* Test line - यह लाल background दिखेगा */
-    min-height: 100px !important;
-}
-
-.option-btn {
-    display: block !important;
-    background: blue !important;  /* Test line - नीले buttons दिखेंगे */
-    color: white !important;
-    padding: 15px !important;
-}
-        .logout-btn {
-            background: linear-gradient(145deg, #c0392b, #e74c3c) !important;
-            border: 2px solid #fff !important;
-            padding: 12px 20px !important;
-            width: auto !important;
-            margin: 0 !important;
-        }
-        
-        .home-btn {
-            background: linear-gradient(145deg, #2c3e50, #34495e) !important;
-            border: 2px solid #ffd700 !important;
-            padding: 12px 20px !important;
-            width: auto !important;
-            margin: 0 !important;
-        }
-        
-        @media (max-width: 480px) {
-            #options-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .game-header {
-                flex-direction: column;
-            }
-            
-            #timer {
-                font-size: 2.5rem;
-            }
-            
-            #question-text {
-                font-size: 1.2rem;
-            }
-        }
+    }
     </style>
 </head>
 <body>
