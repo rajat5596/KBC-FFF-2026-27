@@ -2,23 +2,209 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>प्रैक्टिस शुरू - FFF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>प्रैक्टिस शुरू - FFF मास्टर</title>
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    
+    <style>
+        /* Game-specific styles */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        #timer {
+            font-size: 3rem;
+            color: #ffd700;
+            text-shadow: 0 0 20px #ffd700;
+            margin: 0;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 50px;
+            border: 2px solid #ffd700;
+        }
+        
+        #user-plan-display {
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1rem;
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 15px rgba(255,215,0,0.3);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        #question-text {
+            font-size: 1.5rem;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 15px;
+            border: 2px solid #00d4ff;
+            text-align: center;
+            line-height: 1.5;
+        }
+        
+        #options-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .option-btn {
+            background: linear-gradient(145deg, #2c3e50, #3498db);
+            color: white;
+            border: 2px solid #ffd700;
+            padding: 15px;
+            font-size: 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 80px;
+            word-break: break-word;
+        }
+        
+        .option-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px #ffd700;
+        }
+        
+        .option-btn.selected {
+            background: gold;
+            color: black;
+            border-color: #fff;
+        }
+        
+        .game-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            gap: 15px;
+        }
+        
+        #result {
+            font-size: 1.3rem;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.5);
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .logout-btn {
+            background: linear-gradient(145deg, #c0392b, #e74c3c) !important;
+            border: 2px solid #fff !important;
+            padding: 12px 20px !important;
+            width: auto !important;
+            margin: 0 !important;
+        }
+        
+        .home-btn {
+            background: linear-gradient(145deg, #2c3e50, #34495e) !important;
+            border: 2px solid #ffd700 !important;
+            padding: 12px 20px !important;
+            width: auto !important;
+            margin: 0 !important;
+        }
+        
+        @media (max-width: 480px) {
+            #options-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .game-header {
+                flex-direction: column;
+            }
+            
+            #timer {
+                font-size: 2.5rem;
+            }
+            
+            #question-text {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="main-container">
-        <div id="timer">20</div>
-        <div id="question-text" style="margin-bottom: 20px; font-weight: bold;"></div>
-        
-        <div id="options-container">
+        <!-- Game Header with Timer and Plan Display -->
+        <div class="game-header">
+            <div id="timer">20</div>
+            <div id="user-plan-display">
+                <span class="loading"></span> लोड हो रहा है...
             </div>
-
-        <button onclick="checkSequence()" class="start-btn" style="margin-top:20px;">लॉक करें</button>
-        <p id="result"></p>
+        </div>
+        
+        <!-- Question Display -->
+        <div id="question-text">सवाल लोड हो रहा है...</div>
+        
+        <!-- Options Container (buttons will be added by game.js) -->
+        <div id="options-container"></div>
+        
+        <!-- Game Footer with Action Buttons -->
+        <div class="game-footer">
+            <button onclick="window.location.href='index.html'" class="home-btn">🏠 होम</button>
+            <button onclick="logout()" class="logout-btn">🚪 लॉगआउट</button>
+        </div>
+        
+        <!-- Result Display -->
+        <div id="result"></div>
     </div>
-<script src="question.js"></script>
-<script src="game.js"></script>
 
+    <!-- Firebase Config Script (copy from index.html) -->
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFccfNZzNSTcfBCYEh3kcXPjI4HRETCa0",
+            authDomain: "fatehpur-hubs-a3a9f.firebaseapp.com",
+            databaseURL: "https://fatehpur-hubs-a3a9f-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "fatehpur-hubs-a3a9f",
+            storageBucket: "fatehpur-hubs-a3a9f.firebasestorage.app",
+            messagingSenderId: "294360741451",
+            appId: "1:294360741451:web:5a4a6ac0838f8542fabfce"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Logout Function
+        function logout() {
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            firebase.auth().signOut().then(() => {
+                console.log("✅ Logged out from game");
+                window.location.replace("index.html");
+            }).catch((error) => {
+                console.error("❌ Logout Error:", error);
+                window.location.reload();
+            });
+        }
+        
+        // Check if user is logged in
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                console.log("⚠️ No user logged in, redirecting to index");
+                window.location.replace("index.html");
+            }
+        });
+    </script>
+
+    <!-- Questions and Game Scripts -->
+    <script src="question.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
