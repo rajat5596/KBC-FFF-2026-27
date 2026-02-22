@@ -220,3 +220,102 @@ firebase.auth().onAuthStateChanged(async (user) => {
     }
     loadFinalQuestions();
 });
+// Firebase Auth State Change Handler
+firebase.auth().onAuthStateChanged(async (user) => {
+  if (user) {
+    // यूजर लॉगिन है
+    const phoneNumber = user.phoneNumber; // "+919889904191"
+    const cleanPhone = phoneNumber.replace("+91", ""); // "9889904191"
+    
+    console.log("✅ यूजर लॉगिन:", cleanPhone);
+    
+    // Firebase से डेटा लोड करें
+    try {
+      const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
+      const userData = snapshot.val();
+      
+      console.log("📦 Firebase डेटा:", userData);
+      
+      if (userData && userData.plan && userData.status === "active") {
+        // Expiry चेक करें
+        const expiryDate = new Date(userData.expiry);
+        const today = new Date();
+        
+        if (expiryDate > today) {
+          userPlan = userData.plan;
+          console.log(`💎 प्रीमियम यूजर: ${userPlan}`);
+          
+          // UI में प्लान दिखाएं
+          showUserPlan(userPlan, expiryDate);
+        } else {
+          console.log("⚠️ प्लान एक्सपायर हो गया");
+          userPlan = 'free';
+          showUserPlan('expired');
+        }
+      } else {
+        console.log("ℹ️ फ्री यूजर (कोई प्लान नहीं)");
+        userPlan = 'free';
+        showUserPlan('free');
+      }
+    } catch (error) {
+      console.error("❌ Firebase एरर:", error);
+      userPlan = 'free';
+    }
+    
+    // अगला सवाल लोड करें
+    loadFinalQuestions();
+  }
+});
+
+// प्लान दिखाने का फंक्शन
+function showUserPlan(plan, expiryDate) {
+  // प्लान दिखाने के लिए HTML एलिमेंट बनाएं (अगर नहीं है)
+  let planDiv = document.getElementById('user-plan-display');
+  
+  if (!planDiv) {
+    // एलिमेंट नहीं है तो बना दें
+    planDiv = document.createElement('div');
+    planDiv.id = 'user-plan-display';
+    planDiv.style.position = 'fixed';
+    planDiv.style.top = '10px';
+    planDiv.style.right = '120px'; // Logout बटन के बगल में
+    planDiv.style.padding = '8px 15px';
+    planDiv.style.borderRadius = '20px';
+    planDiv.style.fontWeight = 'bold';
+    planDiv.style.zIndex = '1000';
+    document.body.appendChild(planDiv);
+  }
+  
+  // प्लान के हिसाब से दिखाएं
+  if (plan === 'silver') {
+    planDiv.style.backgroundColor = '#C0C0C0';
+    planDiv.style.color = '#000';
+    planDiv.innerText = '🥈 सिल्वर यूजर';
+  } else if (plan === 'gold') {
+    planDiv.style.backgroundColor = '#FFD700';
+    planDiv.style.color = '#000';
+    planDiv.innerText = '🥇 गोल्ड यूजर';
+  } else if (plan === 'platinum') {
+    planDiv.style.backgroundColor = '#E5E4E2';
+    planDiv.style.color = '#000';
+    planDiv.innerText = '💎 प्लैटिनम यूजर';
+  } else if (plan === 'expired') {
+    planDiv.style.backgroundColor = '#f44336';
+    planDiv.style.color = '#fff';
+    planDiv.innerText = '⚠️ प्लान एक्सपायर';
+  } else {
+    planDiv.style.backgroundColor = '#4CAF50';
+    planDiv.style.color = '#fff';
+    planDiv.innerText = '🎯 फ्री यूजर (10 सवाल)';
+  }
+  
+  // Expiry date दिखाएं (अगर है तो)
+  if (expiryDate && plan !== 'free' && plan !== 'expired') {
+    const expirySpan = document.createElement('span');
+    expirySpan.style.fontSize = '12px';
+    expirySpan.style.marginLeft = '5px';
+    expirySpan.style.opacity = '0.8';
+    expirySpan.innerText = ` (exp: ${expiryDate.toLocaleDateString('hi-IN')})`;
+    planDiv.appendChild(expirySpan);
+  }
+}
