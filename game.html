@@ -253,6 +253,21 @@
                 window.location.replace("index.html");
             }
         });
+        <!-- Game Footer with Action Buttons -->
+<div class="game-footer">
+    <button onclick="window.location.href='index.html'" class="home-btn">🏠 होम</button>
+    <button onclick="logout()" class="logout-btn">🚪 लॉगआउट</button>
+</div>
+
+<!-- 🔒 LOCK BUTTON - यहाँ डालो -->
+<div style="text-align: center; margin: 25px 0;">
+    <button id="lock-answer-btn" onclick="lockAnswer()" class="lock-answer-btn">
+        🔒 उत्तर लॉक करें
+    </button>
+</div>
+
+<!-- Result Display -->
+<div id="result"></div>
     </script>
 
     <!-- Questions and Game Scripts -->
