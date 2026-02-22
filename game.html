@@ -11,6 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
+
     <style>
     /* Game-specific styles */
     .game-header {
@@ -55,45 +56,42 @@
         line-height: 1.5;
     }
     
-    /* Options Container - FIXED */
+    /* Options Container - ORIGINAL */
     #options-container {
-        display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 15px !important;
-        margin: 20px 0 !important;
-        background: red !important;  /* Test line - लाल background */
-        min-height: 100px !important;
-        border: 2px solid yellow !important; /* Test border */
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin: 20px 0;
     }
     
-    /* Option Buttons - FIXED */
+    /* Option Buttons - ORIGINAL */
     .option-btn {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background: blue !important;  /* Test line - नीले buttons */
-        color: white !important;
-        border: 2px solid #ffd700 !important;
-        padding: 15px !important;
-        font-size: 1.2rem !important;
-        border-radius: 12px !important;
-        cursor: pointer !important;
-        min-height: 80px !important;
-        width: 100% !important;
-        text-align: center !important;
-        word-break: break-word !important;
-        transition: all 0.3s ease !important;
+        background: linear-gradient(145deg, #2c3e50, #3498db);
+        color: white;
+        border: 2px solid #ffd700;
+        padding: 15px;
+        font-size: 1.2rem;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-height: 80px;
+        word-break: break-word;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        text-align: center;
     }
     
     .option-btn:hover {
-        transform: scale(1.02) !important;
-        box-shadow: 0 0 15px #ffd700 !important;
+        transform: scale(1.02);
+        box-shadow: 0 0 15px #ffd700;
     }
     
     .option-btn.selected {
-        background: gold !important;
-        color: black !important;
-        border-color: #fff !important;
+        background: gold;
+        color: black;
+        border-color: #fff;
     }
     
     .game-footer {
@@ -114,24 +112,62 @@
     }
     
     .logout-btn {
-        background: linear-gradient(145deg, #c0392b, #e74c3c) !important;
-        border: 2px solid #fff !important;
-        padding: 12px 20px !important;
-        width: auto !important;
-        margin: 0 !important;
+        background: linear-gradient(145deg, #c0392b, #e74c3c);
+        border: 2px solid #fff;
+        padding: 12px 20px;
+        width: auto;
+        margin: 0;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
     }
     
     .home-btn {
-        background: linear-gradient(145deg, #2c3e50, #34495e) !important;
-        border: 2px solid #ffd700 !important;
-        padding: 12px 20px !important;
-        width: auto !important;
-        margin: 0 !important;
+        background: linear-gradient(145deg, #2c3e50, #34495e);
+        border: 2px solid #ffd700;
+        padding: 12px 20px;
+        width: auto;
+        margin: 0;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    
+    /* Lock Button Style - NEW */
+    .lock-btn {
+        background: linear-gradient(145deg, #ffd700, #ffa500);
+        color: black;
+        border: 2px solid #fff;
+        padding: 15px 40px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 20px #ffd700;
+        width: auto;
+        min-width: 200px;
+        margin: 20px auto;
+        display: block;
+    }
+    
+    .lock-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px #ffd700;
+        background: linear-gradient(145deg, #ffa500, #ffd700);
+    }
+    
+    .lock-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
     }
     
     @media (max-width: 480px) {
         #options-container {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: 1fr;
         }
         
         .game-header {
@@ -145,8 +181,14 @@
         #question-text {
             font-size: 1.2rem;
         }
+        
+        .lock-btn {
+            min-width: 150px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+        }
     }
-    </style>
+</style>
 </head>
 <body>
     <div class="main-container">
