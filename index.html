@@ -16,6 +16,48 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    
+    <style>
+        #user-plan-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 30px;
+            margin: 15px 0;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 2px solid #ffd700;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 5px #ffd700; }
+            to { box-shadow: 0 0 20px #ffd700; }
+        }
+        
+        .plan-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+        
+        .silver-badge { background: #C0C0C0; color: #000; }
+        .gold-badge { background: #FFD700; color: #000; }
+        .platinum-badge { background: #E5E4E2; color: #000; border: 1px solid #fff; }
+        .free-badge { background: #4CAF50; color: white; }
+        .expired-badge { background: #f44336; color: white; }
+        
+        #welcome-msg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="main-container">
@@ -37,23 +79,23 @@
         </div>
 
         <div id="menu-section" style="display: none;">
-    <p id="welcome-msg" style="font-size: 1.3rem; font-weight: bold; margin-bottom: 5px; color: #fff;"></p>
-    
-    <div id="plan-status"></div>
-    <div id="user-plan-display"></div>
-    <button onclick="logout()" class="logout-btn" style="background:red; color:white; width:100%; padding:12px; border-radius:8px; border:none; margin-bottom:15px; font-weight:bold;">Logout (लॉगआउट)</button>
+            <p id="welcome-msg"></p>
+            
+            <!-- यहाँ प्लान दिखेगा -->
+            <div id="user-plan-display"></div>
+            
+            <button onclick="logout()" class="logout-btn" style="background:red; color:white; width:100%; padding:12px; border-radius:8px; border:none; margin-bottom:15px; font-weight:bold;">Logout (लॉगआउट)</button>
 
-    <button onclick="window.location.href='game.html'" class="menu-btn" style="width:100%; margin-bottom:20px;">प्रैक्टिस शुरू करें</button>
-    
-    <hr style="border: 0.5px solid #ffd700; opacity: 0.5; margin: 20px 0;">
-    <h3 style="color: #ffd700; margin-bottom: 10px;">प्लान अपग्रेड करें</h3>
-    <div class="plans">
-        <button class="plan-btn" onclick="buySilver()">सिल्वर (₹49) - 500 सवाल</button>
-        <button class="plan-btn" onclick="buyGold()">गोल्ड (₹99) - 1500 सवाल</button>
-        <button class="plan-btn" onclick="buyPlatinum()">प्लैटिनम (₹199) - अनलिमिटेड</button>
-    </div>
-</div>
-
+            <button onclick="window.location.href='game.html'" class="menu-btn" style="width:100%; margin-bottom:20px;">प्रैक्टिस शुरू करें</button>
+            
+            <hr style="border: 0.5px solid #ffd700; opacity: 0.5; margin: 20px 0;">
+            <h3 style="color: #ffd700; margin-bottom: 10px;">प्लान अपग्रेड करें</h3>
+            <div class="plans">
+                <button class="plan-btn" onclick="buyPlan('silver')">सिल्वर (₹49) - 500 सवाल</button>
+                <button class="plan-btn" onclick="buyPlan('gold')">गोल्ड (₹99) - 1500 सवाल</button>
+                <button class="plan-btn" onclick="buyPlan('platinum')">प्लैटिनम (₹199) - अनलिमिटेड</button>
+            </div>
+        </div>
 
         <div id="bottom-ad" style="margin-top: 20px; text-align: center; min-height: 50px;">
             <script type="text/javascript">
@@ -64,7 +106,6 @@
     </div>
 
     <script src="script.js"></script>
-    
     <script src="https://pl28712423.effectivegatecpm.com/e8/d4/74/e8d4747620e17e5817130756fb7c22ff.js"></script>
 </body>
 </html>
