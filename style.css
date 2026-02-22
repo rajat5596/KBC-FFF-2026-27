@@ -1,4 +1,8 @@
-* { margin:0; padding:0; box-sizing:border-box; }
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
 
 body {
     font-family: 'Segoe UI', sans-serif;
@@ -22,6 +26,13 @@ body {
     color: #ffd700;
     text-align: center;
     margin: 20px 0;
+    text-shadow: 0 0 10px #ffd700;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 5px #ffd700; }
+    to { text-shadow: 0 0 20px #ffd700, 0 0 30px #ffaa00; }
 }
 
 .title {
@@ -29,6 +40,7 @@ body {
     color: #00d4ff;
     text-align: center;
     margin-bottom: 20px;
+    text-shadow: 0 0 5px #00d4ff;
 }
 
 button {
@@ -42,6 +54,16 @@ button {
     border: 2px solid #ffd700;
     border-radius: 12px;
     cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 15px #ffd700;
+}
+
+button:active {
+    transform: scale(0.98);
 }
 
 .plan-btn {
@@ -57,3 +79,212 @@ button {
     justify-content: center;
     gap: 20px;
 }
+
+/* Input Fields */
+input {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    font-size: 1.1rem;
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    outline: none;
+}
+
+input:focus {
+    border-color: #00d4ff;
+    box-shadow: 0 0 10px #00d4ff;
+}
+
+input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Plan Display - यह नया जोड़ा है */
+#user-plan-display {
+    width: 100%;
+    padding: 15px 20px;
+    border-radius: 50px;
+    margin: 15px 0;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border: 2px solid #ffd700;
+    animation: planGlow 2s ease-in-out infinite alternate;
+    transition: all 0.3s ease;
+}
+
+@keyframes planGlow {
+    from { box-shadow: 0 0 10px #ffd700; }
+    to { box-shadow: 0 0 25px #ffd700, 0 0 35px #ffaa00; }
+}
+
+/* Silver Plan */
+.silver-plan {
+    background: linear-gradient(135deg, #808080 0%, #C0C0C0 50%, #808080 100%);
+    color: #000;
+}
+
+/* Gold Plan */
+.gold-plan {
+    background: linear-gradient(135deg, #B8860B 0%, #FFD700 50%, #B8860B 100%);
+    color: #000;
+}
+
+/* Platinum Plan */
+.platinum-plan {
+    background: linear-gradient(135deg, #4a4a4a 0%, #E5E4E2 50%, #4a4a4a 100%);
+    color: #000;
+}
+
+/* Free Plan */
+.free-plan {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+}
+
+/* Expired Plan */
+.expired-plan {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+}
+
+/* Plan Display Inner Content */
+.plan-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.plan-icon {
+    font-size: 1.8rem;
+}
+
+.plan-name {
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.plan-expiry {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    background: rgba(0,0,0,0.2);
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+/* Welcome Message */
+#welcome-msg {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #ffd700;
+    text-align: center;
+}
+
+/* Logout Button */
+.logout-btn {
+    background: linear-gradient(145deg, #c0392b, #e74c3c) !important;
+    border-color: #fff !important;
+}
+
+.logout-btn:hover {
+    box-shadow: 0 0 15px #e74c3c !important;
+}
+
+/* Plans Container */
+.plans {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* OTP Input Section */
+#login-section input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+#login-section input[type="number"]::-webkit-outer-spin-button,
+#login-section input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .logo {
+        font-size: 2rem;
+    }
+    
+    .title {
+        font-size: 1rem;
+    }
+    
+    button {
+        padding: 14px;
+        font-size: 1rem;
+    }
+    
+    #user-plan-display {
+        padding: 12px 15px;
+    }
+    
+    .plan-icon {
+        font-size: 1.5rem;
+    }
+    
+    .plan-name {
+        font-size: 1.1rem;
+    }
+}
+
+/* Loading Animation */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #ffd700;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error Message */
+.error-msg {
+    color: #ff6b6b;
+    background: rgba(255,0,0,0.1);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ff6b6b;
+    margin: 10px 0;
+}
+
+/* Success Message */
+.success-msg {
+    color: #2ecc71;
+    background: rgba(46,204,113,0.1);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #2ecc71;
+    margin: 10px 0;
+}
+
+/* Info Message */
+.info-msg {
+    color: #3498db;
+    background: rgba(52,152,219,0.1);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #3498db;
+    margin: 10px 0;
+    }
