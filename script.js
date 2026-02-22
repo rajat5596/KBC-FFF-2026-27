@@ -181,9 +181,3 @@ firebase.database().ref('users/' + phone).on('value', (snapshot) => {
 }, (error) => {
     console.error("Database Error:", error);
 });
-
-    } else {
-        if(loginSection) loginSection.style.display = 'block';
-        if(menuSection) menuSection.style.display = 'none';
-    }
-});
