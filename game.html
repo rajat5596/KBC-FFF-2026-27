@@ -102,7 +102,21 @@
             text-align: center;
             margin-top: 20px;
         }
-        
+        #options-container {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 15px !important;
+    margin: 20px 0 !important;
+    background: red !important;  /* Test line - यह लाल background दिखेगा */
+    min-height: 100px !important;
+}
+
+.option-btn {
+    display: block !important;
+    background: blue !important;  /* Test line - नीले buttons दिखेंगे */
+    color: white !important;
+    padding: 15px !important;
+}
         .logout-btn {
             background: linear-gradient(145deg, #c0392b, #e74c3c) !important;
             border: 2px solid #fff !important;
