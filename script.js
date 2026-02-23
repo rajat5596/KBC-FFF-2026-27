@@ -176,7 +176,7 @@ function buyPlan(plan) {
     } catch (e) {
         console.error("Payment Error:", e);
         // अगर ऊपर वाला फेल हो तो इसे आज़माएँ
-        window.open("https://rzp.io/rzp/15geGvLS_conv", "_self");
+        window.open("https://rzp.io/rzp/15geGvLS", "_self");
     }
 }
 
