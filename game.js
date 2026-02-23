@@ -84,6 +84,45 @@ window.onload = function() {
 
     console.log("✅ Free questions loaded! Game ready. Enjoy!");
 };
+function selectOption(key) {
+    if (!userSequence.includes(key)) {
+        userSequence += key;
+        const btn = document.getElementById("btn-" + key);
+        if (btn) {
+            btn.style.background = "gold";
+            btn.style.color = "black";
+            btn.innerHTML += ` [${userSequence.length}]`;
+        }
+        console.log("Option चुना:", key, "क्रम:", userSequence);
+    }
+}
+
+function checkSequence() {
+    console.log("Lock button क्लिक हुआ - checkSequence चला");
+    if (timerId) clearInterval(timerId);
+    bgMusic.pause(); 
+    clockSound.pause();
+    lockSound.play().catch(() => {});
+
+    const resultPara = document.getElementById('result');
+    if (!resultPara) {
+        console.log("result element नहीं मिला");
+        return;
+    }
+
+    if (userSequence === currentQuestion.correct) {
+        correctSound.play().catch(() => {});
+        resultPara.style.color = "#00FF00";
+        resultPara.innerText = "अद्भुत! सही जवाब।";
+    } else {
+        wrongSound.play().catch(() => {});
+        resultPara.style.color = "#FF0000";
+        resultPara.innerText = "गलत! सही क्रम: " + currentQuestion.correct;
+    }
+
+    questionsPlayed++;
+    setTimeout(loadNewQuestion, 3500);
+}
 function loadNewQuestion() {
     console.log("loadNewQuestion() चला - सवाल लोड कर रहा हूँ");
 
