@@ -13,79 +13,59 @@ let questionsPlayed = 0;
 let currentQuestionsPool = []; 
 let userPlan = 'free'; 
 
-// एक ही window.onload - सब logic यहाँ
 window.onload = function() {
-    console.log("Game page लोड हो गई - plan चेक शुरू");
-
-    // Firebase से plan चेक करो (अगर login है)
-    if (typeof firebase !== 'undefined') {
-        firebase.auth().onAuthStateChanged(async (user) => {
-            if (user) {
-                const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
-                try {
-                    const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
-                    const userData = snapshot.val();
-                    
-                    if (userData && userData.status === 'active') {
-                        const expiryDate = new Date(userData.expiry);
-                        if (expiryDate > new Date()) {
-                            userPlan = userData.plan.toLowerCase().trim();
-                            console.log("Firebase से premium plan मिला:", userPlan);
-                        } else {
-                            console.log("Plan expired");
-                        }
-                    } else {
-                        console.log("No active plan in DB");
-                    }
-                } catch (error) {
-                    console.log("DB Error:", error);
-                }
-            } else {
-                console.log("User लॉगिन नहीं - free मोड");
-            }
-            loadQuestions(); // plan set होने के बाद सवाल लोड
-        });
-    } else {
-        // Firebase नहीं है तो localStorage से fallback
-        userPlan = localStorage.getItem('user_plan_type') || 'free';
-        userPlan = userPlan.toLowerCase().trim();
-        console.log("Firebase नहीं मिला, localStorage से plan:", userPlan);
-        loadQuestions();
+    if (typeof firebase === 'undefined') {
+        useDefaultFreeQuestions();
+        return;
     }
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+            // क्लीन नंबर (9889904191)
+            const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
+            
+            try {
+                const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
+                const userData = snapshot.val();
+                
+                if (userData && userData.status === 'active') {
+                    const expiryDate = new Date(userData.expiry);
+                    if (expiryDate > new Date()) {
+                        userPlan = userData.plan.toLowerCase().trim();
+                        const planDisplay = document.getElementById('user-plan-display');
+                        if(planDisplay) planDisplay.innerHTML = `💎 ${userPlan.toUpperCase()} प्लान`;
+                    }
+                }
+            } catch (error) { console.log("DB Error"); }
+            loadFinalQuestions();
+        } else {
+            window.location.replace("index.html");
+        }
+    });
 };
 
-function loadQuestions() {
-    console.log("सवाल लोड कर रहा हूँ - current plan:", userPlan);
-
-    let fileName = '';
+async function loadFinalQuestions() {
+    let fileName = ''; 
     if (userPlan === 'silver') fileName = 'silver_questions.json';
     else if (userPlan === 'gold') fileName = 'gold_questions.json';
     else if (userPlan === 'platinum') fileName = 'platinum_questions.json';
 
-    if (fileName) {
-        console.log("Premium file लोड: " + fileName);
-        fetch(fileName + "?v=" + Date.now())
-            .then(response => {
-                console.log("Fetch status:", response.status);
-                if (!response.ok) throw new Error("File not found");
-                return response.json();
-            })
-            .then(data => {
-                currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-                loadNewQuestion();
-                console.log("Premium सवाल लोड हो गए! कुल:", data.length);
-            })
-            .catch(err => {
-                console.error("Premium fetch failed:", err);
-                loadFreeFallback();
-            });
+    if (fileName !== '') {
+        try {
+            const response = await fetch(fileName + "?v=" + Date.now()); // Cache bypass
+            if (!response.ok) throw new Error();
+            let data = await response.json();
+            currentQuestionsPool = data.sort(() => Math.random() - 0.5);
+            loadNewQuestion();
+        } catch (e) { useDefaultFreeQuestions(); }
     } else {
-        console.log("Free plan - fallback सवाल");
-        loadFreeFallback();
+        useDefaultFreeQuestions();
     }
 }
+window.onload = function() {
+    console.log("🚀 Game starting - loading free questions directly...");
 
-function loadFreeFallback() {
+    // सारे 10 free सवाल यहीं हैं (कोई firebase, question.js की जरूरत नहीं)
     const freeQuestions = [
         { question: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:", options: { A: "15 अगस्त", B: "26 जनवरी", C: "2 अक्टूबर", D: "14 नवंबर" }, correct: "BACD" },
         { question: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण (Debut) के हिसाब से पुराने से नए क्रम में लगाएं:", options: { A: "विराट कोहली", B: "एमएस धोनी", C: "सचिन तेंदुलकर", D: "शुभमन गिल" }, correct: "CBAD" },
@@ -101,45 +81,27 @@ function loadFreeFallback() {
 
     currentQuestionsPool = freeQuestions.sort(() => Math.random() - 0.5);
     loadNewQuestion();
-    console.log("Free fallback सवाल लोड हो गए");
-}
 
+    console.log("✅ Free questions loaded! Game ready. Enjoy!");
+};
 function loadNewQuestion() {
     if (userPlan === 'free' && questionsPlayed >= 10) {
-        if (typeof handleLimitReached === 'function') {
-            handleLimitReached();
-        } else {
-            alert("10 मुफ्त सवाल पूरे! प्रीमियम लें।");
-            window.open("https://rzp.io/rzp/I5geGyLS", '_self');
-        }
-        return;
+    // script.js वाला handleLimitReached call करो (global function है)
+    if (typeof handleLimitReached === 'function') {
+        handleLimitReached();
+    } else {
+        alert("10 मुफ्त सवाल पूरे! प्रीमियम लें।");
+        window.open("https://rzp.io/rzp/I5geGyLS", '_self');
+    }
+    return;
     }
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        document.getElementById('question-text').innerHTML = "सारे सवाल खत्म! होम जाएँ या प्रीमियम लें।";
-        document.getElementById('options-container').innerHTML = "";
+        alert("सारे सवाल खत्म हो गए!");
+        window.location.href = "index.html";
         return;
     }
 
     currentQuestion = currentQuestionsPool.shift(); 
     userSequence = "";
-    timeLeft = 20;
-    
-    document.getElementById('timer').innerText = timeLeft;
-    document.getElementById('question-text').innerText = currentQuestion.question;
-    document.getElementById('result').innerText = "";
-    
-    let optionsHTML = "";
-    for (let key in currentQuestion.options) {
-        optionsHTML += `<button class="option-btn" id="btn-\( {key}" onclick="selectOption(' \){key}')">
-                            ${key}: ${currentQuestion.options[key]}
-                        </button>`;
-    }
-    document.getElementById('options-container').innerHTML = optionsHTML;
 
-    bgMusic.currentTime = 0;
-    bgMusic.play().catch(() => {});
-    startTimer();
-}
-
-// बाकी functions (startTimer, selectOption, checkSequence आदि) वैसा ही रखो
