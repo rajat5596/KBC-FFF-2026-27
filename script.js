@@ -157,6 +157,10 @@ async function loadUserPlan(user) {
         console.error("Plan Load Error:", error);
     }
 }
+// loadUserPlan() फंक्शन के अंत में add करो (try-catch के बाद)
+if (planDisplay) {
+    planDisplay.innerHTML = planDisplay.innerHTML || `🎯 ${plan.toUpperCase()} प्लान एक्टिव`; // fallback display
+}
 // --- लिमिट खत्म होने पर ---
 function handleLimitReached() {
     const paymentLink = "https://rzp.io/rzp/I5geGyLS"; 
