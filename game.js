@@ -64,13 +64,14 @@ async function loadFinalQuestions() {
 }
 
 function useDefaultFreeQuestions() {
-    // window.fffQuestions से ही डेटा उठाएं
     if (window.fffQuestions && window.fffQuestions.length > 0) {
         currentQuestionsPool = [...window.fffQuestions].sort(() => Math.random() - 0.5);
         loadNewQuestion();
+        console.log("Free questions from question.js लोड हो गए! कुल: " + window.fffQuestions.length);
     } else {
-        console.log("⏳ Waiting for question.js...");
-        setTimeout(useDefaultFreeQuestions, 1000); // अगर सवाल नहीं मिले तो 1 सेकंड बाद फिर चेक करो
+        // अगर question.js अभी लोड नहीं हुआ तो 1-2 सेकंड इंतजार करो
+        console.log("⏳ question.js से सवाल नहीं मिले, 2 सेकंड बाद फिर ट्राई...");
+        setTimeout(useDefaultFreeQuestions, 2000);  // 2 सेकंड बाद फिर चेक करेगा
     }
 }
 
