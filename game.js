@@ -105,3 +105,28 @@ function loadNewQuestion() {
     currentQuestion = currentQuestionsPool.shift(); 
     userSequence = "";
 
+function loadNewQuestion() {
+    console.log("loadNewQuestion() चला - pool में सवाल:", currentQuestionsPool.length);
+    console.log("Current plan:", userPlan);
+    console.log("questionsPlayed:", questionsPlayed);
+
+    if (userPlan === 'free' && questionsPlayed >= 10) {
+        console.log("10 सवाल पूरे - payment page पर रीडायरेक्ट");
+        if (typeof handleLimitReached === 'function') {
+            handleLimitReached();
+        } else {
+            alert("10 मुफ्त सवाल पूरे! प्रीमियम लें।");
+            window.open("https://rzp.io/rzp/I5geGyLS", '_self');
+        }
+        return;
+    }
+
+    if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
+        console.log("सवाल खत्म या pool खाली - fallback");
+        document.getElementById('question-text').innerHTML = "सवाल लोड नहीं हो पाए। होम पर वापस जाएँ या प्रीमियम लें।";
+        document.getElementById('options-container').innerHTML = "";
+        return;
+    }
+
+    // बाकी code वैसा ही रहने दो
+}
