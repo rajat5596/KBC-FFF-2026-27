@@ -64,15 +64,63 @@ async function loadFinalQuestions() {
 }
 
 function useDefaultFreeQuestions() {
-    if (window.fffQuestions && window.fffQuestions.length > 0) {
-        currentQuestionsPool = [...window.fffQuestions].sort(() => Math.random() - 0.5);
-        loadNewQuestion();
-        console.log("Free questions from question.js लोड हो गए! कुल: " + window.fffQuestions.length);
-    } else {
-        // अगर question.js अभी लोड नहीं हुआ तो 1-2 सेकंड इंतजार करो
-        console.log("⏳ question.js से सवाल नहीं मिले, 2 सेकंड बाद फिर ट्राई...");
-        setTimeout(useDefaultFreeQuestions, 2000);  // 2 सेकंड बाद फिर चेक करेगा
-    }
+    // सारे सवाल अब यहीं डाल दिए — question.js की जरूरत नहीं
+    const tempFreeQuestions = [
+        {
+            question: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:",
+            options: { A: "15 अगस्त", B: "26 जनवरी", C: "2 अक्टूबर", D: "14 नवंबर" },
+            correct: "BACD"
+        },
+        {
+            question: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण (Debut) के हिसाब से पुराने से नए क्रम में लगाएं:",
+            options: { A: "विराट कोहली", B: "एमएस धोनी", C: "सचिन तेंदुलकर", D: "शुभमन गिल" },
+            correct: "CBAD"
+        },
+        {
+            question: "इन सोशल मीडिया ऐप्स को उनकी लोकप्रियता के हिसाब से क्रम में लगाएं:",
+            options: { A: "इंस्टाग्राम", B: "फेसबुक", C: "व्हाट्सएप", D: "यूट्यूब" },
+            correct: "DCBA"
+        },
+        {
+            question: "इन रंगों को इंद्रधनुष (Rainbow) के क्रम में लगाएं (नीचे से ऊपर):",
+            options: { A: "पीला", B: "लाल", C: "बैंगनी", D: "हरा" },
+            correct: "CDAB"
+        },
+        {
+            question: "इन प्रधानमंत्रियों को उनके कार्यकाल के हिसाब से पुराने से नए क्रम में लगाएं:",
+            options: { A: "नरेन्द्र मोदी", B: "इन्दिरा गांधी", C: "जवाहरलाल नेहरू", D: "अटल बिहारी वाजपेयी" },
+            correct: "CBDA"
+        },
+        {
+            question: "इन फिल्मों को उनके रिलीज वर्ष के अनुसार पुराने से नए क्रम में लगाएं:",
+            options: { A: "दंगल", B: "शोले", C: "लगान", D: "बाहुबली" },
+            correct: "BCAD"
+        },
+        {
+            question: "इन शहरों को उनकी जनसंख्या के हिसाब से घटते क्रम (ज्यादा से कम) में लगाएं:",
+            options: { A: "मुंबई", B: "दिल्ली", C: "बेंगलुरु", D: "चेन्नई" },
+            correct: "BACD"
+        },
+        {
+            question: "इन ग्रहों को सूर्य से उनकी दूरी के बढ़ते क्रम में लगाएं:",
+            options: { A: "पृथ्वी", B: "बुध", C: "मंगल", D: "शुक्र" },
+            correct: "BDAC"
+        },
+        {
+            question: "इन केबीसी पड़ावों (Levels) को उनकी राशि के हिसाब से बढ़ते क्रम में लगाएं:",
+            options: { A: "10,000", B: "1,60,000", C: "5,000", D: "3,20,000" },
+            correct: "CABD"
+        },
+        {
+            question: "इन त्योहारों को कैलेंडर वर्ष में आने वाले क्रम में लगाएं:",
+            options: { A: "होली", B: "दीवाली", C: "रक्षा बंधन", D: "गणेश चतुर्थी" },
+            correct: "ACDB"
+        }
+    ];
+
+    currentQuestionsPool = tempFreeQuestions.sort(() => Math.random() - 0.5);
+    loadNewQuestion();
+    console.log("Free questions DIRECTLY game.js से लोड हो गए! कुल 10 सवाल तैयार।");
 }
 
 function loadNewQuestion() {
