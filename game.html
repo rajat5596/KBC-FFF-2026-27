@@ -12,21 +12,136 @@
 
     <style>
     /* Game-specific styles */
-    .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-    #timer { font-size: 3rem; color: #ffd700; text-shadow: 0 0 20px #ffd700; margin: 0; padding: 10px 20px; background: rgba(0,0,0,0.3); border-radius: 50px; border: 2px solid #ffd700; }
-    #user-plan-display { padding: 8px 20px; border-radius: 30px; font-weight: bold; font-size: 1rem; border: 2px solid #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.3); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-    #question-text { font-size: 1.5rem; margin: 30px 0; padding: 20px; background: rgba(0,0,0,0.5); border-radius: 15px; border: 2px solid #00d4ff; text-align: center; line-height: 1.5; }
-    #options-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
-    .option-btn { background: linear-gradient(145deg, #2c3e50, #3498db); color: white; border: 2px solid #ffd700; padding: 15px; font-size: 1.2rem; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; min-height: 80px; display: flex; align-items: center; justify-content: center; width: 100%; text-align: center; }
-    .option-btn.selected { background: gold !important; color: black !important; }
-    .game-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; gap: 15px; }
-    .lock-answer-btn { background: linear-gradient(145deg, #ffd700, #ffa500); color: black; border: 2px solid #fff; padding: 15px 40px; font-size: 1.3rem; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px #ffd700; width: 220px; display: block; margin: 20px auto; }
-    #result { font-size: 1.3rem; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5); text-align: center; margin-top: 20px; }
-    .logout-btn { background: #c0392b; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; }
-    .home-btn { background: #2c3e50; color: white; border: 1px solid #ffd700; padding: 10px 15px; border-radius: 8px; font-weight: bold; }
+    .game-header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 10px; /* पहले 20 था, अब कम */ 
+        flex-wrap: wrap; 
+        gap: 8px; 
+    }
+    #timer { 
+        font-size: 2.5rem; /* पहले 3rem था, छोटा किया */
+        color: #ffd700; 
+        text-shadow: 0 0 15px #ffd700; 
+        margin: 0; 
+        padding: 8px 15px; /* पैडिंग कम */
+        background: rgba(0,0,0,0.3); 
+        border-radius: 50px; 
+        border: 2px solid #ffd700; 
+    }
+    #user-plan-display { 
+        padding: 6px 15px; 
+        border-radius: 25px; 
+        font-weight: bold; 
+        font-size: 0.9rem; /* छोटा फॉन्ट */
+        border: 2px solid #ffd700; 
+        box-shadow: 0 0 12px rgba(255,215,0,0.3); 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        color: white; 
+    }
+    #question-text { 
+        font-size: 1.1rem !important; /* बहुत बड़ा था, अब छोटा */
+        margin: 15px 0 !important; 
+        padding: 12px !important; 
+        background: rgba(0,0,0,0.5); 
+        border-radius: 12px; 
+        border: 2px solid #00d4ff; 
+        text-align: center; 
+        line-height: 1.4 !important; 
+    }
+    #options-container { 
+        display: grid; 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 8px !important; /* पहले 15 था, कम किया */
+        margin: 10px 0 !important; 
+    }
+    .option-btn { 
+        background: linear-gradient(145deg, #2c3e50, #3498db); 
+        color: white; 
+        border: 2px solid #ffd700; 
+        padding: 10px !important; /* पहले 15 था */
+        font-size: 0.95rem !important; /* पहले 1.2 था */
+        border-radius: 10px; 
+        cursor: pointer; 
+        transition: all 0.3s ease; 
+        min-height: 60px !important; /* पहले 80 था */
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        width: 100%; 
+        text-align: center; 
+    }
+    .option-btn.selected { 
+        background: gold !important; 
+        color: black !important; 
+    }
+    .game-footer { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-top: 20px; /* थोड़ा कम */
+        gap: 10px; 
+    }
+    .lock-answer-btn { 
+        background: linear-gradient(145deg, #ffd700, #ffa500); 
+        color: black; 
+        border: 2px solid #fff; 
+        padding: 10px 30px !important; /* छोटा किया */
+        font-size: 1rem !important; /* पहले 1.3 था */
+        font-weight: bold; 
+        border-radius: 40px; 
+        cursor: pointer; 
+        box-shadow: 0 0 15px #ffd700; 
+        width: 180px !important; /* पहले 220 था */
+        display: block; 
+        margin: 15px auto !important; 
+    }
+    #result { 
+        font-size: 1.1rem; /* छोटा किया */
+        padding: 12px; 
+        border-radius: 10px; 
+        background: rgba(0,0,0,0.5); 
+        text-align: center; 
+        margin-top: 15px; 
+    }
+    .logout-btn { 
+        background: #c0392b; 
+        color: white; 
+        border: none; 
+        padding: 8px 12px; 
+        border-radius: 8px; 
+        font-weight: bold; 
+    }
+    .home-btn { 
+        background: #2c3e50; 
+        color: white; 
+        border: 1px solid #ffd700; 
+        padding: 8px 12px; 
+        border-radius: 8px; 
+        font-weight: bold; 
+    }
     
-    @media (max-width: 480px) { #options-container { grid-template-columns: 1fr; } }
-    </style>
+    /* मोबाइल फिट बनाने के लिए */
+    @media (max-width: 480px) { 
+        #options-container { grid-template-columns: 1fr; } /* छोटी स्क्रीन पर 1 कॉलम */
+        #question-text { font-size: 1rem !important; }
+        .option-btn { font-size: 0.9rem !important; min-height: 55px !important; }
+    }
+
+    /* पूरे पेज को फिट करने के लिए */
+    body {
+        margin: 0;
+        padding: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .main-container {
+        padding: 10px;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+</style>
 </head>
 <body>
     <div class="main-container">
