@@ -83,22 +83,22 @@ async function loadFinalQuestions() {
 }
 
 // फ्री सवाल लोड करने का फंक्शन (सबसे ज्यादा दिक्कत यहीं होती है)
-function useDefaultFreeQuestions() {
-    // ग्लोबल विंडो से डेटा उठाएं
-    const questions = window.fffQuestions || fffQuestions; 
+async function useDefaultFreeQuestions() {
+    console.log("Checking for fffQuestions...");
     
-    if (questions && questions.length > 0) {
-        currentQuestionsPool = [...questions].sort(() => Math.random() - 0.5);
+    // अगर डेटा तुरंत नहीं मिलता, तो 1 सेकंड इंतज़ार करें
+    if (typeof fffQuestions === 'undefined') {
+        console.warn("fffQuestions not found yet, retrying in 1s...");
+        setTimeout(useDefaultFreeQuestions, 1000);
+        return;
+    }
+
+    if (fffQuestions && fffQuestions.length > 0) {
+        currentQuestionsPool = [...fffQuestions].sort(() => Math.random() - 0.5);
+        console.log("Questions Loaded Successfully!");
         loadNewQuestion();
     } else {
-        console.error("fffQuestions array is empty or not found");
-        // अगर डेटा नहीं मिला तो एक डमी सवाल दिखा दें ताकि गेम क्रैश न हो
-        currentQuestionsPool = [{
-            question: "भारत का राष्ट्रीय खेल क्या है?",
-            options: {A:"क्रिकेट", B:"हॉकी", C:"फुटबॉल", D:"कबड्डी"},
-            correct: "B"
-        }];
-        loadNewQuestion();
+        alert("सवाल लोड करने में समस्या आ रही है, कृपया पेज रिफ्रेश करें।");
     }
 }
 
