@@ -57,7 +57,6 @@ function sendOTP() {
     }
 
     localStorage.setItem('kbc_user', name);
-    // नंबर से फालतू चीजें हटाकर सिर्फ 10 अंक रखें
     phone = phone.replace(/\D/g, '').slice(-10); 
     const phoneNumber = "+91" + phone;
 
@@ -73,7 +72,7 @@ function sendOTP() {
         }).catch((error) => {
             alert("❌ Error: " + error.message);
             console.error(error);
-            window.location.reload(); // Recaptcha रिसेट के लिए
+            window.location.reload();
         });
 }
 
@@ -111,7 +110,6 @@ function showMenu(name) {
 async function loadUserPlan(user) {
     if (!user) return;
     
-    // नंबर को क्लीन करें (9889904191 जैसा दिखेगा)
     const phone = user.phoneNumber.replace(/\D/g, '').slice(-10);
     
     try {
@@ -129,7 +127,6 @@ async function loadUserPlan(user) {
                 const plan = userData.plan.toLowerCase();
                 const expiryStr = expiryDate.toLocaleDateString('hi-IN');
                 
-                // localStorage में प्रीमियम स्टेटस सेव करें ताकि game.html में सवाल लोड हों
                 localStorage.setItem('user_plan_status', 'premium');
                 localStorage.setItem('user_plan_type', plan);
 
@@ -141,72 +138,60 @@ async function loadUserPlan(user) {
                 planDisplay.style.background = planConfig.color;
                 planDisplay.innerHTML = `
                     <div style="padding:10px;">
-                        ${planConfig.icon} <b>${plan.toUpperCase()} एक्टिव</b><br>
+                        \( {planConfig.icon} <b> \){plan.toUpperCase()} एक्टिव</b><br>
                         <small>वैधता: ${expiryStr}</small>
                     </div>`;
             } else {
                 handleExpiredPlan(phone, planDisplay);
             }
         } else {
-            // Free Plan Logic
             localStorage.setItem('user_plan_status', 'free');
             planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
             planDisplay.innerHTML = `🎯 फ्री प्लान (10 सवाल उपलब्ध)`;
+        }
+
+        // Fallback: अगर कुछ भी नहीं दिखा तो ये दिखाओ
+        if (planDisplay && !planDisplay.innerHTML.trim()) {
+            planDisplay.innerHTML = "🎯 फ्री प्लान (10 सवाल उपलब्ध)";
+            planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
         }
     } catch (error) {
         console.error("Plan Load Error:", error);
     }
 }
-// loadUserPlan() फंक्शन के अंत में add करो (try-catch के बाद)
-if (planDisplay) {
-    planDisplay.innerHTML = planDisplay.innerHTML || `🎯 ${plan.toUpperCase()} प्लान एक्टिव`; // fallback display
-}
-// --- लिमिट खत्म होने पर ---
+
+// लिमिट खत्म होने पर
 function handleLimitReached() {
-    const paymentLink = "https://rzp.io/rzp/I5geGyLS"; 
-    
-    if (confirm("10 मुफ्त सवाल पूरे! आगे के लिए प्रीमियम लें?")) {
-        window.location.href = paymentLink; 
+    const paymentLink = "https://rzp.io/rzp/I5geGyLS";
+
+    const userConfirmed = confirm("10 मुफ्त सवाल पूरे हो गए!\nप्रीमियम प्लान लें?");
+
+    if (userConfirmed) {
+        setTimeout(() => {
+            window.open(paymentLink, '_self');
+        }, 500);
     } else {
         window.location.href = "index.html";
     }
 }
-function handleLimitReached() {
-    const paymentLink = "https://rzp.io/rzp/I5geGyLS";  // तुम्हारा payment link
 
-    // Confirm दिखाओ और redirect safe तरीके से
-    const userConfirmed = confirm("10 मुफ्त सवाल पूरे हो गए! प्रीमियम प्लान लें? आगे के लिए पेमेंट करें।");
-
-    if (userConfirmed) {
-        // Mobile पर काम करने वाला तरीका: थोड़ा delay + '_self'
-        setTimeout(() => {
-            window.open(paymentLink, '_self');  // current tab में खोलेगा
-        }, 300);
-    } else {
-        window.location.href = "index.html";  // Cancel पर होम
-    }
-}
-
-// 5. Buy Plan
+// Buy Plan फंक्शन
 function buyPlan(plan) {
     let planName = plan.toUpperCase();
     let amount = plan === 'silver' ? '49' : plan === 'gold' ? '99' : '199';
-    const commonPaymentLink = "https://rzp.io/rzp/I5geGyLS";  // अभी common link इस्तेमाल करो (valid है)
+    const paymentLink = "https://rzp.io/rzp/I5geGyLS";
 
-    if (confirm(`\( {planName} प्लान (₹ \){amount}) चुन लिया! पेमेंट पेज पर जाएँ?`)) {
-        console.log("Redirecting to: " + commonPaymentLink);
-        window.open(commonPaymentLink, '_self');  // current tab में खोलेगा
+    if (confirm(`\( {planName} प्लान (₹ \){amount}) चुन लिया!\nपेमेंट पेज पर जाएँ?`)) {
+        window.open(paymentLink, '_self');
     } else {
         alert("प्लान चुनने से कैंसल किया गया।");
     }
 }
 
-
-// 6. Logout
+// Logout
 function logout() {
     localStorage.clear();
     auth.signOut().then(() => {
         window.location.replace("index.html");
     });
 }
-    
