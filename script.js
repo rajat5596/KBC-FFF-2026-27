@@ -167,18 +167,32 @@ function handleLimitReached() {
         window.location.href = "index.html";
     }
 }
-function handleExpiredPlan(phone, display) {
-    localStorage.setItem('user_plan_status', 'expired');
-    display.style.background = "#f44336";
-    display.innerHTML = `⚠️ प्लान एक्सपायर हो गया है`;
-    database.ref('users/' + phone).update({ status: 'expired' });
+function handleLimitReached() {
+    const paymentLink = "https://rzp.io/rzp/I5geGyLS";  // ये valid है, काम करेगा
+    
+    if (confirm("10 मुफ्त सवाल पूरे! आगे के लिए प्रीमियम प्लान लें?")) {
+        console.log("Redirecting to payment: " + paymentLink);
+        // बेहतर redirect तरीके (mobile पर भी काम करता है)
+        window.open(paymentLink, '_self');  // '_self' current tab में खोलेगा
+        // या अगर ऊपर fail हो तो
+        // window.location.replace(paymentLink);
+    } else {
+        window.location.href = "index.html";
+    }
 }
 
 // 5. Buy Plan
 function buyPlan(plan) {
-    alert(plan.toUpperCase() + " प्लान चुन लिया!\nपेमेंट पेज जल्दी तैयार हो रहा है...");
-    // बाद में Razorpay link यहाँ डालना:
-    // window.location.href = "https://rzp.io/rzp/15geGvLS";
+    let planName = plan.toUpperCase();
+    let amount = plan === 'silver' ? '49' : plan === 'gold' ? '99' : '199';
+    const commonPaymentLink = "https://rzp.io/rzp/I5geGyLS";  // अभी common link इस्तेमाल करो (valid है)
+
+    if (confirm(`\( {planName} प्लान (₹ \){amount}) चुन लिया! पेमेंट पेज पर जाएँ?`)) {
+        console.log("Redirecting to: " + commonPaymentLink);
+        window.open(commonPaymentLink, '_self');  // current tab में खोलेगा
+    } else {
+        alert("प्लान चुनने से कैंसल किया गया।");
+    }
 }
 
 
