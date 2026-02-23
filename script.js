@@ -127,6 +127,7 @@ async function loadUserPlan(user) {
                 const plan = userData.plan.toLowerCase();
                 const expiryStr = expiryDate.toLocaleDateString('hi-IN');
                 
+                // localStorage में सेव करें ताकि game.js में premium detect हो
                 localStorage.setItem('user_plan_status', 'premium');
                 localStorage.setItem('user_plan_type', plan);
 
@@ -145,18 +146,24 @@ async function loadUserPlan(user) {
                 handleExpiredPlan(phone, planDisplay);
             }
         } else {
+            // Free प्लान
             localStorage.setItem('user_plan_status', 'free');
             planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
             planDisplay.innerHTML = `🎯 फ्री प्लान (10 सवाल उपलब्ध)`;
         }
 
-        // Fallback: अगर कुछ भी नहीं दिखा तो ये दिखाओ
+        // Fallback display (अगर ऊपर से कुछ न दिखा तो ये दिखाओ)
         if (planDisplay && !planDisplay.innerHTML.trim()) {
             planDisplay.innerHTML = "🎯 फ्री प्लान (10 सवाल उपलब्ध)";
             planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
         }
     } catch (error) {
         console.error("Plan Load Error:", error);
+        // Error होने पर भी कुछ दिखाओ
+        if (planDisplay) {
+            planDisplay.innerHTML = "🎯 फ्री प्लान (10 सवाल उपलब्ध)";
+            planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
+        }
     }
 }
 
