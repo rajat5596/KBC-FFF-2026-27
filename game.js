@@ -85,13 +85,9 @@ window.onload = function() {
     console.log("✅ Free questions loaded! Game ready. Enjoy!");
 };
 function loadNewQuestion() {
-    console.log("loadNewQuestion() चला");
-    console.log("Current plan:", userPlan);
-    console.log("questionsPlayed:", questionsPlayed);
-    console.log("currentQuestionsPool में सवाल:", currentQuestionsPool.length);
+    console.log("loadNewQuestion() चला - सवाल लोड कर रहा हूँ");
 
     if (userPlan === 'free' && questionsPlayed >= 10) {
-        console.log("10 सवाल पूरे - payment redirect");
         if (typeof handleLimitReached === 'function') {
             handleLimitReached();
         } else {
@@ -102,8 +98,8 @@ function loadNewQuestion() {
     }
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        console.log("Pool खाली - fallback मैसेज");
-        document.getElementById('question-text').innerHTML = "सवाल लोड नहीं हो पाए। होम पर वापस जाएँ या प्रीमियम लें।";
+        console.log("Pool खाली - fallback");
+        document.getElementById('question-text').innerHTML = "सवाल खत्म हो गए! होम जाएँ या प्रीमियम लें।";
         document.getElementById('options-container').innerHTML = "";
         return;
     }
@@ -111,18 +107,28 @@ function loadNewQuestion() {
     currentQuestion = currentQuestionsPool.shift(); 
     userSequence = "";
     timeLeft = 20;
-    
+
     document.getElementById('timer').innerText = timeLeft;
     document.getElementById('question-text').innerText = currentQuestion.question;
     document.getElementById('result').innerText = "";
-    
-    let optionsHTML = "";
+
+    // Options को सही से बनाओ और click listener लगाओ
+    const optionsContainer = document.getElementById('options-container');
+    optionsContainer.innerHTML = ""; // पहले खाली करो
+
     for (let key in currentQuestion.options) {
-        optionsHTML += `<button class="option-btn" id="btn-\( {key}" onclick="selectOption(' \){key}')">
-                            ${key}: ${currentQuestion.options[key]}
-                        </button>`;
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.id = "btn-" + key;
+        btn.innerHTML = key + ": " + currentQuestion.options[key];
+
+        // Click event सही से लगाओ
+        btn.addEventListener("click", function() {
+            selectOption(key);
+        });
+
+        optionsContainer.appendChild(btn);
     }
-    document.getElementById('options-container').innerHTML = optionsHTML;
 
     bgMusic.currentTime = 0;
     bgMusic.play().catch(() => {});
