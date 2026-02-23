@@ -1,4 +1,4 @@
-const fffQuestions = [
+window.fffQuestions = [
     {
         question: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:",
         options: { A: "15 अगस्त", B: "26 जनवरी", C: "2 अक्टूबर", D: "14 नवंबर" },
