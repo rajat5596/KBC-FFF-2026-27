@@ -84,22 +84,20 @@ async function loadFinalQuestions() {
 
 // फ्री सवाल लोड करने का फंक्शन (सबसे ज्यादा दिक्कत यहीं होती है)
 function useDefaultFreeQuestions() {
-    // 1. चेक करें कि क्या fffQuestions नाम का ग्लोबल वेरिएबल मौजूद है
-    // (यह वेरिएबल आमतौर पर questions.js फाइल से आता है)
-    if (typeof fffQuestions !== 'undefined' && fffQuestions.length > 0) {
-        currentQuestionsPool = [...fffQuestions].sort(() => Math.random() - 0.5);
+    console.log("Checking for free questions...");
+    // window.fffQuestions का इस्तेमाल करें ताकि ग्लोबल वेरिएबल पक्का मिल जाए
+    const questions = window.fffQuestions || fffQuestions;
+
+    if (typeof questions !== 'undefined' && questions.length > 0) {
+        console.log("Questions found:", questions.length);
+        currentQuestionsPool = [...questions].sort(() => Math.random() - 0.5);
         loadNewQuestion();
     } else {
-        // अगर डेटा नहीं मिला, तो एक डमी सवाल डाल दें ताकि गेम अटके नहीं
-        console.warn("No free questions found, using emergency pool");
-        currentQuestionsPool = [{
-            question: "भारत की राजधानी क्या है?",
-            options: {A:"मुंबई", B:"दिल्ली", C:"चेन्नई", D:"कोलकाता"},
-            correct: "B"
-        }];
-        loadNewQuestion();
+        console.error("No questions found in question.js!");
+        alert("सवाल लोड नहीं हो पाए। कृपया सुनिश्चित करें कि question.js सही है।");
     }
 }
+
 
 // --- 3. नया सवाल दिखाना ---
 function loadNewQuestion() {
