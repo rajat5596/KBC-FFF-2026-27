@@ -167,15 +167,19 @@ function handleExpiredPlan(phone, display) {
 
 // 5. Buy Plan
 function buyPlan(plan) {
-    const user = firebase.auth().currentUser;
-    if (!user) { alert("❌ पहले लॉगिन करें!"); return; }
-    
-    const phone = user.phoneNumber.replace(/\D/g, '').slice(-10);
-    const paymentLink = "https://rzp.io/rzp/15geGvLS_conv";
-    
-    // अलर्ट को हटाकर सीधे रिडायरेक्ट करें ताकि पॉप-अप ब्लॉक न हो
-    window.location.href = paymentLink; 
+    try {
+        const paymentLink = "https://rzp.io/rzp/15geGvLS_conv";
+        console.log("Redirecting to:", paymentLink);
+        
+        // पक्का करें कि लिंक सही से खुले
+        window.top.location.href = paymentLink; 
+    } catch (e) {
+        console.error("Payment Error:", e);
+        // अगर ऊपर वाला फेल हो तो इसे आज़माएँ
+        window.open("https://rzp.io/rzp/15geGvLS_conv", "_self");
+    }
 }
+
 
 // 6. Logout
 function logout() {
