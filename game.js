@@ -123,6 +123,27 @@ function checkSequence() {
     questionsPlayed++;
     setTimeout(loadNewQuestion, 3500);
 }
+function startTimer() {
+    if (timerId) clearInterval(timerId); // पुराना timer बंद करो
+
+    timeLeft = 20;
+    document.getElementById('timer').innerText = timeLeft;
+
+    clockSound.currentTime = 0;
+    clockSound.play().catch(() => {});
+
+    timerId = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').innerText = timeLeft;
+
+        if (timeLeft <= 0) {
+            clearInterval(timerId);
+            checkSequence(); // समय खत्म होने पर auto लॉक
+        }
+    }, 1000);
+
+    console.log("Timer शुरू हुआ - timeLeft:", timeLeft);
+}
 function loadNewQuestion() {
     console.log("loadNewQuestion() चला - सवाल लोड कर रहा हूँ");
 
