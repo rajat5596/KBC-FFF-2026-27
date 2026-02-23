@@ -86,10 +86,14 @@ window.onload = function() {
 };
 function loadNewQuestion() {
     if (userPlan === 'free' && questionsPlayed >= 10) {
-        // डायरेक्ट पेमेंट पेज पर भेजें, सफेद स्क्रीन से बचने के लिए
-        alert("🎯 10 मुफ्त सवाल पूरे! आगे के लिए प्रीमियम लें।");
-        window.location.href = "https://rzp.io/rzp/15geGvLS_conv";
-        return;
+    // script.js वाला handleLimitReached call करो (global function है)
+    if (typeof handleLimitReached === 'function') {
+        handleLimitReached();
+    } else {
+        alert("10 मुफ्त सवाल पूरे! प्रीमियम लें।");
+        window.open("https://rzp.io/rzp/I5geGyLS", '_self');
+    }
+    return;
     }
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
