@@ -85,33 +85,13 @@ window.onload = function() {
     console.log("✅ Free questions loaded! Game ready. Enjoy!");
 };
 function loadNewQuestion() {
-    if (userPlan === 'free' && questionsPlayed >= 10) {
-    // script.js वाला handleLimitReached call करो (global function है)
-    if (typeof handleLimitReached === 'function') {
-        handleLimitReached();
-    } else {
-        alert("10 मुफ्त सवाल पूरे! प्रीमियम लें।");
-        window.open("https://rzp.io/rzp/I5geGyLS", '_self');
-    }
-    return;
-    }
-
-    if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        alert("सारे सवाल खत्म हो गए!");
-        window.location.href = "index.html";
-        return;
-    }
-
-    currentQuestion = currentQuestionsPool.shift(); 
-    userSequence = "";
-
-function loadNewQuestion() {
-    console.log("loadNewQuestion() चला - pool में सवाल:", currentQuestionsPool.length);
+    console.log("loadNewQuestion() चला");
     console.log("Current plan:", userPlan);
     console.log("questionsPlayed:", questionsPlayed);
+    console.log("currentQuestionsPool में सवाल:", currentQuestionsPool.length);
 
     if (userPlan === 'free' && questionsPlayed >= 10) {
-        console.log("10 सवाल पूरे - payment page पर रीडायरेक्ट");
+        console.log("10 सवाल पूरे - payment redirect");
         if (typeof handleLimitReached === 'function') {
             handleLimitReached();
         } else {
@@ -122,11 +102,29 @@ function loadNewQuestion() {
     }
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        console.log("सवाल खत्म या pool खाली - fallback");
+        console.log("Pool खाली - fallback मैसेज");
         document.getElementById('question-text').innerHTML = "सवाल लोड नहीं हो पाए। होम पर वापस जाएँ या प्रीमियम लें।";
         document.getElementById('options-container').innerHTML = "";
         return;
     }
 
-    // बाकी code वैसा ही रहने दो
+    currentQuestion = currentQuestionsPool.shift(); 
+    userSequence = "";
+    timeLeft = 20;
+    
+    document.getElementById('timer').innerText = timeLeft;
+    document.getElementById('question-text').innerText = currentQuestion.question;
+    document.getElementById('result').innerText = "";
+    
+    let optionsHTML = "";
+    for (let key in currentQuestion.options) {
+        optionsHTML += `<button class="option-btn" id="btn-\( {key}" onclick="selectOption(' \){key}')">
+                            ${key}: ${currentQuestion.options[key]}
+                        </button>`;
+    }
+    document.getElementById('options-container').innerHTML = optionsHTML;
+
+    bgMusic.currentTime = 0;
+    bgMusic.play().catch(() => {});
+    startTimer();
 }
