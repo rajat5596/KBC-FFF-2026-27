@@ -13,49 +13,37 @@ let questionsPlayed = 0;
 let currentQuestionsPool = []; 
 let userPlan = 'free'; 
 
-// --- 1. पेज लोड होते ही डेटा तैयार करना ---
 window.onload = function() {
     if (typeof firebase === 'undefined') {
-        console.log("Firebase लोड नहीं हुआ");
         useDefaultFreeQuestions();
         return;
     }
 
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
-            // नंबर को क्लीन करें: +919889904191 -> 9889904191
+            // क्लीन नंबर (9889904191)
             const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
-            console.log("📱 लॉग इन नंबर:", cleanPhone);
-
+            
             try {
-                // सही पाथ: users/9889904191
                 const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
                 const userData = snapshot.val();
                 
-                if (userData && userData.plan && userData.status === 'active') {
+                if (userData && userData.status === 'active') {
                     const expiryDate = new Date(userData.expiry);
                     if (expiryDate > new Date()) {
                         userPlan = userData.plan.toLowerCase().trim();
-                        console.log("✅ प्रीमियम एक्टिव:", userPlan);
-                        
-                        // UI अपडेट करें (अगर एलिमेंट है)
                         const planDisplay = document.getElementById('user-plan-display');
                         if(planDisplay) planDisplay.innerHTML = `💎 ${userPlan.toUpperCase()} प्लान`;
                     }
                 }
-            } catch (error) {
-                console.log("Firebase error:", error);
-            }
+            } catch (error) { console.log("DB Error"); }
+            loadFinalQuestions();
         } else {
-            window.location.href = "index.html";
-            return;
+            window.location.replace("index.html");
         }
-        // सवालों को लोड करें
-        loadFinalQuestions();
     });
 };
 
-// --- 2. सवालों को लोड करना ---
 async function loadFinalQuestions() {
     let fileName = ''; 
     if (userPlan === 'silver') fileName = 'silver_questions.json';
@@ -64,41 +52,38 @@ async function loadFinalQuestions() {
 
     if (fileName !== '') {
         try {
-            const response = await fetch(fileName);
+            const response = await fetch(fileName + "?v=" + Date.now()); // Cache bypass
             if (!response.ok) throw new Error();
             let data = await response.json();
             currentQuestionsPool = data.sort(() => Math.random() - 0.5);
             loadNewQuestion();
-        } catch (e) {
-            useDefaultFreeQuestions();
-        }
+        } catch (e) { useDefaultFreeQuestions(); }
     } else {
         useDefaultFreeQuestions();
     }
 }
 
 function useDefaultFreeQuestions() {
-    // window.fffQuestions चेक करें (question.js से)
-    const questions = window.fffQuestions || (typeof fffQuestions !== 'undefined' ? fffQuestions : null);
-    
-    if (questions && questions.length > 0) {
-        currentQuestionsPool = [...questions].sort(() => Math.random() - 0.5);
+    // window.fffQuestions से ही डेटा उठाएं
+    if (window.fffQuestions && window.fffQuestions.length > 0) {
+        currentQuestionsPool = [...window.fffQuestions].sort(() => Math.random() - 0.5);
         loadNewQuestion();
     } else {
-        console.log("⏳ सवाल लोड हो रहे हैं...");
-        setTimeout(useDefaultFreeQuestions, 1000);
+        console.log("⏳ Waiting for question.js...");
+        setTimeout(useDefaultFreeQuestions, 1000); // अगर सवाल नहीं मिले तो 1 सेकंड बाद फिर चेक करो
     }
 }
 
-// --- 3. नया सवाल और गेम लॉजिक ---
 function loadNewQuestion() {
     if (userPlan === 'free' && questionsPlayed >= 10) {
-        handleLimitReached();
+        // डायरेक्ट पेमेंट पेज पर भेजें, सफेद स्क्रीन से बचने के लिए
+        alert("🎯 10 मुफ्त सवाल पूरे! आगे के लिए प्रीमियम लें।");
+        window.location.href = "https://rzp.io/rzp/15geGvLS_conv";
         return;
     }
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        alert("सवाल खत्म हो गए हैं!");
+        alert("सारे सवाल खत्म हो गए!");
         window.location.href = "index.html";
         return;
     }
@@ -120,15 +105,14 @@ function loadNewQuestion() {
     document.getElementById('options-container').innerHTML = optionsHTML;
 
     bgMusic.currentTime = 0;
-    bgMusic.play().catch(e => {});
+    bgMusic.play().catch(() => {});
     startTimer();
 }
 
 function startTimer() {
     if (timerId) clearInterval(timerId);
     clockSound.currentTime = 0;
-    clockSound.play().catch(e => {});
-    
+    clockSound.play().catch(() => {});
     timerId = setInterval(() => {
         timeLeft--;
         document.getElementById('timer').innerText = timeLeft;
@@ -153,30 +137,19 @@ function selectOption(key) {
 
 function checkSequence() {
     clearInterval(timerId);
-    bgMusic.pause();
-    clockSound.pause();
-    lockSound.play().catch(e => {});
+    bgMusic.pause(); clockSound.pause();
+    lockSound.play().catch(() => {});
 
     const resultPara = document.getElementById('result');
     if (userSequence === currentQuestion.correct) {
-        correctSound.play().catch(e => {});
+        correctSound.play().catch(() => {});
         resultPara.style.color = "#00FF00";
         resultPara.innerText = "अद्भुत! सही जवाब।";
     } else {
-        wrongSound.play().catch(e => {});
+        wrongSound.play().catch(() => {});
         resultPara.style.color = "#FF0000";
         resultPara.innerText = "गलत! सही क्रम: " + currentQuestion.correct;
     }
-
     questionsPlayed++;
     setTimeout(loadNewQuestion, 3500);
-}
-
-function handleLimitReached() {
-    const paymentLink = "https://rzp.io/rzp/15geGvLS_conv"; 
-    if (confirm("10 मुफ्त सवाल पूरे! आगे के लिए प्रीमियम लें?")) {
-        window.top.location.href = paymentLink; 
-    } else {
-        window.location.href = "index.html";
-    }
 }
