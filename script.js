@@ -176,17 +176,9 @@ function handleExpiredPlan(phone, display) {
 
 // 5. Buy Plan
 function buyPlan(plan) {
-    try {
-        const paymentLink = "https://rzp.io/rzp/15geGvLS_conv";
-        console.log("Redirecting to:", paymentLink);
-        
-        // पक्का करें कि लिंक सही से खुले
-        window.top.location.href = paymentLink; 
-    } catch (e) {
-        console.error("Payment Error:", e);
-        // अगर ऊपर वाला फेल हो तो इसे आज़माएँ
-        window.open("https://rzp.io/rzp/15geGvLS", "_self");
-    }
+    alert(plan.toUpperCase() + " प्लान चुन लिया!\nपेमेंट पेज जल्दी तैयार हो रहा है...");
+    // बाद में Razorpay link यहाँ डालना:
+    // window.location.href = "https://rzp.io/rzp/15geGvLS";
 }
 
 
