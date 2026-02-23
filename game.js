@@ -14,9 +14,9 @@ let currentQuestionsPool = [];
 let userPlan = 'free'; 
 
 window.onload = function() {
-    console.log("Game page लोड हो गई - plan चेक शुरू");
+    console.log("Game page लोड हो गई। Plan चेक शुरू...");
 
-    // Firebase initialize अगर मौजूद है तो premium चेक करो
+    // Firebase से plan लोड करो (अगर login है)
     if (typeof firebase !== 'undefined') {
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
@@ -24,32 +24,33 @@ window.onload = function() {
                 try {
                     const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
                     const userData = snapshot.val();
-                    
                     if (userData && userData.status === 'active') {
                         const expiryDate = new Date(userData.expiry);
                         if (expiryDate > new Date()) {
                             userPlan = userData.plan.toLowerCase().trim();
                             console.log("Firebase से premium plan मिला:", userPlan);
-                            const planDisplay = document.getElementById('user-plan-display');
-                            if(planDisplay) planDisplay.innerHTML = `💎 ${userPlan.toUpperCase()} प्लान`;
                         }
                     }
                 } catch (error) {
                     console.log("DB Error:", error);
                 }
             } else {
-                window.location.replace("index.html");
+                console.log("User नहीं लॉगिन - free मोड");
             }
-            loadQuestions(); // plan set होने के बाद सवाल लोड करो
+            loadQuestions(); // plan set होने के बाद सवाल लोड
         });
     } else {
-        console.log("Firebase नहीं मिला - free मोड");
+        console.log("Firebase नहीं मिला - localStorage चेक");
+        // localStorage fallback
+        userPlan = localStorage.getItem('user_plan_type') || 'free';
+        userPlan = userPlan.toLowerCase().trim();
+        console.log("localStorage से plan:", userPlan);
         loadQuestions();
     }
 };
 
 function loadQuestions() {
-    console.log("सवाल लोड कर रहा हूँ - plan:", userPlan);
+    console.log("सवाल लोड कर रहा हूँ - current plan:", userPlan);
 
     let fileName = '';
     if (userPlan === 'silver') fileName = 'silver_questions.json';
@@ -57,29 +58,34 @@ function loadQuestions() {
     else if (userPlan === 'platinum') fileName = 'platinum_questions.json';
 
     if (fileName) {
-        console.log("Premium file fetch:", fileName);
+        console.log("Premium JSON लोड: " + fileName);
         fetch(fileName + "?v=" + Date.now())
             .then(response => {
-                console.log("Fetch status:", response.status);
-                if (!response.ok) throw new Error("File not found");
+                console.log("Fetch response status:", response.status);
+                if (!response.ok) throw new Error("JSON नहीं मिला");
                 return response.json();
             })
             .then(data => {
-                currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-                loadNewQuestion();
-                console.log("Premium सवाल लोड! कुल:", data.length);
+                if (data && data.length > 0) {
+                    currentQuestionsPool = data.sort(() => Math.random() - 0.5);
+                    loadNewQuestion();
+                    console.log("Premium सवाल लोड हो गए! कुल: " + data.length);
+                } else {
+                    console.log("JSON खाली - free fallback");
+                    loadFreeFallback();
+                }
             })
             .catch(err => {
                 console.error("Fetch error:", err);
                 loadFreeFallback();
             });
     } else {
+        console.log("Free plan - fallback सवाल");
         loadFreeFallback();
     }
 }
 
 function loadFreeFallback() {
-    console.log("Free fallback - 10 सवाल");
     const freeQuestions = [
         { question: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:", options: { A: "15 अगस्त", B: "26 जनवरी", C: "2 अक्टूबर", D: "14 नवंबर" }, correct: "BACD" },
         { question: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण (Debut) के हिसाब से पुराने से नए क्रम में लगाएं:", options: { A: "विराट कोहली", B: "एमएस धोनी", C: "सचिन तेंदुलकर", D: "शुभमन गिल" }, correct: "CBAD" },
@@ -95,10 +101,10 @@ function loadFreeFallback() {
 
     currentQuestionsPool = freeQuestions.sort(() => Math.random() - 0.5);
     loadNewQuestion();
-    console.log("Free questions loaded");
+    console.log("Free 10 सवाल लोड हो गए");
 }
 
-// loadNewQuestion() और बाकी functions वैसा ही रहने दो (timer, selectOption, checkSequence आदि)
+// loadNewQuestion में premium check
 function loadNewQuestion() {
     if (userPlan === 'free' && questionsPlayed >= 10) {
         if (typeof handleLimitReached === 'function') {
@@ -111,8 +117,8 @@ function loadNewQuestion() {
     }
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        alert("सारे सवाल खत्म हो गए!");
-        window.location.href = "index.html";
+        document.getElementById('question-text').innerHTML = "सारे सवाल खत्म! प्रीमियम लें या होम जाएँ।";
+        document.getElementById('options-container').innerHTML = "";
         return;
     }
 
@@ -137,4 +143,4 @@ function loadNewQuestion() {
     startTimer();
 }
 
-// बाकी functions जैसे selectOption, checkSequence, startTimer आदि वैसा ही रखो
+// बाकी सारे functions (startTimer, selectOption, checkSequence, selectOption आदि) वैसा ही रहने दो
