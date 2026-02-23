@@ -157,7 +157,16 @@ async function loadUserPlan(user) {
         console.error("Plan Load Error:", error);
     }
 }
-
+// --- लिमिट खत्म होने पर ---
+function handleLimitReached() {
+    const paymentLink = "https://rzp.io/rzp/I5geGyLS"; 
+    
+    if (confirm("10 मुफ्त सवाल पूरे! आगे के लिए प्रीमियम लें?")) {
+        window.location.href = paymentLink; 
+    } else {
+        window.location.href = "index.html";
+    }
+}
 function handleExpiredPlan(phone, display) {
     localStorage.setItem('user_plan_status', 'expired');
     display.style.background = "#f44336";
