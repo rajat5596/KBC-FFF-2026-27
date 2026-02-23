@@ -168,14 +168,17 @@ function handleLimitReached() {
     }
 }
 function handleLimitReached() {
-    const paymentLink = "https://rzp.io/rzp/I5geGyLS";  // ये valid है, काम करेगा
+    const paymentLink = "https://rzp.io/rzp/I5geGyLS";  // ये link सही है, काम करता है
     
-    if (confirm("10 मुफ्त सवाल पूरे! आगे के लिए प्रीमियम प्लान लें?")) {
-        console.log("Redirecting to payment: " + paymentLink);
-        // बेहतर redirect तरीके (mobile पर भी काम करता है)
-        window.open(paymentLink, '_self');  // '_self' current tab में खोलेगा
-        // या अगर ऊपर fail हो तो
-        // window.location.replace(paymentLink);
+    if (confirm("10 मुफ्त सवाल पूरे! प्रीमियम प्लान लें?")) {
+        // Safe redirect for mobile - current tab में खोलेगा
+        window.open(paymentLink, '_self');
+        // अगर ऊपर fail हो तो fallback
+        setTimeout(() => {
+            if (window.location.href !== paymentLink) {
+                window.location.replace(paymentLink);
+            }
+        }, 500);
     } else {
         window.location.href = "index.html";
     }
