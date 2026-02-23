@@ -167,14 +167,14 @@ function handleExpiredPlan(phone, display) {
 
 // 5. Buy Plan
 function buyPlan(plan) {
-    const user = auth.currentUser;
+    const user = firebase.auth().currentUser;
     if (!user) { alert("❌ पहले लॉगिन करें!"); return; }
     
     const phone = user.phoneNumber.replace(/\D/g, '').slice(-10);
     const paymentLink = "https://rzp.io/rzp/15geGvLS_conv";
     
-    alert(`✅ ${plan.toUpperCase()} प्लान चुना गया। पेमेंट के बाद आपका नंबर ${phone} एक्टिव हो जाएगा।`);
-    window.open(paymentLink, '_blank');
+    // अलर्ट को हटाकर सीधे रिडायरेक्ट करें ताकि पॉप-अप ब्लॉक न हो
+    window.location.href = paymentLink; 
 }
 
 // 6. Logout
