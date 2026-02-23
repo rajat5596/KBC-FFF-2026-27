@@ -13,10 +13,11 @@ let questionsPlayed = 0;
 let currentQuestionsPool = []; 
 let userPlan = 'free'; 
 
+// एक ही window.onload - सब logic यहाँ
 window.onload = function() {
-    console.log("Game page लोड हो गई। Plan चेक शुरू...");
+    console.log("Game page लोड हो गई - plan चेक शुरू");
 
-    // Firebase से plan लोड करो (अगर login है)
+    // Firebase से plan चेक करो (अगर login है)
     if (typeof firebase !== 'undefined') {
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
@@ -24,27 +25,31 @@ window.onload = function() {
                 try {
                     const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
                     const userData = snapshot.val();
+                    
                     if (userData && userData.status === 'active') {
                         const expiryDate = new Date(userData.expiry);
                         if (expiryDate > new Date()) {
                             userPlan = userData.plan.toLowerCase().trim();
                             console.log("Firebase से premium plan मिला:", userPlan);
+                        } else {
+                            console.log("Plan expired");
                         }
+                    } else {
+                        console.log("No active plan in DB");
                     }
                 } catch (error) {
                     console.log("DB Error:", error);
                 }
             } else {
-                console.log("User नहीं लॉगिन - free मोड");
+                console.log("User लॉगिन नहीं - free मोड");
             }
             loadQuestions(); // plan set होने के बाद सवाल लोड
         });
     } else {
-        console.log("Firebase नहीं मिला - localStorage चेक");
-        // localStorage fallback
+        // Firebase नहीं है तो localStorage से fallback
         userPlan = localStorage.getItem('user_plan_type') || 'free';
         userPlan = userPlan.toLowerCase().trim();
-        console.log("localStorage से plan:", userPlan);
+        console.log("Firebase नहीं मिला, localStorage से plan:", userPlan);
         loadQuestions();
     }
 };
@@ -58,25 +63,20 @@ function loadQuestions() {
     else if (userPlan === 'platinum') fileName = 'platinum_questions.json';
 
     if (fileName) {
-        console.log("Premium JSON लोड: " + fileName);
+        console.log("Premium file लोड: " + fileName);
         fetch(fileName + "?v=" + Date.now())
             .then(response => {
-                console.log("Fetch response status:", response.status);
-                if (!response.ok) throw new Error("JSON नहीं मिला");
+                console.log("Fetch status:", response.status);
+                if (!response.ok) throw new Error("File not found");
                 return response.json();
             })
             .then(data => {
-                if (data && data.length > 0) {
-                    currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-                    loadNewQuestion();
-                    console.log("Premium सवाल लोड हो गए! कुल: " + data.length);
-                } else {
-                    console.log("JSON खाली - free fallback");
-                    loadFreeFallback();
-                }
+                currentQuestionsPool = data.sort(() => Math.random() - 0.5);
+                loadNewQuestion();
+                console.log("Premium सवाल लोड हो गए! कुल:", data.length);
             })
             .catch(err => {
-                console.error("Fetch error:", err);
+                console.error("Premium fetch failed:", err);
                 loadFreeFallback();
             });
     } else {
@@ -101,10 +101,9 @@ function loadFreeFallback() {
 
     currentQuestionsPool = freeQuestions.sort(() => Math.random() - 0.5);
     loadNewQuestion();
-    console.log("Free 10 सवाल लोड हो गए");
+    console.log("Free fallback सवाल लोड हो गए");
 }
 
-// loadNewQuestion में premium check
 function loadNewQuestion() {
     if (userPlan === 'free' && questionsPlayed >= 10) {
         if (typeof handleLimitReached === 'function') {
@@ -117,7 +116,7 @@ function loadNewQuestion() {
     }
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        document.getElementById('question-text').innerHTML = "सारे सवाल खत्म! प्रीमियम लें या होम जाएँ।";
+        document.getElementById('question-text').innerHTML = "सारे सवाल खत्म! होम जाएँ या प्रीमियम लें।";
         document.getElementById('options-container').innerHTML = "";
         return;
     }
@@ -143,4 +142,4 @@ function loadNewQuestion() {
     startTimer();
 }
 
-// बाकी सारे functions (startTimer, selectOption, checkSequence, selectOption आदि) वैसा ही रहने दो
+// बाकी functions (startTimer, selectOption, checkSequence आदि) वैसा ही रखो
