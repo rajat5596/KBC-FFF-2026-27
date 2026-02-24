@@ -106,65 +106,63 @@ function showMenu(name) {
     if (welcomeMsg) welcomeMsg.innerHTML = `👋 स्वागत है, <strong>${name}</strong>!`;
 }
 
-// 4. User Plan Load करने का फंक्शन
+// User Login State aur Premium Check
 firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-        // Login hone par sections badalna
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('menu-section').style.display = 'block';
+    const loginSection = document.getElementById('login-section');
+    const menuSection = document.getElementById('menu-section');
+    const displayElement = document.getElementById('user-plan-display');
 
-        // 1. Phone number ko clean karein (chahe wo +91 se aaye ya 10 digit se)
-        // Hum sirf aakhri ke 10 digits nikaal rahe hain
+    if (user) {
+        if(loginSection) loginSection.style.display = 'none';
+        if(menuSection) menuSection.style.display = 'block';
+
+        // Phone number se 10 digit nikalna (Database match ke liye)
         const fullPhone = user.phoneNumber || ""; 
         const tenDigitPhone = fullPhone.slice(-10); 
+        console.log("Database mein is number ko dhund raha hoon:", tenDigitPhone);
         
-        console.log("Searching Database for:", tenDigitPhone);
-        
-        const displayElement = document.getElementById('user-plan-display');
-
-        // 2. Database mein sirf 10 digit waale number folder ko check karein
+        // Database se data mangwana
         firebase.database().ref('users/' + tenDigitPhone).on('value', (snapshot) => {
             const data = snapshot.val();
-            
+            console.log("Database se ye data mila:", data);
+
             if (data && data.plan) {
                 let planType = data.plan.trim().toLowerCase();
                 let expiry = data.expiry ? new Date(data.expiry).toLocaleDateString('hi-IN') : "N/A";
 
-                // UI update (Aapke naye index.html design ke hisaab se)
                 if(displayElement) {
                     displayElement.innerHTML = `
                         <span>आपका प्लान: </span>
                         <span class="plan-badge ${planType}-badge">${planType.toUpperCase()}</span>
                         <div style="font-size: 0.8rem; margin-top: 5px; opacity: 0.9;">वैधता: ${expiry}</div>
                     `;
+                    displayElement.style.display = "block";
                 }
             } else {
-                // Agar plan nahi mila
                 if(displayElement) {
                     displayElement.innerHTML = `<span>आपका प्लान: </span><span class="plan-badge free-badge">FREE</span>`;
+                    displayElement.style.display = "block";
                 }
             }
-        }, (error) => {
-            console.error("Database Read Error:", error);
         });
+    } else {
+        if(loginSection) loginSection.style.display = 'block';
+        if(menuSection) menuSection.style.display = 'none';
     }
 });
 
-
-// लिमिट खत्म होने पर
-function handleLimitReached() {
-    const paymentLink = "https://rzp.io/rzp/I5geGyLS";
-
-    const userConfirmed = confirm("10 मुफ्त सवाल पूरे हो गए!\nप्रीमियम प्लान लें?");
-
-    if (userConfirmed) {
-        setTimeout(() => {
-            window.open(paymentLink, '_self');
-        }, 500);
-    } else {
-        window.location.href = "index.html";
-    }
+// Logout (Fixed Version)
+function logout() {
+    localStorage.clear();
+    sessionStorage.clear();
+    firebase.auth().signOut().then(() => {
+        window.location.replace("index.html");
+    }).catch((error) => {
+        window.location.reload();
+    });
 }
+
+// Baki functions (buyPlan etc.) waise hi rehne dein...
 
 // Buy Plan फंक्शन
 function buyPlan(plan) {
