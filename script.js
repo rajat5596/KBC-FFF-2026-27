@@ -1,3 +1,5 @@
+                                  }
+// --- Service Worker Registration ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
@@ -6,7 +8,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Firebase Config (Fatehpur Hubs प्रोजेक्ट)
+// --- Firebase Config (Fatehpur Hubs प्रोजेक्ट) ---
 const firebaseConfig = {
     apiKey: "AIzaSyCFccfNZzNSTcfBCYEh3kcXPjI4HRETCa0",
     authDomain: "fatehpur-hubs-a3a9f.firebaseapp.com",
@@ -25,10 +27,7 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const database = firebase.database();
 
-// Global Variables
-let confirmationResult;
-
-// Recaptcha Verifier
+// --- Auth State Monitor (Login/Logout Check) ---
 window.onload = function() {
     if (!window.recaptchaVerifier) {
         window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
@@ -37,16 +36,50 @@ window.onload = function() {
     }
     
     auth.onAuthStateChanged(async (user) => {
+        const loginSection = document.getElementById('login-section');
+        const menuSection = document.getElementById('menu-section');
+        const displayElement = document.getElementById('user-plan-display');
+
         if (user) {
-            console.log("✅ User Active:", user.phoneNumber);
+            // Login Hai
+            if(loginSection) loginSection.style.display = 'none';
+            if(menuSection) menuSection.style.display = 'block';
+
             const name = localStorage.getItem('kbc_user') || "यूजर";
-            showMenu(name);
-            await loadUserPlan(user);
+            const welcomeMsg = document.getElementById('welcome-msg');
+            if (welcomeMsg) welcomeMsg.innerHTML = `👋 स्वागत है, <strong>${name}</strong>!`;
+
+            // Database se plan load karein
+            const tenDigitPhone = user.phoneNumber.slice(-10);
+            database.ref('users/' + tenDigitPhone).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (displayElement) {
+                    displayElement.style.display = "block";
+                    if (data && data.plan) {
+                        let planType = data.plan.trim().toLowerCase();
+                        let expiry = data.expiry ? new Date(data.expiry).toLocaleDateString('hi-IN') : "N/A";
+                        // Global plan status save karein
+                        localStorage.setItem('db_plan', planType);
+                        displayElement.innerHTML = `
+                            <span>आपका प्लान: </span>
+                            <span class="plan-badge ${planType}-badge">${planType.toUpperCase()}</span>
+                            <div style="font-size: 0.8rem; margin-top: 5px; opacity: 0.9;">वैधता: ${expiry}</div>
+                        `;
+                    } else {
+                        localStorage.setItem('db_plan', 'free');
+                        displayElement.innerHTML = `<span>आपका प्लान: </span><span class="plan-badge free-badge">FREE</span>`;
+                    }
+                }
+            });
+        } else {
+            // Login Nahi Hai
+            if(loginSection) loginSection.style.display = 'block';
+            if(menuSection) menuSection.style.display = 'none';
         }
     });
 };
 
-// 1. OTP भेजने का फंक्शन
+// --- Login Functions (OTP) ---
 function sendOTP() {
     const name = document.getElementById('username').value.trim();
     let phone = document.getElementById('mobile').value.trim();
@@ -64,152 +97,54 @@ function sendOTP() {
         .then((result) => {
             window.confirmationResult = result;
             alert("✅ OTP भेज दिया गया है!");
-            
             document.getElementById('login-section').innerHTML = `
                 <input type="number" id="otp-code" placeholder="6 अंकों का OTP डालें" style="padding:10px; width:80%; margin-bottom:10px;">
                 <button onclick="verifyOTP()" class="start-btn">✅ वेरीफाई करें</button>
             `;
         }).catch((error) => {
             alert("❌ Error: " + error.message);
-            console.error(error);
             window.location.reload();
         });
 }
 
-// 2. OTP वेरीफाई करने का फंक्शन
 function verifyOTP() {
     const code = document.getElementById('otp-code').value.trim();
-
-    if (code.length !== 6) {
-        alert("❌ कृपया 6 अंकों का OTP डालें");
-        return;
-    }
-
     window.confirmationResult.confirm(code).then(async (result) => {
-        const user = result.user;
-        const phone = user.phoneNumber.replace(/\D/g, '').slice(-10);
-        localStorage.setItem('kbc_phone', phone);
-        
-        const name = localStorage.getItem('kbc_user') || "यूजर";
-        showMenu(name);
-        await loadUserPlan(user);
-    }).catch((error) => {
-        alert("❌ गलत OTP!");
-    });
+        window.location.reload();
+    }).catch(() => alert("❌ गलत OTP!"));
 }
 
-// 3. मेनू दिखाने का फंक्शन
-function showMenu(name) {
-    document.getElementById('login-section').style.display = 'none';
-    document.getElementById('menu-section').style.display = 'block';
-    const welcomeMsg = document.getElementById('welcome-msg');
-    if (welcomeMsg) welcomeMsg.innerHTML = `👋 स्वागत है, <strong>${name}</strong>!`;
-}
+// --- Menu Functions (Game Logic Start) ---
 
-// Firebase Auth State
-firebase.auth().onAuthStateChanged((user) => {
-    const loginSection = document.getElementById('login-section');
-    const menuSection = document.getElementById('menu-section');
-    const displayElement = document.getElementById('user-plan-display');
-
-    if (user) {
-        if(loginSection) loginSection.style.display = 'none';
-        if(menuSection) menuSection.style.display = 'block';
-
-        // 10 digit number extraction
-        const fullPhone = user.phoneNumber || ""; 
-        const tenDigitPhone = fullPhone.slice(-10); 
-        
-        // Database connection
-        firebase.database().ref('users/' + tenDigitPhone).on('value', (snapshot) => {
-            const data = snapshot.val();
-            
-            if (displayElement) {
-                displayElement.style.display = "block"; // Pehle hi show kar do
-                
-                if (data && data.plan) {
-                    let planType = data.plan.trim().toLowerCase();
-                    let expiry = data.expiry ? new Date(data.expiry).toLocaleDateString('hi-IN') : "N/A";
-
-                    displayElement.innerHTML = `
-                        <span>आपका प्लान: </span>
-                        <span class="plan-badge ${planType}-badge">${planType.toUpperCase()}</span>
-                        <div style="font-size: 0.8rem; margin-top: 5px; opacity: 0.9;">वैधता: ${expiry}</div>
-                    `;
-                } else {
-                    displayElement.innerHTML = `<span>आपका प्लान: </span><span class="plan-badge free-badge">FREE</span>`;
-                }
-            }
-        });
-    } else {
-        if(loginSection) loginSection.style.display = 'block';
-        if(menuSection) menuSection.style.display = 'none';
-    }
-});
-
-// Logout (Sirf ek baar rakhein)
-function logout() {
-    localStorage.clear();
-    sessionStorage.clear();
-    firebase.auth().signOut().then(() => {
-        window.location.replace("index.html");
-    });
-}
-
-function buyPlan(clickedPlan) {
-    const displayElement = document.getElementById('user-plan-display');
-    const activePlan = displayElement ? displayElement.innerText.toUpperCase() : "FREE";
-
-    // Agar wahi plan click kiya jo active hai
-    if (activePlan.includes(clickedPlan.toUpperCase())) {
-        localStorage.setItem('selectedJson', clickedPlan.toLowerCase() + "_questions.json"); 
-        window.location.href = "game.html";
-    } 
-    else {
-        // Agar dusra plan click kiya toh payment page
-        let amount = clickedPlan === 'silver' ? '49' : clickedPlan === 'gold' ? '99' : '199';
-        const paymentLink = "https://rzp.io/rzp/I5geGyLS";
-        if (confirm(`${clickedPlan.toUpperCase()} (₹${amount}) प्लान लें?`)) {
-            window.open(paymentLink, '_self');
-        }
-    }
-}
-
-// Practice Button ke liye
 function startPractice() {
-    // Sabse zaroori: Yahan 'free_questions.json' hi hona chahiye
+    // Sirf Free questions load honge
     localStorage.setItem('selectedJson', 'free_questions.json'); 
-    localStorage.setItem('userPlan', 'free'); // Plan ko clear set karein
+    localStorage.setItem('forcePlan', 'free'); 
     window.location.href = "game.html";
 }
 
-// Premium Buttons ke liye
 function buyPlan(clickedPlan) {
-    const displayElement = document.getElementById('user-plan-display');
-    const activePlan = displayElement ? displayElement.innerText.toUpperCase() : "FREE";
-
-    if (activePlan.includes(clickedPlan.toUpperCase())) {
-        // Agar Silver active hai, toh silver_questions.json load karo
+    const dbPlan = localStorage.getItem('db_plan') || 'free';
+    
+    // Agar click kiya hua plan database wale active plan se match karta hai
+    if (dbPlan === clickedPlan.toLowerCase()) {
         localStorage.setItem('selectedJson', clickedPlan.toLowerCase() + "_questions.json"); 
-        localStorage.setItem('userPlan', 'premium'); 
+        localStorage.setItem('forcePlan', clickedPlan.toLowerCase()); 
         window.location.href = "game.html";
-    } else {
-        // Payment logic...
-        if (confirm("क्या आप " + clickedPlan + " प्लान खरीदना चाहते हैं?")) {
+    } 
+    else {
+        // Payment Page par bhejein
+        let amount = clickedPlan === 'silver' ? '49' : clickedPlan === 'gold' ? '99' : '199';
+        if (confirm(`${clickedPlan.toUpperCase()} (₹${amount}) प्लान आपके पास नहीं है। क्या आप इसे खरीदना चाहते हैं?`)) {
             window.open("https://rzp.io/rzp/I5geGyLS", '_self');
         }
     }
 }
 
-
-// 2. Limit Check Fix - Jo Silver users ko kabhi nahi rokega
-function checkFreeLimitAndStart() {
-    let playedCount = localStorage.getItem('playedCount') || 0;
-    
-    if (playedCount >= 10) {
-        // Sirf tabhi limit wala pop-up dikhaye jab user FREE ho
-        handleLimitReached();
-    } else {
-        window.location.href = "game.html";
-    }
-                                           }
+function logout() {
+    localStorage.clear();
+    sessionStorage.clear();
+    auth.signOut().then(() => {
+        window.location.replace("index.html");
+    });
+}
