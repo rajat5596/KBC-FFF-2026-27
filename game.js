@@ -1,3 +1,4 @@
+// --- ऑडियो फाइल्स ---
 const bgMusic = new Audio('audio/background.mp3');
 const clockSound = new Audio('audio/clock.mp3');
 const lockSound = new Audio('audio/lock.mp3');
@@ -13,85 +14,78 @@ let currentQuestionsPool = [];
 let userPlan = 'free'; 
 
 window.onload = function() {
-    // 1. LocalStorage se plan aur file pakadna
-    const selectedJson = localStorage.getItem('selectedJson') || 'free_questions.json';
-    
-    // Yahan fix hai: Agar 'free' word hai toh userPlan 'free' rahega
-    if (selectedJson.includes('free')) {
-        userPlan = 'free';
-    } else {
-        userPlan = 'silver';
+    if (typeof firebase === 'undefined') {
+        useDefaultFreeQuestions();
+        return;
     }
 
-    console.log("Plan Detected:", userPlan, "File:", selectedJson);
-    loadFinalQuestions(selectedJson);
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+            // क्लीन नंबर (9889904191)
+            const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
+            
+            try {
+                const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
+                const userData = snapshot.val();
+                
+                if (userData && userData.status === 'active') {
+                    const expiryDate = new Date(userData.expiry);
+                    if (expiryDate > new Date()) {
+                        userPlan = userData.plan.toLowerCase().trim();
+                        const planDisplay = document.getElementById('user-plan-display');
+                        if(planDisplay) planDisplay.innerHTML = `💎 ${userPlan.toUpperCase()} प्लान`;
+                    }
+                }
+            } catch (error) { console.log("DB Error"); }
+            loadFinalQuestions();
+        } else {
+            window.location.replace("index.html");
+        }
+    });
 };
 
-async function loadFinalQuestions(fileName) {
-    try {
-        const response = await fetch(fileName + "?v=" + Date.now());
-        if (!response.ok) throw new Error();
-        let data = await response.json();
-        currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-        loadNewQuestion();
-    } catch (e) { 
-        console.error("JSON Error");
-        // Agar file na mile toh index par wapas bhej do
-        window.location.href = "index.html";
+async function loadFinalQuestions() {
+    let fileName = ''; 
+    if (userPlan === 'silver') fileName = 'silver_questions.json';
+    else if (userPlan === 'gold') fileName = 'gold_questions.json';
+    else if (userPlan === 'platinum') fileName = 'platinum_questions.json';
+
+    if (fileName !== '') {
+        try {
+            const response = await fetch(fileName + "?v=" + Date.now()); // Cache bypass
+            if (!response.ok) throw new Error();
+            let data = await response.json();
+            currentQuestionsPool = data.sort(() => Math.random() - 0.5);
+            loadNewQuestion();
+        } catch (e) { useDefaultFreeQuestions(); }
+    } else {
+        useDefaultFreeQuestions();
     }
 }
+window.onload = function() {
+    console.log("🚀 Game starting - loading free questions directly...");
 
-function loadNewQuestion() {
-    // 2. Limit Check (Sirf Free ke liye)
-    if (userPlan === 'free' && questionsPlayed >= 10) {
-        alert("10 मुफ्त सवाल पूरे! सिल्वर प्लान लें।");
-        window.location.href = "index.html";
-        return;
-    }
+    // सारे 10 free सवाल यहीं हैं (कोई firebase, question.js की जरूरत नहीं)
+    const freeQuestions = [
+        { question: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:", options: { A: "15 अगस्त", B: "26 जनवरी", C: "2 अक्टूबर", D: "14 नवंबर" }, correct: "BACD" },
+        { question: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण (Debut) के हिसाब से पुराने से नए क्रम में लगाएं:", options: { A: "विराट कोहली", B: "एमएस धोनी", C: "सचिन तेंदुलकर", D: "शुभमन गिल" }, correct: "CBAD" },
+        { question: "इन सोशल मीडिया ऐप्स को उनकी लोकप्रियता के हिसाब से क्रम में लगाएं:", options: { A: "इंस्टाग्राम", B: "फेसबुक", C: "व्हाट्सएप", D: "यूट्यूब" }, correct: "DCBA" },
+        { question: "इन रंगों को इंद्रधनुष (Rainbow) के क्रम में लगाएं (नीचे से ऊपर):", options: { A: "पीला", B: "लाल", C: "बैंगनी", D: "हरा" }, correct: "CDAB" },
+        { question: "इन प्रधानमंत्रियों को उनके कार्यकाल के हिसाब से पुराने से नए क्रम में लगाएं:", options: { A: "नरेन्द्र मोदी", B: "इन्दिरा गांधी", C: "जवाहरलाल नेहरू", D: "अटल बिहारी वाजपेयी" }, correct: "CBDA" },
+        { question: "इन फिल्मों को उनके रिलीज वर्ष के अनुसार पुराने से नए क्रम में लगाएं:", options: { A: "दंगल", B: "शोले", C: "लगान", D: "बाहुबली" }, correct: "BCAD" },
+        { question: "इन शहरों को उनकी जनसंख्या के हिसाब से घटते क्रम (ज्यादा से कम) में लगाएं:", options: { A: "मुंबई", B: "दिल्ली", C: "बेंगलुरु", D: "चेन्नई" }, correct: "BACD" },
+        { question: "इन ग्रहों को सूर्य से उनकी दूरी के बढ़ते क्रम में लगाएं:", options: { A: "पृथ्वी", B: "बुध", C: "मंगल", D: "शुक्र" }, correct: "BDAC" },
+        { question: "इन केबीसी पड़ावों (Levels) को उनकी राशि के हिसाब से बढ़ते क्रम में लगाएं:", options: { A: "10,000", B: "1,60,000", C: "5,000", D: "3,20,000" }, correct: "CABD" },
+        { question: "इन त्योहारों को कैलेंडर वर्ष में आने वाले क्रम में लगाएं:", options: { A: "होली", B: "दीवाली", C: "रक्षा बंधन", D: "गणेश चतुर्थी" }, correct: "ACDB" }
+    ];
 
-    if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        alert("सारे सवाल खत्म हो गए!");
-        window.location.href = "index.html";
-        return;
-    }
+    currentQuestionsPool = freeQuestions.sort(() => Math.random() - 0.5);
+    loadNewQuestion();
 
-    currentQuestion = currentQuestionsPool.shift(); 
-    userSequence = ""; // Reset sequence
-    timeLeft = 20;
-
-    // Data Mapping Fix
-    const qText = currentQuestion.question || currentQuestion.q || "सवाल लोड नहीं हुआ";
-    const qAns = currentQuestion.correct || currentQuestion.answer || "";
-    currentQuestion.correct = qAns.toString().toUpperCase();
-
-    document.getElementById('timer').innerText = timeLeft;
-    document.getElementById('question-text').innerText = qText;
-    document.getElementById('result').innerText = "";
-
-    const optionsContainer = document.getElementById('options-container');
-    optionsContainer.innerHTML = "";
-
-    // 0,1,2,3 ko A,B,C,D mein map karne ka paka tarika
-    const keyMap = { "0": "A", "1": "B", "2": "C", "3": "D", "A": "A", "B": "B", "C": "C", "D": "D" };
-
-    for (let key in currentQuestion.options) {
-        const btn = document.createElement("button");
-        btn.className = "option-btn";
-        btn.id = "btn-" + key;
-        let label = keyMap[key] || key;
-        btn.innerHTML = `${label}: ${currentQuestion.options[key]}`;
-        btn.onclick = function() { selectOption(key); };
-        optionsContainer.appendChild(btn);
-    }
-
-    bgMusic.currentTime = 0;
-    bgMusic.play().catch(() => {});
-    startTimer();
-}
-
+    console.log("✅ Free questions loaded! Game ready. Enjoy!");
+};
 function selectOption(key) {
-    // Bina touch kiye lock na ho, isliye sequence check
-    if (!userSequence.includes(key) && userSequence.length < 4) {
+    if (!userSequence.includes(key)) {
         userSequence += key;
         const btn = document.getElementById("btn-" + key);
         if (btn) {
@@ -99,53 +93,104 @@ function selectOption(key) {
             btn.style.color = "black";
             btn.innerHTML += ` [${userSequence.length}]`;
         }
+        console.log("Option चुना:", key, "क्रम:", userSequence);
     }
 }
 
 function checkSequence() {
-    // Bina option dabaye lock karne par "Pehle option chunein" alert
-    if (userSequence.length === 0 && timeLeft > 0) {
-        alert("कृपया पहले सही क्रम चुनें!");
-        return;
-    }
-
+    console.log("Lock button क्लिक हुआ - checkSequence चला");
     if (timerId) clearInterval(timerId);
-    bgMusic.pause(); clockSound.pause();
+    bgMusic.pause(); 
+    clockSound.pause();
     lockSound.play().catch(() => {});
 
     const resultPara = document.getElementById('result');
-    
-    // Kram Convert Fix: userSequence aur correct dono ko ABCD mein badalna
-    const map = { "0": "A", "1": "B", "2": "C", "3": "D", "A": "A", "B": "B", "C": "C", "D": "D" };
-    
-    let userFinal = "";
-    for(let char of userSequence) { userFinal += map[char] || char; }
+    if (!resultPara) {
+        console.log("result element नहीं मिला");
+        return;
+    }
 
-    let correctFinal = "";
-    for(let char of currentQuestion.correct) { correctFinal += map[char] || char; }
-
-    if (userFinal === correctFinal && userFinal !== "") {
+    if (userSequence === currentQuestion.correct) {
         correctSound.play().catch(() => {});
         resultPara.style.color = "#00FF00";
         resultPara.innerText = "अद्भुत! सही जवाब।";
     } else {
         wrongSound.play().catch(() => {});
         resultPara.style.color = "#FF0000";
-        // Yahan fix hai: Ab sahi kram dikhayega
-        resultPara.innerText = "गलत! सही क्रम: " + correctFinal;
+        resultPara.innerText = "गलत! सही क्रम: " + currentQuestion.correct;
     }
 
     questionsPlayed++;
     setTimeout(loadNewQuestion, 3500);
 }
-
 function startTimer() {
-    if (timerId) clearInterval(timerId);
+    if (timerId) clearInterval(timerId); // पुराना timer बंद करो
+
+    timeLeft = 20;
+    document.getElementById('timer').innerText = timeLeft;
+
     clockSound.currentTime = 0;
     clockSound.play().catch(() => {});
+
     timerId = setInterval(() => {
         timeLeft--;
         document.getElementById('timer').innerText = timeLeft;
-        if (timeLeft <= 0) { clearInterval(timerId); checkSequence(); }
+
+        if (timeLeft <= 0) {
+            clearInterval(timerId);
+            checkSequence(); // समय खत्म होने पर auto लॉक
+        }
     }, 1000);
+
+    console.log("Timer शुरू हुआ - timeLeft:", timeLeft);
+}
+function loadNewQuestion() {
+    console.log("loadNewQuestion() चला - सवाल लोड कर रहा हूँ");
+
+    if (userPlan === 'free' && questionsPlayed >= 10) {
+        if (typeof handleLimitReached === 'function') {
+            handleLimitReached();
+        } else {
+            alert("10 मुफ्त सवाल पूरे! प्रीमियम लें।");
+            window.open("https://rzp.io/rzp/I5geGyLS", '_self');
+        }
+        return;
+    }
+
+    if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
+        console.log("Pool खाली - fallback");
+        document.getElementById('question-text').innerHTML = "सवाल खत्म हो गए! होम जाएँ या प्रीमियम लें।";
+        document.getElementById('options-container').innerHTML = "";
+        return;
+    }
+
+    currentQuestion = currentQuestionsPool.shift(); 
+    userSequence = "";
+    timeLeft = 20;
+
+    document.getElementById('timer').innerText = timeLeft;
+    document.getElementById('question-text').innerText = currentQuestion.question;
+    document.getElementById('result').innerText = "";
+
+    // Options को सही से बनाओ और click listener लगाओ
+    const optionsContainer = document.getElementById('options-container');
+    optionsContainer.innerHTML = ""; // पहले खाली करो
+
+    for (let key in currentQuestion.options) {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.id = "btn-" + key;
+        btn.innerHTML = key + ": " + currentQuestion.options[key];
+
+        // Click event सही से लगाओ
+        btn.addEventListener("click", function() {
+            selectOption(key);
+        });
+
+        optionsContainer.appendChild(btn);
+    }
+
+    bgMusic.currentTime = 0;
+    bgMusic.play().catch(() => {});
+    startTimer();
 }
