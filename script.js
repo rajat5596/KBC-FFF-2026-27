@@ -107,65 +107,49 @@ function showMenu(name) {
 }
 
 // 4. User Plan Load करने का फंक्शन
-async function loadUserPlan(user) {
-    if (!user) return;
-    
-    const phone = user.phoneNumber.replace(/\D/g, '').slice(-10);
-    
-    try {
-        const snapshot = await database.ref('users/' + phone).once('value');
-        const userData = snapshot.val();
-        const planDisplay = document.getElementById('user-plan-display');
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        // Login hone par sections badalna
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('menu-section').style.display = 'block';
+
+        // 1. Phone number ko clean karein (chahe wo +91 se aaye ya 10 digit se)
+        // Hum sirf aakhri ke 10 digits nikaal rahe hain
+        const fullPhone = user.phoneNumber || ""; 
+        const tenDigitPhone = fullPhone.slice(-10); 
         
-        if (!planDisplay) return;
+        console.log("Searching Database for:", tenDigitPhone);
+        
+        const displayElement = document.getElementById('user-plan-display');
 
-        if (userData && userData.plan && userData.status === 'active') {
-            const expiryDate = new Date(userData.expiry);
-            const today = new Date();
+        // 2. Database mein sirf 10 digit waale number folder ko check karein
+        firebase.database().ref('users/' + tenDigitPhone).on('value', (snapshot) => {
+            const data = snapshot.val();
             
-            if (expiryDate > today) {
-                const plan = userData.plan.toLowerCase();
-                const expiryStr = expiryDate.toLocaleDateString('hi-IN');
-                
-                // localStorage में सेव करें ताकि game.js में premium detect हो
-                localStorage.setItem('user_plan_status', 'premium');
-                localStorage.setItem('user_plan_type', plan);
+            if (data && data.plan) {
+                let planType = data.plan.trim().toLowerCase();
+                let expiry = data.expiry ? new Date(data.expiry).toLocaleDateString('hi-IN') : "N/A";
 
-                let planConfig = { icon: "🎯", color: "#667eea" };
-                if (plan === 'silver') planConfig = { icon: "🥈", color: "linear-gradient(135deg, #C0C0C0, #707070)" };
-                if (plan === 'gold') planConfig = { icon: "🥇", color: "linear-gradient(135deg, #FFD700, #B8860B)" };
-                if (plan === 'platinum') planConfig = { icon: "💎", color: "linear-gradient(135deg, #E5E4E2, #708090)" };
-
-                planDisplay.style.background = planConfig.color;
-                planDisplay.innerHTML = `
-                    <div style="padding:10px;">
-                        \( {planConfig.icon} <b> \){plan.toUpperCase()} एक्टिव</b><br>
-                        <small>वैधता: ${expiryStr}</small>
-                    </div>`;
+                // UI update (Aapke naye index.html design ke hisaab se)
+                if(displayElement) {
+                    displayElement.innerHTML = `
+                        <span>आपका प्लान: </span>
+                        <span class="plan-badge ${planType}-badge">${planType.toUpperCase()}</span>
+                        <div style="font-size: 0.8rem; margin-top: 5px; opacity: 0.9;">वैधता: ${expiry}</div>
+                    `;
+                }
             } else {
-                handleExpiredPlan(phone, planDisplay);
+                // Agar plan nahi mila
+                if(displayElement) {
+                    displayElement.innerHTML = `<span>आपका प्लान: </span><span class="plan-badge free-badge">FREE</span>`;
+                }
             }
-        } else {
-            // Free प्लान
-            localStorage.setItem('user_plan_status', 'free');
-            planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
-            planDisplay.innerHTML = `🎯 फ्री प्लान (10 सवाल उपलब्ध)`;
-        }
-
-        // Fallback display (अगर ऊपर से कुछ न दिखा तो ये दिखाओ)
-        if (planDisplay && !planDisplay.innerHTML.trim()) {
-            planDisplay.innerHTML = "🎯 फ्री प्लान (10 सवाल उपलब्ध)";
-            planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
-        }
-    } catch (error) {
-        console.error("Plan Load Error:", error);
-        // Error होने पर भी कुछ दिखाओ
-        if (planDisplay) {
-            planDisplay.innerHTML = "🎯 फ्री प्लान (10 सवाल उपलब्ध)";
-            planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
-        }
+        }, (error) => {
+            console.error("Database Read Error:", error);
+        });
     }
-}
+});
+
 
 // लिमिट खत्म होने पर
 function handleLimitReached() {
