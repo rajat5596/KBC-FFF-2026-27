@@ -156,25 +156,32 @@ function logout() {
     });
 }
 
-function buyPlan(plan) {
-    // Pehle check karein ki kya user ke paas pehle se koi plan hai
-    const currentStatus = document.getElementById('user-plan-display').innerText;
-    
-    // Agar user ke paas pehle se Silver/Gold/Platinum hai toh use warning dein
-    if (currentStatus.includes("SILVER") || currentStatus.includes("GOLD") || currentStatus.includes("PLATINUM")) {
-        alert("Aapka premium plan pehle se hi active hai! Aapko dobara kharidne ki zaroorat nahi hai.");
-        return; // Payment page par nahi bhejega
+function buyPlan(clickedPlan) {
+    // 1. Pehle active plan ka pata lagao
+    const displayElement = document.getElementById('user-plan-display');
+    const activePlan = displayElement ? displayElement.innerText.toUpperCase() : "FREE";
+
+    // 2. Agar user ne wahi plan click kiya jo uska ACTIVE hai
+    if (activePlan.includes(clickedPlan.toUpperCase())) {
+        alert(clickedPlan.toUpperCase() + " प्लान एक्टिव है! प्रैक्टिस शुरू हो रही है...");
+        
+        // Plan type ko save karein taaki game.html sahi questions load kare
+        localStorage.setItem('userPlan', clickedPlan.toLowerCase());
+        
+        // Game page par bhejein
+        window.location.href = "game.html";
+        return;
     }
 
-    // Agar FREE user hai, tabhi payment par le jaye
-    let planName = plan.toUpperCase();
-    let amount = plan === 'silver' ? '49' : plan === 'gold' ? '99' : '199';
+    // 3. Agar user ne dusra plan click kiya jo uska active NAHI hai
+    let amount = clickedPlan === 'silver' ? '49' : clickedPlan === 'gold' ? '99' : '199';
     const paymentLink = "https://rzp.io/rzp/I5geGyLS";
 
-    if (confirm(`${planName} प्लान (₹${amount}) चुन लिया!\nपेमेंट पेज पर जाएँ?`)) {
+    if (confirm(`Aapka ${activePlan} active hai. Kya aap ${clickedPlan.toUpperCase()} (₹${amount}) par upgrade karna chahte hain?`)) {
         window.open(paymentLink, '_self');
     }
 }
+
 // 1. Game Start logic - Jo Premium check karega
 function startPractice() {
     const display = document.getElementById('user-plan-display');
