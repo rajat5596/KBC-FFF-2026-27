@@ -13,122 +13,86 @@ let questionsPlayed = 0;
 let currentQuestionsPool = []; 
 let userPlan = 'free'; 
 
-// --- 1. Sabse Pehle Plan aur Questions Load Karein ---
+// --- 1. Plan aur Questions Load Karein ---
 window.onload = function() {
-    console.log("🚀 Game Shuru Ho Raha Hai...");
-
-    // Pehle localStorage check karein (Agar index.html se button daba kar aaye hain)
     const selectedJson = localStorage.getItem('selectedJson');
     
-    if (selectedJson && selectedJson !== 'question.json') {
-        console.log("Premium Path Detected: " + selectedJson);
-        userPlan = selectedJson.split('_')[0]; // silver, gold etc.
+    // Check karein ki user 'Practice' daba kar aaya hai ya 'Silver' button
+    if (selectedJson && selectedJson !== 'free') {
+        userPlan = selectedJson.split('_')[0]; 
         loadFinalQuestions(selectedJson);
-    } 
-    else if (typeof firebase !== 'undefined') {
-        // Firebase Auth se check karein (Safety net)
-        firebase.auth().onAuthStateChanged(async (user) => {
-            if (user) {
-                const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
-                try {
-                    const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
-                    const userData = snapshot.val();
-                    if (userData && userData.status === 'active') {
-                        userPlan = userData.plan.toLowerCase().trim();
-                        loadFinalQuestions(userPlan + "_questions.json");
-                    } else {
-                        useDefaultFreeQuestions();
-                    }
-                } catch (error) { useDefaultFreeQuestions(); }
-            } else {
-                window.location.replace("index.html");
-            }
-        });
     } else {
         useDefaultFreeQuestions();
     }
 };
 
-// --- 2. Sahi JSON File Load Karne Wala Function ---
 async function loadFinalQuestions(fileName) {
-    console.log("Loading File: " + fileName);
     try {
         const response = await fetch(fileName + "?v=" + Date.now());
         if (!response.ok) throw new Error();
         let data = await response.json();
         currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-        console.log("Total Questions Loaded: " + currentQuestionsPool.length);
         loadNewQuestion();
-    } catch (e) {
-        console.log("JSON Error, using Free fallback");
-        useDefaultFreeQuestions();
-    }
+    } catch (e) { useDefaultFreeQuestions(); }
 }
 
-// --- 3. Free Questions Fallback (Wahi 10 Sawal) ---
 function useDefaultFreeQuestions() {
     userPlan = 'free';
     const freeQuestions = [
         { question: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:", options: { A: "15 अगस्त", B: "26 जनवरी", C: "2 अक्टूबर", D: "14 नवंबर" }, correct: "BACD" },
-        { question: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण (Debut) के हिसाब से पुराने से नए क्रम में लगाएं:", options: { A: "विराट कोहली", B: "एमएस धोनी", C: "सचिन तेंदुलकर", D: "शुभमन गिल" }, correct: "CBAD" },
-        { question: "इन सोशल मीडिया ऐप्स को उनकी लोकप्रियता के हिसाब से क्रम में लगाएं:", options: { A: "इंस्टाग्राम", B: "फेसबुक", C: "व्हाट्सएप", D: "यूट्यूब" }, correct: "DCBA" },
-        { question: "इन रंगों को इंद्रधनुष (Rainbow) के क्रम में लगाएं (नीचे से ऊपर):", options: { A: "पीला", B: "लाल", C: "बैंगनी", D: "हरा" }, correct: "CDAB" },
-        { question: "इन प्रधानमंत्रियों को उनके कार्यकाल के हिसाब से पुराने से नए क्रम में लगाएं:", options: { A: "नरेन्द्र मोदी", B: "इन्दिरा गांधी", C: "जवाहरलाल नेहरू", D: "अटल बिहारी वाजपेयी" }, correct: "CBDA" },
-        { question: "इन फिल्मों को उनके रिलीज वर्ष के अनुसार पुराने से नए क्रम में लगाएं:", options: { A: "दंगल", B: "शोले", C: "लगान", D: "बाहुबली" }, correct: "BCAD" },
-        { question: "इन शहरों को उनकी जनसंख्या के हिसाब से घटते क्रम (ज्यादा से कम) में लगाएं:", options: { A: "मुंबई", B: "दिल्ली", C: "बेंगलुरु", D: "चेन्नई" }, correct: "BACD" },
-        { question: "इन ग्रहों को सूर्य से उनकी दूरी के बढ़ते क्रम में लगाएं:", options: { A: "पृथ्वी", B: "बुध", C: "मंगल", D: "शुक्र" }, correct: "BDAC" },
-        { question: "इन केबीसी पड़ावों (Levels) को उनकी राशि के हिसाब से बढ़ते क्रम में लगाएं:", options: { A: "10,000", B: "1,60,000", C: "5,000", D: "3,20,000" }, correct: "CABD" },
-        { question: "इन त्योहारों को कैलेंडर वर्ष में आने वाले क्रम में लगाएं:", options: { A: "होली", B: "दीवाली", C: "रक्षा बंधन", D: "गणेश चतुर्थी" }, correct: "ACDB" }
+        { question: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण (Debut) के हिसाब se पुराने से नए क्रम में लगाएं:", options: { A: "विराट कोहली", B: "एमएस धोनी", C: "सचिन तेंदुलकर", D: "शुभमन गिल" }, correct: "CBAD" },
+        { question: "इन ग्रहों को सूर्य से उनकी दूरी के बढ़ते क्रम में लगाएं:", options: { A: "पृथ्वी", B: "बुध", C: "मंगल", D: "शुक्र" }, correct: "BDAC" }
     ];
     currentQuestionsPool = freeQuestions.sort(() => Math.random() - 0.5);
     loadNewQuestion();
 }
 
-// --- 4. Timer aur Question Logic ---
+// --- 2. Main Question Loader (Undefined aur 0,1,2,3 Fix) ---
 function loadNewQuestion() {
-    console.log("Naya sawal load ho raha hai...");
-
-    // 1. Limit Check: Agar user FREE hai tabhi 10 sawal ki limit lagao
     if (userPlan === 'free' && questionsPlayed >= 10) {
-        alert("10 मुफ्त सवाल पूरे! सिल्वर प्लान लें।");
+        alert("10 मुफ्त सवाल पूरे! प्रीमियम लें।");
         window.location.href = "index.html";
         return;
     }
 
-    // 2. Pool Check: Agar sawal khatam ho gaye hain
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        alert("सारे सवाल खत्म हो गए! आप प्रो हैं।");
+        alert("सारे सवाल खत्म हो गए!");
         window.location.href = "index.html";
         return;
     }
 
-    // 3. Sawal nikalna
     currentQuestion = currentQuestionsPool.shift(); 
     userSequence = "";
     timeLeft = 20;
 
-    // --- UNDEFINED FIX STARTS ---
-    // Agar JSON mein 'question' nahi mil raha toh 'q' ya 'text' dhoondo
-    const finalQuestionText = currentQuestion.question || currentQuestion.q || currentQuestion.text || "सवाल लोड नहीं हुआ";
+    // Display Fix: Sawal aur Sahi Kram dhoondna
+    const finalQText = currentQuestion.question || currentQuestion.q || "सवाल लोड नहीं हुआ";
+    const finalAnswer = currentQuestion.correct || currentQuestion.answer || "";
     
-    // Agar JSON mein 'correct' nahi mil raha toh 'answer' check karo
-    const finalCorrectSequence = currentQuestion.correct || currentQuestion.answer || "";
-    currentQuestion.correct = finalCorrectSequence; 
-    // --- UNDEFINED FIX ENDS ---
+    // Store it properly for checking
+    currentQuestion.correct = finalAnswer;
 
     document.getElementById('timer').innerText = timeLeft;
-    document.getElementById('question-text').innerText = finalQuestionText;
+    document.getElementById('question-text').innerText = finalQText;
     document.getElementById('result').innerText = "";
 
     const optionsContainer = document.getElementById('options-container');
     optionsContainer.innerHTML = "";
 
-    // Options load karna
+    // Options Fix: A, B, C, D dikhane ke liye
     for (let key in currentQuestion.options) {
         const btn = document.createElement("button");
         btn.className = "option-btn";
         btn.id = "btn-" + key;
-        btn.innerHTML = key + ": " + currentQuestion.options[key];
+        
+        // Agar key '0' hai toh use 'A' dikhayein, '1' hai toh 'B'
+        let displayKey = key;
+        if(key === "0") displayKey = "A";
+        else if(key === "1") displayKey = "B";
+        else if(key === "2") displayKey = "C";
+        else if(key === "3") displayKey = "D";
+
+        btn.innerHTML = displayKey + ": " + currentQuestion.options[key];
         btn.addEventListener("click", () => selectOption(key));
         optionsContainer.appendChild(btn);
     }
@@ -138,6 +102,35 @@ function loadNewQuestion() {
     startTimer();
 }
 
+// --- 3. Result Check (Sahi Kram Fix) ---
+function checkSequence() {
+    if (timerId) clearInterval(timerId);
+    bgMusic.pause(); 
+    clockSound.pause();
+    lockSound.play().catch(() => {});
+
+    const resultPara = document.getElementById('result');
+    
+    // Sahi kram ko display karne ke liye
+    let correctText = currentQuestion.correct;
+    // Agar kram numbers mein hai (0123) toh use ABCD mein badlein
+    correctText = correctText.replace(/0/g, 'A').replace(/1/g, 'B').replace(/2/g, 'C').replace(/3/g, 'D');
+
+    if (userSequence === currentQuestion.correct) {
+        correctSound.play().catch(() => {});
+        resultPara.style.color = "#00FF00";
+        resultPara.innerText = "अद्भुत! सही जवाब।";
+    } else {
+        wrongSound.play().catch(() => {});
+        resultPara.style.color = "#FF0000";
+        resultPara.innerText = "गलत! सही क्रम: " + correctText;
+    }
+
+    questionsPlayed++;
+    setTimeout(loadNewQuestion, 3500);
+}
+
+// Timer aur SelectOption functions purane hi rahenge...
 function selectOption(key) {
     if (!userSequence.includes(key)) {
         userSequence += key;
@@ -145,7 +138,8 @@ function selectOption(key) {
         if (btn) {
             btn.style.background = "gold";
             btn.style.color = "black";
-            btn.innerHTML += ` [${userSequence.length}]`;
+            let displayNum = userSequence.length;
+            btn.innerHTML += ` [${displayNum}]`;
         }
     }
 }
@@ -162,25 +156,4 @@ function startTimer() {
             checkSequence();
         }
     }, 1000);
-}
-
-function checkSequence() {
-    if (timerId) clearInterval(timerId);
-    bgMusic.pause(); 
-    clockSound.pause();
-    lockSound.play().catch(() => {});
-
-    const resultPara = document.getElementById('result');
-    if (userSequence === currentQuestion.correct) {
-        correctSound.play().catch(() => {});
-        resultPara.style.color = "#00FF00";
-        resultPara.innerText = "अद्भुत! सही जवाब।";
-    } else {
-        wrongSound.play().catch(() => {});
-        resultPara.style.color = "#FF0000";
-        resultPara.innerText = "गलत! सही क्रम: " + currentQuestion.correct;
-    }
-
-    questionsPlayed++;
-    setTimeout(loadNewQuestion, 3500);
-}
+        }
