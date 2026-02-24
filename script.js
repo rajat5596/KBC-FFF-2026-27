@@ -160,18 +160,27 @@ function buyPlan(clickedPlan) {
     const displayElement = document.getElementById('user-plan-display');
     const activePlan = displayElement ? displayElement.innerText.toUpperCase() : "FREE";
 
+    // Agar wahi plan click kiya jo active hai
     if (activePlan.includes(clickedPlan.toUpperCase())) {
-        alert(clickedPlan.toUpperCase() + " प्लान एक्टिव है! प्रैक्टिस शुरू हो रही है...");
-        
-        // Sahi JSON file ka naam yahan set karein
         localStorage.setItem('selectedJson', clickedPlan.toLowerCase() + "_questions.json"); 
-        
         window.location.href = "game.html";
-        return;
+    } 
+    else {
+        // Agar dusra plan click kiya toh payment page
+        let amount = clickedPlan === 'silver' ? '49' : clickedPlan === 'gold' ? '99' : '199';
+        const paymentLink = "https://rzp.io/rzp/I5geGyLS";
+        if (confirm(`${clickedPlan.toUpperCase()} (₹${amount}) प्लान लें?`)) {
+            window.open(paymentLink, '_self');
+        }
     }
-
-    // Payment Logic...
 }
+
+// Practice button ke liye (Taki free sawal hi load hon)
+function startPractice() {
+    localStorage.setItem('selectedJson', 'free'); // Ise 'free' set karein
+    window.location.href = "game.html";
+}
+
 
 
 // 1. Game Start logic - Jo Premium check karega
