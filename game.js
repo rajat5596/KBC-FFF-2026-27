@@ -86,30 +86,44 @@ function useDefaultFreeQuestions() {
 
 // --- 4. Timer aur Question Logic ---
 function loadNewQuestion() {
-    // Limit Check (Sirf Free Plan ke liye)
+    console.log("Naya sawal load ho raha hai...");
+
+    // 1. Limit Check: Agar user FREE hai tabhi 10 sawal ki limit lagao
     if (userPlan === 'free' && questionsPlayed >= 10) {
         alert("10 मुफ्त सवाल पूरे! सिल्वर प्लान लें।");
         window.location.href = "index.html";
         return;
     }
 
+    // 2. Pool Check: Agar sawal khatam ho gaye hain
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        alert("सारे सवाल खत्म हो गए!");
+        alert("सारे सवाल खत्म हो गए! आप प्रो हैं।");
         window.location.href = "index.html";
         return;
     }
 
+    // 3. Sawal nikalna
     currentQuestion = currentQuestionsPool.shift(); 
     userSequence = "";
     timeLeft = 20;
 
+    // --- UNDEFINED FIX STARTS ---
+    // Agar JSON mein 'question' nahi mil raha toh 'q' ya 'text' dhoondo
+    const finalQuestionText = currentQuestion.question || currentQuestion.q || currentQuestion.text || "सवाल लोड नहीं हुआ";
+    
+    // Agar JSON mein 'correct' nahi mil raha toh 'answer' check karo
+    const finalCorrectSequence = currentQuestion.correct || currentQuestion.answer || "";
+    currentQuestion.correct = finalCorrectSequence; 
+    // --- UNDEFINED FIX ENDS ---
+
     document.getElementById('timer').innerText = timeLeft;
-    document.getElementById('question-text').innerText = currentQuestion.question;
+    document.getElementById('question-text').innerText = finalQuestionText;
     document.getElementById('result').innerText = "";
 
     const optionsContainer = document.getElementById('options-container');
     optionsContainer.innerHTML = "";
 
+    // Options load karna
     for (let key in currentQuestion.options) {
         const btn = document.createElement("button");
         btn.className = "option-btn";
