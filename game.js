@@ -13,59 +13,61 @@ let questionsPlayed = 0;
 let currentQuestionsPool = []; 
 let userPlan = 'free'; 
 
+// --- 1. Sabse Pehle Plan aur Questions Load Karein ---
 window.onload = function() {
-    if (typeof firebase === 'undefined') {
-        useDefaultFreeQuestions();
-        return;
-    }
+    console.log("🚀 Game Shuru Ho Raha Hai...");
 
-    firebase.auth().onAuthStateChanged(async (user) => {
-        if (user) {
-            // क्लीन नंबर (9889904191)
-            const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
-            
-            try {
-                const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
-                const userData = snapshot.val();
-                
-                if (userData && userData.status === 'active') {
-                    const expiryDate = new Date(userData.expiry);
-                    if (expiryDate > new Date()) {
+    // Pehle localStorage check karein (Agar index.html se button daba kar aaye hain)
+    const selectedJson = localStorage.getItem('selectedJson');
+    
+    if (selectedJson && selectedJson !== 'question.json') {
+        console.log("Premium Path Detected: " + selectedJson);
+        userPlan = selectedJson.split('_')[0]; // silver, gold etc.
+        loadFinalQuestions(selectedJson);
+    } 
+    else if (typeof firebase !== 'undefined') {
+        // Firebase Auth se check karein (Safety net)
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
+                try {
+                    const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
+                    const userData = snapshot.val();
+                    if (userData && userData.status === 'active') {
                         userPlan = userData.plan.toLowerCase().trim();
-                        const planDisplay = document.getElementById('user-plan-display');
-                        if(planDisplay) planDisplay.innerHTML = `💎 ${userPlan.toUpperCase()} प्लान`;
+                        loadFinalQuestions(userPlan + "_questions.json");
+                    } else {
+                        useDefaultFreeQuestions();
                     }
-                }
-            } catch (error) { console.log("DB Error"); }
-            loadFinalQuestions();
-        } else {
-            window.location.replace("index.html");
-        }
-    });
-};
-
-async function loadFinalQuestions() {
-    let fileName = ''; 
-    if (userPlan === 'silver') fileName = 'silver_questions.json';
-    else if (userPlan === 'gold') fileName = 'gold_questions.json';
-    else if (userPlan === 'platinum') fileName = 'platinum_questions.json';
-
-    if (fileName !== '') {
-        try {
-            const response = await fetch(fileName + "?v=" + Date.now()); // Cache bypass
-            if (!response.ok) throw new Error();
-            let data = await response.json();
-            currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-            loadNewQuestion();
-        } catch (e) { useDefaultFreeQuestions(); }
+                } catch (error) { useDefaultFreeQuestions(); }
+            } else {
+                window.location.replace("index.html");
+            }
+        });
     } else {
         useDefaultFreeQuestions();
     }
-}
-window.onload = function() {
-    console.log("🚀 Game starting - loading free questions directly...");
+};
 
-    // सारे 10 free सवाल यहीं हैं (कोई firebase, question.js की जरूरत नहीं)
+// --- 2. Sahi JSON File Load Karne Wala Function ---
+async function loadFinalQuestions(fileName) {
+    console.log("Loading File: " + fileName);
+    try {
+        const response = await fetch(fileName + "?v=" + Date.now());
+        if (!response.ok) throw new Error();
+        let data = await response.json();
+        currentQuestionsPool = data.sort(() => Math.random() - 0.5);
+        console.log("Total Questions Loaded: " + currentQuestionsPool.length);
+        loadNewQuestion();
+    } catch (e) {
+        console.log("JSON Error, using Free fallback");
+        useDefaultFreeQuestions();
+    }
+}
+
+// --- 3. Free Questions Fallback (Wahi 10 Sawal) ---
+function useDefaultFreeQuestions() {
+    userPlan = 'free';
     const freeQuestions = [
         { question: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:", options: { A: "15 अगस्त", B: "26 जनवरी", C: "2 अक्टूबर", D: "14 नवंबर" }, correct: "BACD" },
         { question: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण (Debut) के हिसाब से पुराने से नए क्रम में लगाएं:", options: { A: "विराट कोहली", B: "एमएस धोनी", C: "सचिन तेंदुलकर", D: "शुभमन गिल" }, correct: "CBAD" },
@@ -78,12 +80,50 @@ window.onload = function() {
         { question: "इन केबीसी पड़ावों (Levels) को उनकी राशि के हिसाब से बढ़ते क्रम में लगाएं:", options: { A: "10,000", B: "1,60,000", C: "5,000", D: "3,20,000" }, correct: "CABD" },
         { question: "इन त्योहारों को कैलेंडर वर्ष में आने वाले क्रम में लगाएं:", options: { A: "होली", B: "दीवाली", C: "रक्षा बंधन", D: "गणेश चतुर्थी" }, correct: "ACDB" }
     ];
-
     currentQuestionsPool = freeQuestions.sort(() => Math.random() - 0.5);
     loadNewQuestion();
+}
 
-    console.log("✅ Free questions loaded! Game ready. Enjoy!");
-};
+// --- 4. Timer aur Question Logic ---
+function loadNewQuestion() {
+    // Limit Check (Sirf Free Plan ke liye)
+    if (userPlan === 'free' && questionsPlayed >= 10) {
+        alert("10 मुफ्त सवाल पूरे! सिल्वर प्लान लें।");
+        window.location.href = "index.html";
+        return;
+    }
+
+    if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
+        alert("सारे सवाल खत्म हो गए!");
+        window.location.href = "index.html";
+        return;
+    }
+
+    currentQuestion = currentQuestionsPool.shift(); 
+    userSequence = "";
+    timeLeft = 20;
+
+    document.getElementById('timer').innerText = timeLeft;
+    document.getElementById('question-text').innerText = currentQuestion.question;
+    document.getElementById('result').innerText = "";
+
+    const optionsContainer = document.getElementById('options-container');
+    optionsContainer.innerHTML = "";
+
+    for (let key in currentQuestion.options) {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.id = "btn-" + key;
+        btn.innerHTML = key + ": " + currentQuestion.options[key];
+        btn.addEventListener("click", () => selectOption(key));
+        optionsContainer.appendChild(btn);
+    }
+
+    bgMusic.currentTime = 0;
+    bgMusic.play().catch(() => {});
+    startTimer();
+}
+
 function selectOption(key) {
     if (!userSequence.includes(key)) {
         userSequence += key;
@@ -93,23 +133,30 @@ function selectOption(key) {
             btn.style.color = "black";
             btn.innerHTML += ` [${userSequence.length}]`;
         }
-        console.log("Option चुना:", key, "क्रम:", userSequence);
     }
 }
 
+function startTimer() {
+    if (timerId) clearInterval(timerId);
+    clockSound.currentTime = 0;
+    clockSound.play().catch(() => {});
+    timerId = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').innerText = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(timerId);
+            checkSequence();
+        }
+    }, 1000);
+}
+
 function checkSequence() {
-    console.log("Lock button क्लिक हुआ - checkSequence चला");
     if (timerId) clearInterval(timerId);
     bgMusic.pause(); 
     clockSound.pause();
     lockSound.play().catch(() => {});
 
     const resultPara = document.getElementById('result');
-    if (!resultPara) {
-        console.log("result element नहीं मिला");
-        return;
-    }
-
     if (userSequence === currentQuestion.correct) {
         correctSound.play().catch(() => {});
         resultPara.style.color = "#00FF00";
@@ -122,75 +169,4 @@ function checkSequence() {
 
     questionsPlayed++;
     setTimeout(loadNewQuestion, 3500);
-}
-function startTimer() {
-    if (timerId) clearInterval(timerId); // पुराना timer बंद करो
-
-    timeLeft = 20;
-    document.getElementById('timer').innerText = timeLeft;
-
-    clockSound.currentTime = 0;
-    clockSound.play().catch(() => {});
-
-    timerId = setInterval(() => {
-        timeLeft--;
-        document.getElementById('timer').innerText = timeLeft;
-
-        if (timeLeft <= 0) {
-            clearInterval(timerId);
-            checkSequence(); // समय खत्म होने पर auto लॉक
-        }
-    }, 1000);
-
-    console.log("Timer शुरू हुआ - timeLeft:", timeLeft);
-}
-function loadNewQuestion() {
-    console.log("loadNewQuestion() चला - सवाल लोड कर रहा हूँ");
-
-    if (userPlan === 'free' && questionsPlayed >= 10) {
-        if (typeof handleLimitReached === 'function') {
-            handleLimitReached();
-        } else {
-            alert("10 मुफ्त सवाल पूरे! प्रीमियम लें।");
-            window.open("https://rzp.io/rzp/I5geGyLS", '_self');
-        }
-        return;
-    }
-
-    if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        console.log("Pool खाली - fallback");
-        document.getElementById('question-text').innerHTML = "सवाल खत्म हो गए! होम जाएँ या प्रीमियम लें।";
-        document.getElementById('options-container').innerHTML = "";
-        return;
-    }
-
-    currentQuestion = currentQuestionsPool.shift(); 
-    userSequence = "";
-    timeLeft = 20;
-
-    document.getElementById('timer').innerText = timeLeft;
-    document.getElementById('question-text').innerText = currentQuestion.question;
-    document.getElementById('result').innerText = "";
-
-    // Options को सही से बनाओ और click listener लगाओ
-    const optionsContainer = document.getElementById('options-container');
-    optionsContainer.innerHTML = ""; // पहले खाली करो
-
-    for (let key in currentQuestion.options) {
-        const btn = document.createElement("button");
-        btn.className = "option-btn";
-        btn.id = "btn-" + key;
-        btn.innerHTML = key + ": " + currentQuestion.options[key];
-
-        // Click event सही से लगाओ
-        btn.addEventListener("click", function() {
-            selectOption(key);
-        });
-
-        optionsContainer.appendChild(btn);
-    }
-
-    bgMusic.currentTime = 0;
-    bgMusic.play().catch(() => {});
-    startTimer();
 }
