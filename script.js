@@ -156,10 +156,22 @@ function logout() {
     });
 }
 
-// Buy Plan
 function buyPlan(plan) {
+    // Pehle check karein ki kya user ke paas pehle se koi plan hai
+    const currentStatus = document.getElementById('user-plan-display').innerText;
+    
+    // Agar user ke paas pehle se Silver/Gold/Platinum hai toh use warning dein
+    if (currentStatus.includes("SILVER") || currentStatus.includes("GOLD") || currentStatus.includes("PLATINUM")) {
+        alert("Aapka premium plan pehle se hi active hai! Aapko dobara kharidne ki zaroorat nahi hai.");
+        return; // Payment page par nahi bhejega
+    }
+
+    // Agar FREE user hai, tabhi payment par le jaye
+    let planName = plan.toUpperCase();
+    let amount = plan === 'silver' ? '49' : plan === 'gold' ? '99' : '199';
     const paymentLink = "https://rzp.io/rzp/I5geGyLS";
-    if (confirm(plan.toUpperCase() + " प्लान के लिए पेमेंट पेज पर जाएँ?")) {
+
+    if (confirm(`${planName} प्लान (₹${amount}) चुन लिया!\nपेमेंट पेज पर जाएँ?`)) {
         window.open(paymentLink, '_self');
     }
 }
