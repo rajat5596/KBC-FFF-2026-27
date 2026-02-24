@@ -177,9 +177,10 @@ function buyPlan(clickedPlan) {
 
 // Practice button ke liye (Taki free sawal hi load hon)
 function startPractice() {
-    localStorage.setItem('selectedJson', 'free'); // Ise 'free' set karein
+    localStorage.setItem('selectedJson', 'free_questions.json'); // Naam ekdum sahi hona chahiye
     window.location.href = "game.html";
 }
+
 
 
 
