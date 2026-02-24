@@ -106,7 +106,7 @@ function showMenu(name) {
     if (welcomeMsg) welcomeMsg.innerHTML = `👋 स्वागत है, <strong>${name}</strong>!`;
 }
 
-// User Login State aur Premium Check
+// Firebase Auth State
 firebase.auth().onAuthStateChanged((user) => {
     const loginSection = document.getElementById('login-section');
     const menuSection = document.getElementById('menu-section');
@@ -116,32 +116,28 @@ firebase.auth().onAuthStateChanged((user) => {
         if(loginSection) loginSection.style.display = 'none';
         if(menuSection) menuSection.style.display = 'block';
 
-        // Phone number se 10 digit nikalna (Database match ke liye)
+        // 10 digit number extraction
         const fullPhone = user.phoneNumber || ""; 
         const tenDigitPhone = fullPhone.slice(-10); 
-        console.log("Database mein is number ko dhund raha hoon:", tenDigitPhone);
         
-        // Database se data mangwana
+        // Database connection
         firebase.database().ref('users/' + tenDigitPhone).on('value', (snapshot) => {
             const data = snapshot.val();
-            console.log("Database se ye data mila:", data);
+            
+            if (displayElement) {
+                displayElement.style.display = "block"; // Pehle hi show kar do
+                
+                if (data && data.plan) {
+                    let planType = data.plan.trim().toLowerCase();
+                    let expiry = data.expiry ? new Date(data.expiry).toLocaleDateString('hi-IN') : "N/A";
 
-            if (data && data.plan) {
-                let planType = data.plan.trim().toLowerCase();
-                let expiry = data.expiry ? new Date(data.expiry).toLocaleDateString('hi-IN') : "N/A";
-
-                if(displayElement) {
                     displayElement.innerHTML = `
                         <span>आपका प्लान: </span>
                         <span class="plan-badge ${planType}-badge">${planType.toUpperCase()}</span>
                         <div style="font-size: 0.8rem; margin-top: 5px; opacity: 0.9;">वैधता: ${expiry}</div>
                     `;
-                    displayElement.style.display = "block";
-                }
-            } else {
-                if(displayElement) {
+                } else {
                     displayElement.innerHTML = `<span>आपका प्लान: </span><span class="plan-badge free-badge">FREE</span>`;
-                    displayElement.style.display = "block";
                 }
             }
         });
@@ -151,36 +147,19 @@ firebase.auth().onAuthStateChanged((user) => {
     }
 });
 
-// Logout (Fixed Version)
+// Logout (Sirf ek baar rakhein)
 function logout() {
     localStorage.clear();
     sessionStorage.clear();
     firebase.auth().signOut().then(() => {
         window.location.replace("index.html");
-    }).catch((error) => {
-        window.location.reload();
     });
 }
 
-// Baki functions (buyPlan etc.) waise hi rehne dein...
-
-// Buy Plan फंक्शन
+// Buy Plan
 function buyPlan(plan) {
-    let planName = plan.toUpperCase();
-    let amount = plan === 'silver' ? '49' : plan === 'gold' ? '99' : '199';
     const paymentLink = "https://rzp.io/rzp/I5geGyLS";
-
-    if (confirm(`\( {planName} प्लान (₹ \){amount}) चुन लिया!\nपेमेंट पेज पर जाएँ?`)) {
+    if (confirm(plan.toUpperCase() + " प्लान के लिए पेमेंट पेज पर जाएँ?")) {
         window.open(paymentLink, '_self');
-    } else {
-        alert("प्लान चुनने से कैंसल किया गया।");
     }
-}
-
-// Logout
-function logout() {
-    localStorage.clear();
-    auth.signOut().then(() => {
-        window.location.replace("index.html");
-    });
 }
