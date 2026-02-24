@@ -175,3 +175,29 @@ function buyPlan(plan) {
         window.open(paymentLink, '_self');
     }
 }
+// 1. Game Start logic - Jo Premium check karega
+function startPractice() {
+    const display = document.getElementById('user-plan-display');
+    const planText = display ? display.innerText.toUpperCase() : "FREE";
+
+    if (planText.includes("SILVER") || planText.includes("GOLD") || planText.includes("PLATINUM")) {
+        console.log("Premium User Detected: " + planText);
+        // Premium user ke liye game.html par bhejein (yahan koi 10 limit nahi lagegi)
+        window.location.href = "game.html"; 
+    } else {
+        // Free user ke liye purana limit wala check
+        checkFreeLimitAndStart();
+    }
+}
+
+// 2. Limit Check Fix - Jo Silver users ko kabhi nahi rokega
+function checkFreeLimitAndStart() {
+    let playedCount = localStorage.getItem('playedCount') || 0;
+    
+    if (playedCount >= 10) {
+        // Sirf tabhi limit wala pop-up dikhaye jab user FREE ho
+        handleLimitReached();
+    } else {
+        window.location.href = "game.html";
+    }
+                                           }
