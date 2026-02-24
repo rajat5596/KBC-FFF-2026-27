@@ -175,29 +175,32 @@ function buyPlan(clickedPlan) {
     }
 }
 
-// Practice button ke liye (Taki free sawal hi load hon)
+// Practice Button ke liye
 function startPractice() {
-    localStorage.setItem('selectedJson', 'free_questions.json'); // Naam ekdum sahi hona chahiye
+    // Sabse zaroori: Yahan 'free_questions.json' hi hona chahiye
+    localStorage.setItem('selectedJson', 'free_questions.json'); 
+    localStorage.setItem('userPlan', 'free'); // Plan ko clear set karein
     window.location.href = "game.html";
 }
 
+// Premium Buttons ke liye
+function buyPlan(clickedPlan) {
+    const displayElement = document.getElementById('user-plan-display');
+    const activePlan = displayElement ? displayElement.innerText.toUpperCase() : "FREE";
 
-
-
-// 1. Game Start logic - Jo Premium check karega
-function startPractice() {
-    const display = document.getElementById('user-plan-display');
-    const planText = display ? display.innerText.toUpperCase() : "FREE";
-
-    if (planText.includes("SILVER") || planText.includes("GOLD") || planText.includes("PLATINUM")) {
-        console.log("Premium User Detected: " + planText);
-        // Premium user ke liye game.html par bhejein (yahan koi 10 limit nahi lagegi)
-        window.location.href = "game.html"; 
+    if (activePlan.includes(clickedPlan.toUpperCase())) {
+        // Agar Silver active hai, toh silver_questions.json load karo
+        localStorage.setItem('selectedJson', clickedPlan.toLowerCase() + "_questions.json"); 
+        localStorage.setItem('userPlan', 'premium'); 
+        window.location.href = "game.html";
     } else {
-        // Free user ke liye purana limit wala check
-        checkFreeLimitAndStart();
+        // Payment logic...
+        if (confirm("क्या आप " + clickedPlan + " प्लान खरीदना चाहते हैं?")) {
+            window.open("https://rzp.io/rzp/I5geGyLS", '_self');
+        }
     }
 }
+
 
 // 2. Limit Check Fix - Jo Silver users ko kabhi nahi rokega
 function checkFreeLimitAndStart() {
