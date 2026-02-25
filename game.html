@@ -16,16 +16,16 @@
         display: flex; 
         justify-content: space-between; 
         align-items: center; 
-        margin-bottom: 10px; /* पहले 20 था, अब कम */ 
+        margin-bottom: 10px;
         flex-wrap: wrap; 
         gap: 8px; 
     }
     #timer { 
-        font-size: 2.5rem; /* पहले 3rem था, छोटा किया */
+        font-size: 2.5rem;
         color: #ffd700; 
         text-shadow: 0 0 15px #ffd700; 
         margin: 0; 
-        padding: 8px 15px; /* पैडिंग कम */
+        padding: 8px 15px;
         background: rgba(0,0,0,0.3); 
         border-radius: 50px; 
         border: 2px solid #ffd700; 
@@ -34,14 +34,14 @@
         padding: 6px 15px; 
         border-radius: 25px; 
         font-weight: bold; 
-        font-size: 0.9rem; /* छोटा फॉन्ट */
+        font-size: 0.9rem;
         border: 2px solid #ffd700; 
         box-shadow: 0 0 12px rgba(255,215,0,0.3); 
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
         color: white; 
     }
     #question-text { 
-        font-size: 1.1rem !important; /* बहुत बड़ा था, अब छोटा */
+        font-size: 1.1rem !important;
         margin: 15px 0 !important; 
         padding: 12px !important; 
         background: rgba(0,0,0,0.5); 
@@ -53,19 +53,19 @@
     #options-container { 
         display: grid; 
         grid-template-columns: repeat(2, 1fr); 
-        gap: 8px !important; /* पहले 15 था, कम किया */
+        gap: 8px !important;
         margin: 10px 0 !important; 
     }
     .option-btn { 
         background: linear-gradient(145deg, #2c3e50, #3498db); 
         color: white; 
         border: 2px solid #ffd700; 
-        padding: 10px !important; /* पहले 15 था */
-        font-size: 0.95rem !important; /* पहले 1.2 था */
+        padding: 10px !important;
+        font-size: 0.95rem !important;
         border-radius: 10px; 
         cursor: pointer; 
         transition: all 0.3s ease; 
-        min-height: 60px !important; /* पहले 80 था */
+        min-height: 60px !important;
         display: flex; 
         align-items: center; 
         justify-content: center; 
@@ -80,25 +80,25 @@
         display: flex; 
         justify-content: space-between; 
         align-items: center; 
-        margin-top: 20px; /* थोड़ा कम */
+        margin-top: 20px;
         gap: 10px; 
     }
     .lock-answer-btn { 
         background: linear-gradient(145deg, #ffd700, #ffa500); 
         color: black; 
         border: 2px solid #fff; 
-        padding: 10px 30px !important; /* छोटा किया */
-        font-size: 1rem !important; /* पहले 1.3 था */
+        padding: 10px 30px !important;
+        font-size: 1rem !important;
         font-weight: bold; 
         border-radius: 40px; 
         cursor: pointer; 
         box-shadow: 0 0 15px #ffd700; 
-        width: 180px !important; /* पहले 220 था */
+        width: 180px !important;
         display: block; 
         margin: 15px auto !important; 
     }
     #result { 
-        font-size: 1.1rem; /* छोटा किया */
+        font-size: 1.1rem;
         padding: 12px; 
         border-radius: 10px; 
         background: rgba(0,0,0,0.5); 
@@ -122,14 +122,12 @@
         font-weight: bold; 
     }
     
-    /* मोबाइल फिट बनाने के लिए */
     @media (max-width: 480px) { 
-        #options-container { grid-template-columns: 1fr; } /* छोटी स्क्रीन पर 1 कॉलम */
+        #options-container { grid-template-columns: 1fr; }
         #question-text { font-size: 1rem !important; }
         .option-btn { font-size: 0.9rem !important; min-height: 55px !important; }
     }
 
-    /* पूरे पेज को फिट करने के लिए */
     body {
         margin: 0;
         padding: 0;
@@ -146,7 +144,7 @@
 <body>
     <div class="main-container">
 
-        <!-- Top Ad Unit (Adsterra) -->
+        <!-- Top Ad Unit -->
         <div id="top-ad" style="margin: 10px auto; text-align: center; min-height: 50px; max-width: 320px;">
             <script type="text/javascript">
                 atOptions = { 'key' : '8bb7bd31447ffb74a3ebec1be09202fe', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
@@ -161,13 +159,14 @@
         <div id="question-text">सवाल लोड हो रहा है...</div>
         <div id="options-container"></div>
         
+        <!-- FIXED: onclick function name changed to lockAnswer() -->
         <div style="text-align: center;">
-            <button id="lock-answer-btn" onclick="checkSequence()" class="lock-answer-btn">🔒 उत्तर लॉक करें</button>
+            <button id="lock-answer-btn" onclick="lockAnswer()" class="lock-answer-btn">🔒 उत्तर लॉक करें</button>
         </div>
 
         <div id="result"></div>
 
-        <!-- Bottom Ad Unit (Adsterra) -->
+        <!-- Bottom Ad Unit -->
         <div id="bottom-ad" style="margin: 20px auto; text-align: center; min-height: 50px; max-width: 320px;">
             <script type="text/javascript">
                 atOptions = { 'key' : '8bb7bd31447ffb74a3ebec1be09202fe', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
@@ -182,16 +181,21 @@
     </div>
 
     <script>
-        // यहाँ से Firebase Initialize हटा दिया गया है क्योंकि वह game.js में पहले से है
         function logout() {
             localStorage.clear();
-            firebase.auth().signOut().then(() => {
+            if (typeof firebase !== 'undefined') {
+                firebase.auth().signOut().then(() => {
+                    window.location.replace("index.html");
+                }).catch(() => {
+                    window.location.replace("index.html");
+                });
+            } else {
                 window.location.replace("index.html");
-            });
+            }
         }
     </script>
 
-    <script src="question.js"></script>
+    <!-- REMOVED: question.js - aapke game.js mein already free questions embedded hain -->
     <script src="game.js"></script>
 </body>
 </html>
