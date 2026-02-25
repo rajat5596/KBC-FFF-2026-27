@@ -106,7 +106,7 @@ function showMenu(name) {
     if (welcomeMsg) welcomeMsg.innerHTML = `👋 स्वागत है, <strong>${name}</strong>!`;
 }
 
-// 4. User Plan Load करने का फंक्शन
+// User Plan Load करने के फंक्शन में यह जोड़ो
 async function loadUserPlan(user) {
     if (!user) return;
     
@@ -119,6 +119,11 @@ async function loadUserPlan(user) {
         
         if (!planDisplay) return;
 
+        // पहले सभी plan buttons से active class हटाओ
+        document.querySelectorAll('.plan-btn').forEach(btn => {
+            btn.classList.remove('active-plan');
+        });
+
         if (userData && userData.plan && userData.status === 'active') {
             const expiryDate = new Date(userData.expiry);
             const today = new Date();
@@ -127,9 +132,15 @@ async function loadUserPlan(user) {
                 const plan = userData.plan.toLowerCase();
                 const expiryStr = expiryDate.toLocaleDateString('hi-IN');
                 
-                // localStorage में सेव करें ताकि game.js में premium detect हो
+                // localStorage में सेव करें
                 localStorage.setItem('user_plan_status', 'premium');
                 localStorage.setItem('user_plan_type', plan);
+
+                // Active plan button को highlight करो
+                const activeBtn = document.getElementById(`${plan}-plan-btn`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active-plan');
+                }
 
                 let planConfig = { icon: "🎯", color: "#667eea" };
                 if (plan === 'silver') planConfig = { icon: "🥈", color: "linear-gradient(135deg, #C0C0C0, #707070)" };
@@ -148,18 +159,18 @@ async function loadUserPlan(user) {
         } else {
             // Free प्लान
             localStorage.setItem('user_plan_status', 'free');
+            localStorage.removeItem('user_plan_type');
             planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
             planDisplay.innerHTML = `🎯 फ्री प्लान (10 सवाल उपलब्ध)`;
         }
 
-        // Fallback display (अगर ऊपर से कुछ न दिखा तो ये दिखाओ)
+        // Fallback display
         if (planDisplay && !planDisplay.innerHTML.trim()) {
             planDisplay.innerHTML = "🎯 फ्री प्लान (10 सवाल उपलब्ध)";
             planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
         }
     } catch (error) {
         console.error("Plan Load Error:", error);
-        // Error होने पर भी कुछ दिखाओ
         const planDisplay = document.getElementById('user-plan-display');
         if (planDisplay) {
             planDisplay.innerHTML = "🎯 फ्री प्लान (10 सवाल उपलब्ध)";
