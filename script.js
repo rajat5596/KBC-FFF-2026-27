@@ -196,26 +196,15 @@ function handleLimitReached() {
 
 // Buy Plan फंक्शन - FIXED
 function buyPlan(plan) {
-    const userPlanStatus = localStorage.getItem('user_plan_status');
-    const userActivePlan = localStorage.getItem('user_plan_type');
-    
-    // Agar user already premium hai
-    if (userPlanStatus === 'premium') {
-        // Agar wahi plan hai jo active hai
-        if (userActivePlan === plan) {
-            // Direct game kholo
-            window.location.href = "game.html";
-            return;
-        } else {
-            // Different plan par click kiya hai - upgrade/downgrade
-            const confirmMsg = `आपके पास पहले से ${userActivePlan.toUpperCase()} प्लान एक्टिव है।\n${plan.toUpperCase()} प्लान पर स्विच करें?`;
-            if (confirm(confirmMsg)) {
-                // Payment page par bhejo upgrade ke liye
-                window.open("https://rzp.io/rzp/I5geGyLS", '_self');
-            }
-            return;
-        }
+    let confirmMsg = `🥈 सिल्वर प्लान (₹49) लें?\n500 सवाल अनलिमिटेड प्रैक्टिस`;
+    if (plan === 'gold') confirmMsg = `🥇 गोल्ड प्लान (₹99) लें?\n1500 सवाल अनलिमिटेड प्रैक्टिस`;
+    if (plan === 'platinum') confirmMsg = `💎 प्लैटिनम प्लान (₹199) लें?\nअनलिमिटेड सवाल`;
+
+    if (confirm(confirmMsg)) {
+        // Direct redirect
+        window.location.assign("https://rzp.io/rzp/I5geGyLS");
     }
+}
     
     // Free user ke liye - payment page
     let planName = plan.toUpperCase();
