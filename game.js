@@ -170,13 +170,13 @@ function startTimer() {
     }, 1000);
 }
 
-// Lock button event (HTML में button id="lock-btn" होना चाहिए)
+// Lock button event
 document.addEventListener('DOMContentLoaded', () => {
-    const lockBtn = document.getElementById('lock-btn');
+    const lockBtn = document.getElementById('lock-answer-btn');
     if (lockBtn) {
         lockBtn.addEventListener('click', checkSequence);
-        console.log('Lock button set!');
+        console.log('Lock button ready! ID: lock-answer-btn');
     } else {
-        console.warn('Lock button id="lock-btn" नहीं मिला!');
+        console.warn('Lock button id="lock-answer-btn" नहीं मिला! HTML check karo.');
     }
 });
