@@ -41,14 +41,36 @@ function updatePlanDisplay(plan, expiryDate) {
 window.onload = function() {
     console.log("🚀 Game starting...");
     
-    const backupQuestions = [
-        { q: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:", options: ["15 अगस्त", "26 जनवरी", "2 अक्टूबर", "14 नवंबर"], a: "BACD" },
-        { q: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण के हिसाब से पुराने से नए क्रम में लगाएं:", options: ["विराट कोहली", "एमएस धोनी", "सचिन तेंदुलकर", "शुभमन गिल"], a: "CBAD" },
-        { q: "इन सोशल मीडिया ऐप्स को उनकी लोकप्रियता के हिसाब से क्रम में लगाएं:", options: ["इंस्टाग्राम", "फेसबुक", "व्हाट्सएप", "यूट्यूब"], a: "DCBA" }
-    ];
-    
-    currentQuestionsPool = [...backupQuestions].sort(() => Math.random() - 0.5);
+    // पहले खाली pool रखो
+currentQuestionsPool = [];
 
+// फ्री questions लोड करने की कोशिश करो
+async function loadQuestionsFromFile(filename) {
+    try {
+        const response = await fetch(filename + '?v=' + Date.now());
+        if (response.ok) {
+            const data = await response.json();
+            console.log(`✅ ${filename} loaded:`, data.length);
+            return data;
+        }
+    } catch (e) {
+        console.log(`❌ ${filename} load failed:`, e);
+    }
+    return null;
+}
+
+// पहले free_questions.json लोड करो
+loadQuestionsFromFile('free_questions.json').then(data => {
+    if (data && data.length > 0) {
+        currentQuestionsPool = data.sort(() => Math.random() - 0.5);
+    } else {
+        // Backup questions
+        currentQuestionsPool = [
+            { q: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:", options: ["15 अगस्त", "26 जनवरी", "2 अक्टूबर", "14 नवंबर"], a: "BACD" },
+            { q: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण के हिसाब से पुराने से नए क्रम में लगाएं:", options: ["विराट कोहली", "एमएस धोनी", "सचिन तेंदुलकर", "शुभमन गिल"], a: "CBAD" }
+        ].sort(() => Math.random() - 0.5);
+    }
+});
     let gameStarted = false;
     const fallbackTimer = setTimeout(() => {
         if (!gameStarted) {
