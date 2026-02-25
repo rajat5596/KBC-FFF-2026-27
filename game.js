@@ -41,13 +41,10 @@ function updatePlanDisplay(plan, expiryDate) {
 window.onload = function() {
     console.log("🚀 Game starting...");
     
-    // Backup Questions (Format Match with your JSON)
     const backupQuestions = [
         { q: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:", options: ["15 अगस्त", "26 जनवरी", "2 अक्टूबर", "14 नवंबर"], a: "BACD" },
         { q: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण के हिसाब से पुराने से नए क्रम में लगाएं:", options: ["विराट कोहली", "एमएस धोनी", "सचिन तेंदुलकर", "शुभमन गिल"], a: "CBAD" },
-        { q: "इन सोशल मीडिया ऐप्स को उनकी लोकप्रियता के हिसाब से क्रम में लगाएं:", options: ["इंस्टाग्राम", "फेसबुक", "व्हाट्सएप", "यूट्यूब"], a: "DCBA" },
-        { q: "इन रंगों को इंद्रधनुष के क्रम में लगाएं:", options: ["पीला", "लाल", "बैंगनी", "हरा"], a: "CDAB" },
-        { q: "इन प्रधानमंत्रियों को कार्यकाल के हिसाब से क्रम में लगाएं:", options: ["नरेन्द्र मोदी", "इन्दिरा गांधी", "जवाहरलाल नेहरू", "अटल बिहारी वाजपेयी"], a: "CBDA" }
+        { q: "इन सोशल मीडिया ऐप्स को उनकी लोकप्रियता के हिसाब से क्रम में लगाएं:", options: ["इंस्टाग्राम", "फेसबुक", "व्हाट्सएप", "यूट्यूब"], a: "DCBA" }
     ];
     
     currentQuestionsPool = [...backupQuestions].sort(() => Math.random() - 0.5);
@@ -82,7 +79,6 @@ window.onload = function() {
                                 const premiumData = await response.json();
                                 if (premiumData && premiumData.length > 0) {
                                     currentQuestionsPool = premiumData.sort(() => Math.random() - 0.5);
-                                    console.log("Premium Questions Loaded:", currentQuestionsPool.length);
                                 }
                             }
                         }
@@ -99,23 +95,32 @@ window.onload = function() {
 };
 
 // --- 2. नया सवाल लोड करना ---
-// loadNewQuestion function ke andar limit check wala part
-if (userPlan === 'free' && questionsPlayed >= 5) {
-    bgMusic.pause();
-    clockSound.pause();
-    if (confirm("🎯 Aapke 5 muft sawal poore hue! Premium plan lekar 500+ sawal khelein?")) {
-        // Nayi tab mein kholne se white screen nahi aayegi
-        window.open("https://rzp.io/rzp/15geGvLS_conv", "_blank");
-        // Peeche wale page ko home par bhej dein taaki game reset ho jaye
+function loadNewQuestion() {
+    // Limit check for free users
+    if (userPlan === 'free' && questionsPlayed >= 5) {
+        bgMusic.pause();
+        clockSound.pause();
+        if (confirm("🎯 आपके 5 मुफ्त सवाल पूरे हुए! प्रीमियम प्लान लेकर 500+ सवाल खेलें?")) {
+            window.open("https://rzp.io/rzp/15geGvLS_conv", "_blank");
+        }
         window.location.replace("index.html");
-    } else {
-        window.location.replace("index.html");
+        return;
     }
-    return;
-}
 
+    if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
+        alert("सारे सवाल खत्म हो गए हैं!");
+        window.location.replace("index.html");
+        return;
+    }
+
+    currentQuestion = currentQuestionsPool.shift();
+    userSequence = "";
+    timeLeft = 20;
+
+    document.getElementById('timer').innerText = timeLeft;
+    document.getElementById('question-text').innerText = currentQuestion.q || currentQuestion.question;
+    document.getElementById('result').innerText = "";
     
-    // Normalize Correct Answer
     currentQuestion.correct = currentQuestion.a || currentQuestion.correct;
     
     const optionsContainer = document.getElementById('options-container');
@@ -200,7 +205,7 @@ function checkAnswer() {
     setTimeout(loadNewQuestion, 3000);
 }
 
-// --- 5. ऑप्शन चुनना ---
+// --- 5. ऑप्शन चुनna ---
 function selectOption(key) {
     if (!userSequence.includes(key) && userSequence.length < 4) {
         userSequence += key;
@@ -239,15 +244,14 @@ function startTimer() {
 function logout() {
     localStorage.clear();
     firebase.auth().signOut().then(() => window.location.replace("index.html"));
-                                                                                     }
-        
+}
+
 function checkPlanAccess(clickedPlan) {
     if (userPlan !== 'free' && userPlan !== clickedPlan) {
-        alert(`Aapka abhi ${userPlan.toUpperCase()} plan active hai. Isse upgrade karne ke liye customer support se sampark karein.`);
+        alert(`आपका अभी ${userPlan.toUpperCase()} प्लान सक्रिय है। इसे अपग्रेड करने के लिए कस्टमर सपोर्ट से संपर्क करें।`);
     } else if (userPlan === clickedPlan) {
-        alert("Ye plan aapka pehle se active hai!");
+        alert("यह प्लान पहले से ही सक्रिय है!");
     } else {
-        // Proceed to payment
         window.open("https://rzp.io/rzp/15geGvLS_conv", "_blank");
     }
 }
