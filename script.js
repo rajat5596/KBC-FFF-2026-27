@@ -139,7 +139,7 @@ async function loadUserPlan(user) {
                 planDisplay.style.background = planConfig.color;
                 planDisplay.innerHTML = `
                     <div style="padding:10px;">
-                        \( {planConfig.icon} <b> \){plan.toUpperCase()} एक्टिव</b><br>
+                        ${planConfig.icon} <b>${plan.toUpperCase()} एक्टिव</b><br>
                         <small>वैधता: ${expiryStr}</small>
                     </div>`;
             } else {
@@ -160,6 +160,7 @@ async function loadUserPlan(user) {
     } catch (error) {
         console.error("Plan Load Error:", error);
         // Error होने पर भी कुछ दिखाओ
+        const planDisplay = document.getElementById('user-plan-display');
         if (planDisplay) {
             planDisplay.innerHTML = "🎯 फ्री प्लान (10 सवाल उपलब्ध)";
             planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
@@ -188,7 +189,7 @@ function buyPlan(plan) {
     let amount = plan === 'silver' ? '49' : plan === 'gold' ? '99' : '199';
     const paymentLink = "https://rzp.io/rzp/I5geGyLS";
 
-    if (confirm(`\( {planName} प्लान (₹ \){amount}) चुन लिया!\nपेमेंट पेज पर जाएँ?`)) {
+    if (confirm(`${planName} प्लान (₹${amount}) चुन लिया!\nपेमेंट पेज पर जाएँ?`)) {
         window.open(paymentLink, '_self');
     } else {
         alert("प्लान चुनने से कैंसल किया गया।");
@@ -201,4 +202,16 @@ function logout() {
     auth.signOut().then(() => {
         window.location.replace("index.html");
     });
-        }
+}
+
+// Expired Plan Handler
+function handleExpiredPlan(phone, planDisplay) {
+    localStorage.setItem('user_plan_status', 'expired');
+    planDisplay.style.background = "linear-gradient(135deg, #f44336, #c62828)";
+    planDisplay.innerHTML = `⚠️ प्लान एक्सपायर हो गया है। कृपया नया प्लान लें।`;
+    
+    // Update Firebase
+    database.ref('users/' + phone).update({
+        status: 'expired'
+    }).catch(() => {});
+            }
