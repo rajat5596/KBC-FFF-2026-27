@@ -52,6 +52,7 @@ window.onload = function() {
     let gameStarted = false;
     const fallbackTimer = setTimeout(() => {
         if (!gameStarted) {
+            console.log("⚠️ Fallback timer: free mode");
             updatePlanDisplay('free');
             loadNewQuestion();
             gameStarted = true;
@@ -63,37 +64,62 @@ window.onload = function() {
             if (user && !gameStarted) {
                 clearTimeout(fallbackTimer);
                 const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
+                console.log("✅ User logged in:", cleanPhone);
                 
                 try {
                     const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
                     const userData = snapshot.val();
+                    console.log("📦 Firebase data:", userData);
                     
                     if (userData && userData.status === 'active') {
                         const expiryDate = new Date(userData.expiry);
                         if (expiryDate > new Date()) {
                             userPlan = userData.plan.toLowerCase().trim();
+                            console.log("💎 PREMIUM PLAN DETECTED:", userPlan);  // ✅ यह लाइन
                             updatePlanDisplay(userPlan, userData.expiry);
                             
-                            const response = await fetch(`${userPlan}_questions.json?v=${Date.now()}`);
-                            if (response.ok) {
-                                const premiumData = await response.json();
-                                if (premiumData && premiumData.length > 0) {
-                                    currentQuestionsPool = premiumData.sort(() => Math.random() - 0.5);
+                            try {
+                                const response = await fetch(`${userPlan}_questions.json?v=${Date.now()}`);
+                                if (response.ok) {
+                                    const premiumData = await response.json();
+                                    if (premiumData && premiumData.length > 0) {
+                                        currentQuestionsPool = premiumData.sort(() => Math.random() - 0.5);
+                                        console.log(`✅ ${userPlan} सवाल लोड हुए:`, premiumData.length);
+                                    }
+                                } else {
+                                    console.log("⚠️ Premium file not found, using free questions");
                                 }
+                            } catch (e) {
+                                console.log("Premium load failed:", e);
                             }
+                        } else {
+                            console.log("⚠️ Plan expired");
+                            userPlan = 'free';
+                            updatePlanDisplay('free');
                         }
+                    } else {
+                        console.log("ℹ️ Free user (no premium)");
+                        userPlan = 'free';
+                        updatePlanDisplay('free');
                     }
-                } catch (err) { console.log("Firebase Error"); }
+                } catch (err) { 
+                    console.log("Firebase Error:", err);
+                    userPlan = 'free';
+                    updatePlanDisplay('free');
+                }
                 
+                console.log("🎯 FINAL userPlan:", userPlan);  // ✅ यह लाइन
                 loadNewQuestion();
                 gameStarted = true;
             } else if (!user && !gameStarted) {
+                console.log("No user, redirecting to index");
                 window.location.replace("index.html");
             }
         });
+    } else {
+        console.log("Firebase not available");
     }
 };
-
 // --- 2. नया सवाल लोड करना ---
 function loadNewQuestion() {
     // Limit check for free users
