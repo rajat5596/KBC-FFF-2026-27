@@ -122,18 +122,31 @@ window.onload = function() {
 };
 // --- 2. नया सवाल लोड करना ---
 function loadNewQuestion() {
-    // Limit check for free users
+    console.log("📝 loadNewQuestion called, questionsPlayed:", questionsPlayed, "userPlan:", userPlan);
+
+    // 🔁 FREE USER KI LIMIT CHECK (5 SAWAL)
     if (userPlan === 'free' && questionsPlayed >= 5) {
+        console.log("🎯 Free limit reached! Showing popup...");
+
         bgMusic.pause();
         clockSound.pause();
-        if (confirm("🎯 आपके 5 मुफ्त सवाल पूरे हुए! प्रीमियम प्लान लेकर 500+ सवाल खेलें?")) {
-            window.open("https://rzp.io/rzp/I5geGyLS", '_self');
+
+        // ⚠️ YAHI SE UPGRADE KA PAGE OPEN HOGA
+        let userWantsPremium = confirm("🎯 5 मुफ्त सवाल पूरे हो गए!\n\nप्रीमियम प्लान लेकर 500+ सवाल खेलें?\n✓ सिल्वर: 500 सवाल\n✓ गोल्ड: 1500 सवाल\n✓ प्लैटिनम: अनलिमिटेड");
+
+        if (userWantsPremium) {
+            console.log("➡️ User wants premium. Redirecting to payment page...");
+            window.location.href = "https://rzp.io/rzp/I5geGyLS"; // 👈 यही लिंक काम करेगा
+        } else {
+            console.log("🏠 User refused premium. Going to index.html");
+            window.location.replace("index.html");
         }
-        window.location.replace("index.html");
         return;
     }
 
+    // Agar pool me sawaal nahi bache
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
+        console.log("❌ No questions left!");
         alert("सारे सवाल खत्म हो गए हैं!");
         window.location.replace("index.html");
         return;
@@ -146,12 +159,12 @@ function loadNewQuestion() {
     document.getElementById('timer').innerText = timeLeft;
     document.getElementById('question-text').innerText = currentQuestion.q || currentQuestion.question;
     document.getElementById('result').innerText = "";
-    
+
     currentQuestion.correct = currentQuestion.a || currentQuestion.correct;
-    
+
     const optionsContainer = document.getElementById('options-container');
     optionsContainer.innerHTML = "";
-    
+
     const optionKeys = ['A', 'B', 'C', 'D'];
     const optionsData = currentQuestion.options;
 
@@ -159,9 +172,9 @@ function loadNewQuestion() {
         const btn = document.createElement("button");
         btn.className = "option-btn";
         btn.id = "btn-" + key;
-        
+
         let optionText = Array.isArray(optionsData) ? optionsData[index] : optionsData[key];
-        
+
         btn.innerHTML = `${key}: ${optionText}`;
         btn.onclick = () => selectOption(key);
         optionsContainer.appendChild(btn);
