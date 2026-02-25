@@ -194,22 +194,49 @@ function handleLimitReached() {
     }
 }
 
-// Buy Plan फंक्शन - FIXED
-// Buy Plan फंक्शन - सही
-function buyPlan(plan) {
-    // प्लान के हिसाब से मैसेज तय करो
-    let confirmMsg = '';
-    if (plan === 'silver') {
-        confirmMsg = '🥈 सिल्वर प्लान (₹49) लें?\n500 सवाल अनलिमिटेड प्रैक्टिस';
-    } else if (plan === 'gold') {
-        confirmMsg = '🥇 गोल्ड प्लान (₹99) लें?\n1500 सवाल अनलिमिटेड प्रैक्टिस';
-    } else if (plan === 'platinum') {
-        confirmMsg = '💎 प्लैटिनम प्लान (₹199) लें?\nअनलिमिटेड सवाल';
+// Buy Plan फंक्शन - Active Plan के हिसाब से काम करेगा
+function buyPlan(clickedPlan) {
+    // localStorage से यूजर का स्टेटस और प्लान लोड करो
+    const userPlanStatus = localStorage.getItem('user_plan_status');
+    const userActivePlan = localStorage.getItem('user_plan_type');
+    
+    console.log("🔍 Buy Plan Clicked:", clickedPlan);
+    console.log("👤 User Status:", userPlanStatus, "Active Plan:", userActivePlan);
+    
+    // केस 1: यूजर के पास कोई एक्टिव प्रीमियम प्लान है
+    if (userPlanStatus === 'premium' && userActivePlan) {
+        
+        // अगर वही प्लान क्लिक किया जो एक्टिव है
+        if (userActivePlan === clickedPlan) {
+            console.log("✅ Same plan - starting game");
+            window.location.href = "game.html";
+            return;
+        }
+        
+        // अगर दूसरा प्लान क्लिक किया (अपग्रेड/डाउनग्रेड)
+        else {
+            const confirmMsg = `आपके पास पहले से ${userActivePlan.toUpperCase()} प्लान एक्टिव है।\n${clickedPlan.toUpperCase()} प्लान पर स्विच करें?`;
+            if (confirm(confirmMsg)) {
+                window.location.href = "https://rzp.io/rzp/I5geGyLS";
+            }
+            return;
+        }
     }
+    
+    // केस 2: फ्री यूजर - सीधा पेमेंट पेज
+    else {
+        let confirmMsg = '';
+        if (clickedPlan === 'silver') {
+            confirmMsg = '🥈 सिल्वर प्लान (₹49) लें?\n500 सवाल अनलिमिटेड प्रैक्टिस';
+        } else if (clickedPlan === 'gold') {
+            confirmMsg = '🥇 गोल्ड प्लान (₹99) लें?\n1500 सवाल अनलिमिटेड प्रैक्टिस';
+        } else if (clickedPlan === 'platinum') {
+            confirmMsg = '💎 प्लैटिनम प्लान (₹199) लें?\nअनलिमिटेड सवाल';
+        }
 
-    // पूछो और रीडायरेक्ट करो
-    if (confirm(confirmMsg)) {
-        window.location.href = "https://rzp.io/rzp/I5geGyLS";
+        if (confirm(confirmMsg)) {
+            window.location.href = "https://rzp.io/rzp/I5geGyLS";
+        }
     }
 }
 
