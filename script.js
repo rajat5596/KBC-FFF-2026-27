@@ -183,11 +183,33 @@ function handleLimitReached() {
     }
 }
 
-// Buy Plan फंक्शन
+// Buy Plan फंक्शन - FIXED
 function buyPlan(plan) {
+    const userPlanStatus = localStorage.getItem('user_plan_status');
+    const userActivePlan = localStorage.getItem('user_plan_type');
+    
+    // Agar user already premium hai
+    if (userPlanStatus === 'premium') {
+        // Agar wahi plan hai jo active hai
+        if (userActivePlan === plan) {
+            // Direct game kholo
+            window.location.href = "game.html";
+            return;
+        } else {
+            // Different plan par click kiya hai - upgrade/downgrade
+            const confirmMsg = `आपके पास पहले से ${userActivePlan.toUpperCase()} प्लान एक्टिव है।\n${plan.toUpperCase()} प्लान पर स्विच करें?`;
+            if (confirm(confirmMsg)) {
+                // Payment page par bhejo upgrade ke liye
+                window.open("https://rzp.io/rzp/15geGvLS_conv", '_self');
+            }
+            return;
+        }
+    }
+    
+    // Free user ke liye - payment page
     let planName = plan.toUpperCase();
     let amount = plan === 'silver' ? '49' : plan === 'gold' ? '99' : '199';
-    const paymentLink = "https://rzp.io/rzp/I5geGyLS";
+    const paymentLink = "https://rzp.io/rzp/15geGvLS_conv";
 
     if (confirm(`${planName} प्लान (₹${amount}) चुन लिया!\nपेमेंट पेज पर जाएँ?`)) {
         window.open(paymentLink, '_self');
@@ -195,6 +217,8 @@ function buyPlan(plan) {
         alert("प्लान चुनने से कैंसल किया गया।");
     }
 }
+
+// Plus - index.html में Buttons को सही से लिंक करो
 
 // Logout
 function logout() {
