@@ -195,30 +195,23 @@ function handleLimitReached() {
 }
 
 // Buy Plan फंक्शन - FIXED
+// Buy Plan फंक्शन - सही
 function buyPlan(plan) {
-    let confirmMsg = `🥈 सिल्वर प्लान (₹49) लें?\n500 सवाल अनलिमिटेड प्रैक्टिस`;
-    if (plan === 'gold') confirmMsg = `🥇 गोल्ड प्लान (₹99) लें?\n1500 सवाल अनलिमिटेड प्रैक्टिस`;
-    if (plan === 'platinum') confirmMsg = `💎 प्लैटिनम प्लान (₹199) लें?\nअनलिमिटेड सवाल`;
+    // प्लान के हिसाब से मैसेज तय करो
+    let confirmMsg = '';
+    if (plan === 'silver') {
+        confirmMsg = '🥈 सिल्वर प्लान (₹49) लें?\n500 सवाल अनलिमिटेड प्रैक्टिस';
+    } else if (plan === 'gold') {
+        confirmMsg = '🥇 गोल्ड प्लान (₹99) लें?\n1500 सवाल अनलिमिटेड प्रैक्टिस';
+    } else if (plan === 'platinum') {
+        confirmMsg = '💎 प्लैटिनम प्लान (₹199) लें?\nअनलिमिटेड सवाल';
+    }
 
+    // पूछो और रीडायरेक्ट करो
     if (confirm(confirmMsg)) {
-        // Direct redirect
-        window.location.assign("https://rzp.io/rzp/I5geGyLS");
+        window.location.href = "https://rzp.io/rzp/I5geGyLS";
     }
 }
-    
-    // Free user ke liye - payment page
-    let planName = plan.toUpperCase();
-    let amount = plan === 'silver' ? '49' : plan === 'gold' ? '99' : '199';
-    const paymentLink = "https://rzp.io/rzp/15geGvLS_conv";
-
-    if (confirm(`${planName} प्लान (₹${amount}) चुन लिया!\nपेमेंट पेज पर जाएँ?`)) {
-        window.open(paymentLink, '_self');
-    } else {
-        alert("प्लान चुनने से कैंसल किया गया।");
-    }
-}
-
-// Plus - index.html में Buttons को सही से लिंक करो
 
 // Logout
 function logout() {
