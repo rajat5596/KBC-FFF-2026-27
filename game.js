@@ -95,16 +95,17 @@ window.onload = function() {
 };
 
 // --- 2. नया सवाल लोड करना ---
-// Limit check for free users
-if (userPlan === 'free' && questionsPlayed >= 5) {
-    bgMusic.pause();
-    clockSound.pause();
-    if (confirm("🎯 आपके 5 मुफ्त सवाल पूरे हुए! प्रीमियम प्लान लेकर 500+ सवाल खेलें?")) {
-        window.open("https://rzp.io/rzp/I5geGyLS", '_self');
+function loadNewQuestion() {
+    // Limit check for free users
+    if (userPlan === 'free' && questionsPlayed >= 5) {
+        bgMusic.pause();
+        clockSound.pause();
+        if (confirm("🎯 आपके 5 मुफ्त सवाल पूरे हुए! प्रीमियम प्लान लेकर 500+ सवाल खेलें?")) {
+            window.open("https://rzp.io/rzp/I5geGyLS", '_self');
+        }
+        window.location.replace("index.html");
+        return;
     }
-    window.location.replace("index.html");
-    return;
-}
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
         alert("सारे सवाल खत्म हो गए हैं!");
