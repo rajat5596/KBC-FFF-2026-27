@@ -16,9 +16,6 @@ let userPlan = 'free';
 // --- 1. पेज लोड होते ही ---
 window.onload = function() {
     console.log("🚀 Game Starting...");
-    
-    // Backup questions in case fetch fails
-    currentQuestionsPool = [{ q: "भारत की राजधानी क्या है?", options: ["मुंबई", "दिल्ली", "चेन्नई", "कोलकाता"], a: "B" }];
 
     if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().onAuthStateChanged(async (user) => {
@@ -28,21 +25,27 @@ window.onload = function() {
                     const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
                     const userData = snapshot.val();
                     
+                    // Firebase check
                     if (userData && userData.status === 'active') {
                         userPlan = userData.plan.toLowerCase().trim();
-                        console.log("User Plan Identified:", userPlan);
+                        console.log("Plan Found:", userPlan);
 
-                        // Fetching premium questions
+                        // JSON Fetching
                         const response = await fetch(`${userPlan}_questions.json?v=${Date.now()}`);
                         if (response.ok) {
                             const data = await response.json();
                             currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-                            console.log("✅ JSON Questions Loaded:", currentQuestionsPool.length);
+                            console.log("✅ JSON Loaded:", currentQuestionsPool.length);
                         }
+                    } else {
+                        // Agar plan active nahi hai toh free sawal
+                        const res = await fetch('free_questions.json');
+                        if (res.ok) currentQuestionsPool = await res.json();
                     }
                 } catch (err) {
-                    console.error("Firebase/Fetch Error:", err);
+                    console.error("Error:", err);
                 }
+                // Pool bharne ke baad hi load karein
                 loadNewQuestion();
             } else {
                 window.location.replace("index.html");
@@ -51,8 +54,9 @@ window.onload = function() {
     }
 };
 
-// --- 2. नया सवाल लोड करना (Properly Fixed) ---
+// --- 2. नया सवाल लोड करना (Is Header ko dhyan se dekhiye) ---
 function loadNewQuestion() {
+    // Plan limit check
     if (userPlan === 'free' && questionsPlayed >= 5) {
         bgMusic.pause(); clockSound.pause();
         if (confirm("🎯 आपके 5 मुफ्त सवाल पूरे हुए! प्रीमियम लें?")) {
@@ -63,8 +67,7 @@ function loadNewQuestion() {
     }
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        alert("सवाल खत्म हो गए हैं!");
-        window.location.replace("index.html");
+        alert("सवाल लोड नहीं हो पाए!");
         return;
     }
 
@@ -72,10 +75,12 @@ function loadNewQuestion() {
     userSequence = "";
     timeLeft = 20;
 
+    // UI Updates
     document.getElementById('timer').innerText = timeLeft;
     document.getElementById('question-text').innerText = currentQuestion.q || currentQuestion.question;
     document.getElementById('result').innerText = "";
     
+    // Aapke JSON ke 'a' key ko read karne ke liye
     currentQuestion.correct = currentQuestion.a || currentQuestion.correct;
     
     const optionsContainer = document.getElementById('options-container');
