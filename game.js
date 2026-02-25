@@ -16,11 +16,18 @@ let userPlan = 'free';
 // Page load hone par plan check + questions load
 window.addEventListener('load', () => {
     console.log("Game शुरू...");
-    
-    // LocalStorage से plan लो (index.html में login के बाद set होता है)
-    const savedPlan = localStorage.getItem('user_plan_type') || 'free';
-    userPlan = savedPlan.toLowerCase().trim();
-    console.log("Plan:", userPlan);
+
+    // NEW: Practice mode (free) force karo
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'free') {
+        userPlan = 'free';
+        console.log("Practice/Free mode forced");
+    } else {
+        // Paid users ke liye normal localStorage se plan
+        const savedPlan = localStorage.getItem('user_plan_type') || 'free';
+        userPlan = savedPlan.toLowerCase().trim();
+        console.log("Normal plan:", userPlan);
+    }
 
     loadQuestions();
 });
