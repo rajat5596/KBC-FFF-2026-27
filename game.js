@@ -101,7 +101,7 @@ function loadNewQuestion() {
         bgMusic.pause();
         clockSound.pause();
         if (confirm("🎯 आपके 5 मुफ्त सवाल पूरे हुए! प्रीमियम प्लान लेकर 500+ सवाल खेलें?")) {
-            window.open("https://rzp.io/rzp/15geGvLS_conv", "_blank");
+            window.open("https://rzp.io/rzp/15geGvLS", "_blank");
         }
         window.location.replace("index.html");
         return;
@@ -252,6 +252,6 @@ function checkPlanAccess(clickedPlan) {
     } else if (userPlan === clickedPlan) {
         alert("यह प्लान पहले से ही सक्रिय है!");
     } else {
-        window.open("https://rzp.io/rzp/15geGvLS_conv", "_blank");
+        window.open("https://rzp.io/rzp/15geGvLS", "_blank");
     }
 }
