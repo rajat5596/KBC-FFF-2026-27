@@ -250,3 +250,19 @@ function handleExpiredPlan(phone, planDisplay) {
         status: 'expired'
     }).catch(() => {});
             }
+// प्रैक्टिस शुरू करें फंक्शन
+function startPractice() {
+    const userPlanStatus = localStorage.getItem('user_plan_status');
+    const userActivePlan = localStorage.getItem('user_plan_type');
+    
+    console.log("Starting practice - Plan status:", userPlanStatus, "Active plan:", userActivePlan);
+    
+    // अगर premium user है
+    if (userPlanStatus === 'premium' && userActivePlan) {
+        // सीधा game.html खोलो
+        window.location.href = "game.html";
+    } else {
+        // Free user - 10 सवाल वाला game.html खोलो
+        window.location.href = "game.html";
+    }
+}
