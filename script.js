@@ -211,7 +211,7 @@ function buyPlan(plan) {
             const confirmMsg = `आपके पास पहले से ${userActivePlan.toUpperCase()} प्लान एक्टिव है।\n${plan.toUpperCase()} प्लान पर स्विच करें?`;
             if (confirm(confirmMsg)) {
                 // Payment page par bhejo upgrade ke liye
-                window.open("https://rzp.io/rzp/15geGvLS_conv", '_self');
+                window.open("https://rzp.io/rzp/I5geGyLS", '_self');
             }
             return;
         }
