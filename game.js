@@ -41,106 +41,87 @@ function updatePlanDisplay(plan, expiryDate) {
 window.onload = function() {
     console.log("🚀 Game starting...");
     
-    // पहले खाली pool रखो
-currentQuestionsPool = [];
-
-// फ्री questions लोड करने की कोशिश करो
-async function loadQuestionsFromFile(filename) {
-    try {
-        const response = await fetch(filename + '?v=' + Date.now());
-        if (response.ok) {
-            const data = await response.json();
-            console.log(`✅ ${filename} loaded:`, data.length);
-            return data;
-        }
-    } catch (e) {
-        console.log(`❌ ${filename} load failed:`, e);
-    }
-    return null;
-}
-
-// पहले free_questions.json लोड करो
-loadQuestionsFromFile('free_questions.json').then(data => {
-    if (data && data.length > 0) {
-        currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-    } else {
-        // Backup questions
-        currentQuestionsPool = [
-            { q: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:", options: ["15 अगस्त", "26 जनवरी", "2 अक्टूबर", "14 नवंबर"], a: "BACD" },
-            { q: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण के हिसाब से पुराने से नए क्रम में लगाएं:", options: ["विराट कोहली", "एमएस धोनी", "सचिन तेंदुलकर", "शुभमन गिल"], a: "CBAD" }
-        ].sort(() => Math.random() - 0.5);
-    }
-});
-    let gameStarted = false;
-    const fallbackTimer = setTimeout(() => {
-        if (!gameStarted) {
-            console.log("⚠️ Fallback timer: free mode");
-            updatePlanDisplay('free');
-            loadNewQuestion();
-            gameStarted = true;
-        }
-    }, 3000);
-
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-        firebase.auth().onAuthStateChanged(async (user) => {
-            if (user && !gameStarted) {
-                clearTimeout(fallbackTimer);
-                const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
-                console.log("✅ User logged in:", cleanPhone);
-                
-                try {
-                    const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
-                    const userData = snapshot.val();
-                    console.log("📦 Firebase data:", userData);
-                    
-                    if (userData && userData.status === 'active') {
-                        const expiryDate = new Date(userData.expiry);
-                        if (expiryDate > new Date()) {
-                            userPlan = userData.plan.toLowerCase().trim();
-                            console.log("💎 PREMIUM PLAN DETECTED:", userPlan);  // ✅ यह लाइन
-                            updatePlanDisplay(userPlan, userData.expiry);
+    // ----------------------------------------
+    // 1. सबसे पहले free_questions.json लोड करो
+    // ----------------------------------------
+    fetch('free_questions.json?v=' + Date.now())
+        .then(res => res.json())
+        .then(data => {
+            console.log("✅ Free questions loaded:", data.length);
+            currentQuestionsPool = data.sort(() => Math.random() - 0.5);
+            
+            // ----------------------------------------
+            // 2. Firebase से user plan check करो
+            // ----------------------------------------
+            if (typeof firebase !== 'undefined' && firebase.auth) {
+                firebase.auth().onAuthStateChanged(async (user) => {
+                    if (user) {
+                        const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
+                        console.log("✅ User logged in:", cleanPhone);
+                        
+                        try {
+                            const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
+                            const userData = snapshot.val();
+                            console.log("📦 Firebase data:", userData);
                             
-                            try {
-                                const response = await fetch(`${userPlan}_questions.json?v=${Date.now()}`);
-                                if (response.ok) {
-                                    const premiumData = await response.json();
-                                    if (premiumData && premiumData.length > 0) {
-                                        currentQuestionsPool = premiumData.sort(() => Math.random() - 0.5);
-                                        console.log(`✅ ${userPlan} सवाल लोड हुए:`, premiumData.length);
+                            if (userData && userData.status === 'active') {
+                                const expiryDate = new Date(userData.expiry);
+                                if (expiryDate > new Date()) {
+                                    userPlan = userData.plan.toLowerCase().trim();
+                                    console.log("💎 Premium plan detected:", userPlan);
+                                    updatePlanDisplay(userPlan, userData.expiry);
+                                    
+                                    // Premium questions लोड करो
+                                    try {
+                                        const premiumRes = await fetch(userPlan + '_questions.json?v=' + Date.now());
+                                        if (premiumRes.ok) {
+                                            const premiumData = await premiumRes.json();
+                                            if (premiumData && premiumData.length > 0) {
+                                                currentQuestionsPool = premiumData.sort(() => Math.random() - 0.5);
+                                                console.log(`✅ ${userPlan} questions loaded:`, premiumData.length);
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.log("Premium load failed, using free");
                                     }
                                 } else {
-                                    console.log("⚠️ Premium file not found, using free questions");
+                                    console.log("⚠️ Plan expired");
+                                    userPlan = 'free';
+                                    updatePlanDisplay('free');
                                 }
-                            } catch (e) {
-                                console.log("Premium load failed:", e);
+                            } else {
+                                console.log("ℹ️ Free user");
+                                userPlan = 'free';
+                                updatePlanDisplay('free');
                             }
-                        } else {
-                            console.log("⚠️ Plan expired");
+                        } catch (err) {
+                            console.log("Firebase error:", err);
                             userPlan = 'free';
                             updatePlanDisplay('free');
                         }
                     } else {
-                        console.log("ℹ️ Free user (no premium)");
-                        userPlan = 'free';
-                        updatePlanDisplay('free');
+                        console.log("No user, redirecting...");
+                        window.location.replace("index.html");
+                        return;
                     }
-                } catch (err) { 
-                    console.log("Firebase Error:", err);
-                    userPlan = 'free';
-                    updatePlanDisplay('free');
-                }
-                
-                console.log("🎯 FINAL userPlan:", userPlan);  // ✅ यह लाइन
+                    
+                    console.log("🎯 FINAL userPlan:", userPlan);
+                    loadNewQuestion();
+                });
+            } else {
+                console.log("Firebase not available");
                 loadNewQuestion();
-                gameStarted = true;
-            } else if (!user && !gameStarted) {
-                console.log("No user, redirecting to index");
-                window.location.replace("index.html");
             }
+        })
+        .catch(err => {
+            console.log("❌ Free questions failed, using backup:", err);
+            // Backup questions
+            currentQuestionsPool = [
+                { q: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:", options: ["15 अगस्त", "26 जनवरी", "2 अक्टूबर", "14 नवंबर"], a: "BACD" },
+                { q: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण के हिसाब से पुराने से नए क्रम में लगाएं:", options: ["विराट कोहली", "एमएस धोनी", "सचिन तेंदुलकर", "शुभमन गिल"], a: "CBAD" }
+            ].sort(() => Math.random() - 0.5);
+            loadNewQuestion();
         });
-    } else {
-        console.log("Firebase not available");
-    }
 };
 // --- 2. नया सवाल लोड करना ---
 function loadNewQuestion() {
