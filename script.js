@@ -275,3 +275,10 @@ function startPractice() {
         window.location.href = "game.html";
     }
 }
+// डिबग फंक्शन - कंसोल में चलाना
+function checkLocalStorage() {
+    console.log("🔍 LocalStorage Check:");
+    console.log("user_plan_status:", localStorage.getItem('user_plan_status'));
+    console.log("user_plan_type:", localStorage.getItem('user_plan_type'));
+    console.log("kbc_phone:", localStorage.getItem('kbc_phone'));
+}
