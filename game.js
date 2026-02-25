@@ -99,20 +99,10 @@ window.onload = function() {
 if (userPlan === 'free' && questionsPlayed >= 5) {
     bgMusic.pause();
     clockSound.pause();
-    
-    // सबसे पहले सवाल खत्म होने का मैसेज
-    alert("🎯 5 मुफ्त सवाल पूरे हो गए!");
-    
-    // अब पूछें कि प्रीमियम लेना है या नहीं
-    const userConfirmed = confirm("प्रीमियम प्लान लेकर 500+ सवाल खेलें?");
-    
-    if (userConfirmed) {
-        // प्रीमियम लेना चाहता है - पेमेंट पेज पर भेजो
-        window.location.href = "https://rzp.io/rzp/I5geGyLS";
-    } else {
-        // प्रीमियम नहीं लेना - होम पेज पर भेजो
-        window.location.replace("index.html");
+    if (confirm("🎯 आपके 5 मुफ्त सवाल पूरे हुए! प्रीमियम प्लान लेकर 500+ सवाल खेलें?")) {
+        window.open("https://rzp.io/rzp/I5geGyLS", '_self');
     }
+    window.location.replace("index.html");
     return;
 }
 
