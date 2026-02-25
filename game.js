@@ -237,21 +237,26 @@ function startTimer() {
 
 // --- नया सवाल लोड करना ---
 function loadNewQuestion() {
+    // 1. Check if Free Limit (10 questions) is reached
     if (userPlan === 'free' && questionsPlayed >= 10) {
-        if (confirm("🎯 10 मुफ्त सवाल पूरे! प्रीमियम लें?")) {
+        alert("🎯 Aapke 10 muft sawal poore ho gaye hain! Agle sawalo ke liye premium plan lein.");
+        window.location.href = "https://rzp.io/rzp/15geGvLS_conv"; // Aapka payment link
+        return;
+    }
+    
+    // 2. Check if Pool is empty
+    if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
+        if (userPlan === 'free') {
+            alert("🎯 Free sawal khatm! Premium lekar unlimited sawal payein.");
             window.location.href = "https://rzp.io/rzp/15geGvLS_conv";
         } else {
+            alert("✨ Is session ke sawal poore huye! Dubara koshish karein.");
             window.location.href = "index.html";
         }
         return;
     }
     
-    if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        document.getElementById('question-text').innerHTML = "सवाल खत्म! होम जाएँ।";
-        document.getElementById('options-container').innerHTML = "";
-        return;
-    }
-    
+    // Baaki ka code wahi rahega...
     currentQuestion = currentQuestionsPool.shift();
     userSequence = "";
     timeLeft = 20;
@@ -275,6 +280,4 @@ function loadNewQuestion() {
     bgMusic.currentTime = 0;
     bgMusic.play().catch(() => {});
     startTimer();
-    
-    console.log("📝 New question loaded:", currentQuestion.question);
 }
