@@ -241,3 +241,13 @@ function logout() {
     firebase.auth().signOut().then(() => window.location.replace("index.html"));
                                                                                      }
         
+function checkPlanAccess(clickedPlan) {
+    if (userPlan !== 'free' && userPlan !== clickedPlan) {
+        alert(`Aapka abhi ${userPlan.toUpperCase()} plan active hai. Isse upgrade karne ke liye customer support se sampark karein.`);
+    } else if (userPlan === clickedPlan) {
+        alert("Ye plan aapka pehle se active hai!");
+    } else {
+        // Proceed to payment
+        window.open("https://rzp.io/rzp/15geGvLS_conv", "_blank");
+    }
+}
