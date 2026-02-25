@@ -99,32 +99,21 @@ window.onload = function() {
 };
 
 // --- 2. नया सवाल लोड करना ---
-function loadNewQuestion() {
-    // Free user limit check
-    if (userPlan === 'free' && questionsPlayed >= 5) {
-        bgMusic.pause();
-        clockSound.pause();
-        if (confirm("🎯 आपके 5 मुफ्त सवाल पूरे हुए! प्रीमियम प्लान लेकर 500+ सवाल खेलें?")) {
-            window.location.assign("https://rzp.io/rzp/15geGvLS_conv");
-        } else {
-            window.location.replace("index.html");
-        }
-        return;
-    }
-
-    if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        alert("सारे सवाल खत्म हो गए हैं!");
+// loadNewQuestion function ke andar limit check wala part
+if (userPlan === 'free' && questionsPlayed >= 5) {
+    bgMusic.pause();
+    clockSound.pause();
+    if (confirm("🎯 Aapke 5 muft sawal poore hue! Premium plan lekar 500+ sawal khelein?")) {
+        // Nayi tab mein kholne se white screen nahi aayegi
+        window.open("https://rzp.io/rzp/15geGvLS_conv", "_blank");
+        // Peeche wale page ko home par bhej dein taaki game reset ho jaye
         window.location.replace("index.html");
-        return;
+    } else {
+        window.location.replace("index.html");
     }
+    return;
+}
 
-    currentQuestion = currentQuestionsPool.shift();
-    userSequence = "";
-    timeLeft = 20;
-
-    document.getElementById('timer').innerText = timeLeft;
-    document.getElementById('question-text').innerText = currentQuestion.q || currentQuestion.question;
-    document.getElementById('result').innerText = "";
     
     // Normalize Correct Answer
     currentQuestion.correct = currentQuestion.a || currentQuestion.correct;
