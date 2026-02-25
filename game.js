@@ -42,85 +42,69 @@ function updatePlanDisplay(plan, expiryDate) {
 window.onload = function() {
     console.log("🚀 Game starting...");
     
-    // पहले फ्री सवाल लोड करो (हमेशा बैकअप के लिए)
+    // 1. Pehle Backup Questions ready rakho
     const freeQuestions = [
         { question: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:", options: { A: "15 अगस्त", B: "26 जनवरी", C: "2 अक्टूबर", D: "14 नवंबर" }, correct: "BACD" },
         { question: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण (Debut) के हिसाब से पुराने से नए क्रम में लगाएं:", options: { A: "विराट कोहली", B: "एमएस धोनी", C: "सचिन तेंदुलकर", D: "शुभमन गिल" }, correct: "CBAD" },
         { question: "इन सोशल मीडिया ऐप्स को उनकी लोकप्रियता के हिसाब से क्रम में लगाएं:", options: { A: "इंस्टाग्राम", B: "फेसबुक", C: "व्हाट्सएप", D: "यूट्यूब" }, correct: "DCBA" },
         { question: "इन रंगों को इंद्रधनुष (Rainbow) के क्रम में लगाएं (नीचे से ऊपर):", options: { A: "पीला", B: "लाल", C: "बैंगनी", D: "हरा" }, correct: "CDAB" },
-        { question: "इन प्रधानमंत्रियों को उनके कार्यकाल के हिसाब से पुराने से नए क्रम में लगाएं:", options: { A: "नरेन्द्र मोदी", B: "इन्दिरा गांधी", C: "जवाहरलाल नेहरू", D: "अटल बिहारी वाजपेयी" }, correct: "CBDA" },
-        { question: "इन फिल्मों को उनके रिलीज वर्ष के अनुसार पुराने से नए क्रम में लगाएं:", options: { A: "दंगल", B: "शोले", C: "लगान", D: "बाहुबली" }, correct: "BCAD" },
-        { question: "इन शहरों को उनकी जनसंख्या के हिसाब से घटते क्रम (ज्यादा से कम) में लगाएं:", options: { A: "मुंबई", B: "दिल्ली", C: "बेंगलुरु", D: "चेन्नई" }, correct: "BACD" },
-        { question: "इन ग्रहों को सूर्य से उनकी दूरी के बढ़ते क्रम में लगाएं:", options: { A: "पृथ्वी", B: "बुध", C: "मंगल", D: "शुक्र" }, correct: "BDAC" },
-        { question: "इन केबीसी पड़ावों (Levels) को उनकी राशि के हिसाब से बढ़ते क्रम में लगाएं:", options: { A: "10,000", B: "1,60,000", C: "5,000", D: "3,20,000" }, correct: "CABD" },
-        { question: "इन त्योहारों को कैलेंडर वर्ष में आने वाले क्रम में लगाएं:", options: { A: "होली", B: "दीवाली", C: "रक्षा बंधन", D: "गणेश चतुर्थी" }, correct: "ACDB" }
+        { question: "इन प्रधानमंत्रियों को उनके कार्यकाल के हिसाब से पुराने से नए क्रम में लगाएं:", options: { A: "नरेन्द्र मोदी", B: "इन्दिरा गांधी", C: "जवाहरलाल नेहरू", D: "अटल बिहारी वाजपेयी" }, correct: "CBDA" }
     ];
     
     currentQuestionsPool = [...freeQuestions].sort(() => Math.random() - 0.5);
-    
-    // Firebase चेक करो अगर उपलब्ध हो
-    if (typeof firebase !== 'undefined') {
+
+    // 2. Fail-safe: Agar 3 second tak Firebase load nahi hua, to game shuru kar do
+    let gameStarted = false;
+    const fallbackTimer = setTimeout(() => {
+        if (!gameStarted) {
+            console.log("⏳ Firebase timeout - Starting with Free Questions");
+            updatePlanDisplay('free');
+            loadNewQuestion();
+            gameStarted = true;
+        }
+    }, 3000);
+
+    // 3. Firebase Auth Check
+    if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().onAuthStateChanged(async (user) => {
-            if (user) {
-                // नंबर साफ करो (+91 हटाओ)
+            if (user && !gameStarted) {
+                clearTimeout(fallbackTimer); // Timeout cancel karo kyunki user mil gaya
                 const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
-                console.log("✅ User logged in:", cleanPhone);
                 
                 try {
                     const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
                     const userData = snapshot.val();
-                    console.log("📦 Firebase data:", userData);
                     
                     if (userData && userData.status === 'active') {
                         const expiryDate = new Date(userData.expiry);
                         if (expiryDate > new Date()) {
                             userPlan = userData.plan.toLowerCase().trim();
-                            console.log("💎 Premium plan detected:", userPlan);
                             updatePlanDisplay(userPlan, userData.expiry);
                             
-                            // प्रीमियम सवाल लोड करने की कोशिश करो
+                            // Premium JSON load karne ki koshish
                             try {
-                                const fileName = userPlan + '_questions.json';
-                                const response = await fetch(fileName + "?v=" + Date.now());
+                                const response = await fetch(`${userPlan}_questions.json?v=${Date.now()}`);
                                 if (response.ok) {
                                     const premiumData = await response.json();
-                                    if (premiumData && premiumData.length > 0) {
+                                    if (premiumData.length > 0) {
                                         currentQuestionsPool = premiumData.sort(() => Math.random() - 0.5);
-                                        console.log(`✅ ${userPlan} सवाल लोड हुए:`, premiumData.length);
                                     }
                                 }
-                            } catch (e) {
-                                console.log("Premium load failed, using free:", e);
-                            }
-                        } else {
-                            console.log("⚠️ Plan expired");
-                            updatePlanDisplay('free');
+                            } catch (e) { console.log("JSON fetch failed"); }
                         }
-                    } else {
-                        console.log("ℹ️ Free user");
-                        updatePlanDisplay('free');
                     }
-                } catch (error) {
-                    console.log("Firebase error:", error);
-                    updatePlanDisplay('free');
-                }
-            } else {
-                console.log("No user logged in");
+                } catch (err) { console.log("Firebase Data Error"); }
+                
+                loadNewQuestion();
+                gameStarted = true;
+            } else if (!user && !gameStarted) {
+                // Agar user logged in nahi hai, to game shuru karne ke bajaye redirect karein
                 window.location.replace("index.html");
-                return;
             }
-            
-            // गेम शुरू करो
-            loadNewQuestion();
         });
-    } else {
-        console.log("Firebase not available - free mode");
-        updatePlanDisplay('free');
-        loadNewQuestion();
     }
-    
-    console.log("✅ Game ready!", currentQuestionsPool.length, "questions loaded");
 };
+
 
 // --- उत्तर लॉक करने का फंक्शन ---
 function lockAnswer() {
