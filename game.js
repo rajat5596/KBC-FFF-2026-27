@@ -15,60 +15,47 @@ let userPlan = 'free';
 
 // --- 1. पेज लोड होते ही ---
 window.onload = function() {
-    console.log("🚀 Game starting...");
+    console.log("🚀 Game Starting...");
     
-    // Sirf emergency ke liye backup
-    currentQuestionsPool = [
-        { q: "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:", options: ["15 अगस्त", "26 जनवरी", "2 अक्टूबर", "14 नवंबर"], a: "BACD" }
-    ];
-
-    let gameStarted = false;
+    // Backup questions in case fetch fails
+    currentQuestionsPool = [{ q: "भारत की राजधानी क्या है?", options: ["मुंबई", "दिल्ली", "चेन्नई", "कोलकाता"], a: "B" }];
 
     if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().onAuthStateChanged(async (user) => {
-            if (user && !gameStarted) {
+            if (user) {
                 const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
-                
                 try {
                     const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
                     const userData = snapshot.val();
                     
                     if (userData && userData.status === 'active') {
                         userPlan = userData.plan.toLowerCase().trim();
-                        if (typeof updatePlanDisplay === 'function') updatePlanDisplay(userPlan, userData.expiry);
-                        
-                        // JSON Fetch Logic
-                        const fileName = `${userPlan}_questions.json`;
-                        console.log("Fetching questions from:", fileName);
+                        console.log("User Plan Identified:", userPlan);
 
-                        const response = await fetch(fileName + "?v=" + Date.now());
+                        // Fetching premium questions
+                        const response = await fetch(`${userPlan}_questions.json?v=${Date.now()}`);
                         if (response.ok) {
-                            const premiumData = await response.json();
-                            if (premiumData && premiumData.length > 0) {
-                                currentQuestionsPool = premiumData.sort(() => Math.random() - 0.5);
-                                console.log("✅ Questions Loaded Successfully!");
-                            }
+                            const data = await response.json();
+                            currentQuestionsPool = data.sort(() => Math.random() - 0.5);
+                            console.log("✅ JSON Questions Loaded:", currentQuestionsPool.length);
                         }
                     }
-                } catch (err) { 
-                    console.error("Fetch Error:", err); 
+                } catch (err) {
+                    console.error("Firebase/Fetch Error:", err);
                 }
-                
-                gameStarted = true;
                 loadNewQuestion();
-            } else if (!user && !gameStarted) {
+            } else {
                 window.location.replace("index.html");
             }
         });
     }
 };
 
-// --- 2. नया सवाल लोड करना ---
+// --- 2. नया सवाल लोड करना (Properly Fixed) ---
 function loadNewQuestion() {
-    // Plan limit check
     if (userPlan === 'free' && questionsPlayed >= 5) {
         bgMusic.pause(); clockSound.pause();
-        if (confirm("🎯 आपके मुफ्त सवाल पूरे हुए! प्रीमियम प्लान लें?")) {
+        if (confirm("🎯 आपके 5 मुफ्त सवाल पूरे हुए! प्रीमियम लें?")) {
             window.open("https://rzp.io/rzp/15geGvLS_conv", "_blank");
         }
         window.location.replace("index.html");
@@ -76,7 +63,8 @@ function loadNewQuestion() {
     }
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        console.error("No questions in pool!");
+        alert("सवाल खत्म हो गए हैं!");
+        window.location.replace("index.html");
         return;
     }
 
@@ -84,13 +72,10 @@ function loadNewQuestion() {
     userSequence = "";
     timeLeft = 20;
 
-    // UI Updates
-    const qText = document.getElementById('question-text');
-    const timerText = document.getElementById('timer');
-    if (qText) qText.innerText = currentQuestion.q || currentQuestion.question;
-    if (timerText) timerText.innerText = timeLeft;
-    
+    document.getElementById('timer').innerText = timeLeft;
+    document.getElementById('question-text').innerText = currentQuestion.q || currentQuestion.question;
     document.getElementById('result').innerText = "";
+    
     currentQuestion.correct = currentQuestion.a || currentQuestion.correct;
     
     const optionsContainer = document.getElementById('options-container');
@@ -110,17 +95,14 @@ function loadNewQuestion() {
     });
 
     const lockBtn = document.getElementById('lock-answer-btn');
-    if (lockBtn) { 
-        lockBtn.disabled = false; 
-        lockBtn.innerHTML = '🔒 उत्तर लॉक करें'; 
-    }
+    if (lockBtn) { lockBtn.disabled = false; lockBtn.innerHTML = '🔒 उत्तर लॉक करें'; }
 
     bgMusic.currentTime = 0;
     bgMusic.play().catch(() => {});
     startTimer();
 }
 
-// --- बाकी Game Functions (Lock, Check, Timer) ---
+// --- 3. बाकी फंक्शन्स ---
 function selectOption(key) {
     if (!userSequence.includes(key) && userSequence.length < 4) {
         userSequence += key;
@@ -156,7 +138,6 @@ function checkAnswer() {
         wrongSound.play().catch(() => {});
         resultPara.innerHTML = `<span style='color:#FF0000'>❌ गलत! सही: ${currentQuestion.correct}</span>`;
     }
-    
     questionsPlayed++;
     setTimeout(loadNewQuestion, 3000);
 }
@@ -167,7 +148,8 @@ function startTimer() {
     clockSound.play().catch(() => {});
     timerId = setInterval(() => {
         timeLeft--;
-        document.getElementById('timer').innerText = timeLeft;
+        const timerEl = document.getElementById('timer');
+        if (timerEl) timerEl.innerText = timeLeft;
         if (timeLeft <= 0) {
             clearInterval(timerId);
             lockAnswer();
