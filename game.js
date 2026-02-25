@@ -237,45 +237,40 @@ function startTimer() {
 
 // --- नया सवाल लोड करना ---
 function loadNewQuestion() {
-    // 1. Check if Free Limit (10 questions) is reached
-    if (userPlan === 'free' && questionsPlayed >= 10) {
-        alert("🎯 Aapke 10 muft sawal poore ho gaye hain! Agle sawalo ke liye premium plan lein.");
-        window.location.href = "https://rzp.io/rzp/15geGvLS_conv"; // Aapka payment link
-        return;
-    }
-    
-    // 2. Check if Pool is empty
-    if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
-        if (userPlan === 'free') {
-            alert("🎯 Free sawal khatm! Premium lekar unlimited sawal payein.");
-            window.location.href = "https://rzp.io/rzp/15geGvLS_conv";
-        } else {
-            alert("✨ Is session ke sawal poore huye! Dubara koshish karein.");
-            window.location.href = "index.html";
-        }
-        return;
-    }
-    
-    // Baaki ka code wahi rahega...
+    // ... (Limit check wala code wahi rehne dein)
+
     currentQuestion = currentQuestionsPool.shift();
     userSequence = "";
     timeLeft = 20;
     
     document.getElementById('timer').innerText = timeLeft;
-    document.getElementById('question-text').innerText = currentQuestion.question;
+    
+    // YAHAN BADLAV HAI: 'q' key use karein
+    document.getElementById('question-text').innerText = currentQuestion.q || currentQuestion.question;
     document.getElementById('result').innerText = "";
     
     const optionsContainer = document.getElementById('options-container');
     optionsContainer.innerHTML = "";
     
-    for (let key in currentQuestion.options) {
+    // YAHAN BADLAV HAI: Array options ko A, B, C, D mein convert karna
+    const optionKeys = ['A', 'B', 'C', 'D'];
+    const optionsData = currentQuestion.options; // Jo aapki file mein array hai
+
+    optionKeys.forEach((key, index) => {
         const btn = document.createElement("button");
         btn.className = "option-btn";
         btn.id = "btn-" + key;
-        btn.innerHTML = key + ": " + currentQuestion.options[key];
+        
+        // Agar array hai to index se uthaye, agar purana format hai to key se
+        const optionText = Array.isArray(optionsData) ? optionsData[index] : optionsData[key];
+        
+        btn.innerHTML = key + ": " + optionText;
         btn.onclick = () => selectOption(key);
         optionsContainer.appendChild(btn);
-    }
+    });
+
+    // Correct Answer key fix: aapki file mein 'a' hai, backup mein 'correct'
+    currentQuestion.correct = currentQuestion.a || currentQuestion.correct;
     
     bgMusic.currentTime = 0;
     bgMusic.play().catch(() => {});
