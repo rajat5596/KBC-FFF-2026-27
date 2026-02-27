@@ -51,17 +51,17 @@ async function loadQuestions() {
         // Silver/Gold/Platinum format को normalize करो (options array → A/B/C/D object, correct text → letters)
         // Sab plans ke liye normalize (Hindi + English + mixed keys handle)
 currentQuestionsPool = currentQuestionsPool.map(item => {
-    // Flexible keys: English ya Hindi dono le lega
-    let questionText = item.q || item['प्रश्न'] || item.question || item['प्रश्न '] || '';
+    // Flexible keys with trim
+    let questionText = (item.q || item['प्रश्न'] || item.question || item['प्रश्न '] || '').trim();
     let optionsArr = item.options || item['विकल्प'] || item.options || [];
-    let correctAns = item.a || item['उत्तर'] || item.output || item.correct || item['उत्तर '] || '';
+    let correctAns = (item.a || item['उत्तर'] || item.output || item.correct || item['उत्तर '] || '').trim();
 
-    if (!questionText || !Array.isArray(optionsArr) || optionsArr.length < 2 || !correctAns) {
+    if (!questionText || !Array.isArray(optionsArr) || optionsArr.length < 3 || !correctAns) {
         console.warn("Invalid question skipped:", item);
-        return null; // galat entry skip
+        return null;
     }
 
-    // Options ko A/B/C/D object mein convert
+    // Options A/B/C/D
     const opts = {};
     optionsArr.forEach((opt, idx) => {
         if (opt && opt.trim()) {
@@ -69,19 +69,19 @@ currentQuestionsPool = currentQuestionsPool.map(item => {
         }
     });
 
-    // Correct answer text ko letters mein convert
+    // Correct letters with loose match (trim + lower case)
     const correctParts = correctAns.split(',').map(s => s.trim());
     let correctLetters = '';
     correctParts.forEach(part => {
-        const foundIdx = optionsArr.findIndex(opt => opt && opt.trim() === part);
+        const foundIdx = optionsArr.findIndex(opt => opt && opt.trim().toLowerCase() === part.toLowerCase());
         if (foundIdx !== -1) {
             correctLetters += String.fromCharCode(65 + foundIdx);
         }
     });
 
-    // Agar correct match na mile to fallback (rare case)
+    // Fallback
     if (!correctLetters && correctParts.length > 0) {
-        correctLetters = 'ABCD'; // default
+        correctLetters = 'ABCD';
     }
 
     return {
@@ -89,22 +89,14 @@ currentQuestionsPool = currentQuestionsPool.map(item => {
         options: opts,
         correct: correctLetters
     };
-}).filter(q => q !== null && Object.keys(q.options).length >= 2); // kam se kam 2 options wale rakh
+}).filter(q => q !== null && Object.keys(q.options).length >= 3);
 
 console.log("Total valid questions after normalize:", currentQuestionsPool.length);
 
 if (currentQuestionsPool.length === 0) {
     console.error("No valid questions found for plan:", userPlan);
     alert("इस प्लान के सवाल उपलब्ध नहीं हैं या format में समस्या है! Free मोड ट्राई करें।");
-    useHardcodedFreeQuestions(); // free fallback
-}
-
-        loadNewQuestion();
-    } catch (err) {
-        console.error("Error:", err);
-        alert("सवाल लोड नहीं हो रहे! Free मोड ट्राई करो।");
-        loadFreeFallback();
-    }
+    useHardcodedFreeQuestions();
 }
 
 function loadFreeFallback() {
