@@ -185,17 +185,17 @@ function startTimer() {
         }
     }, 1000);
 }
-// Har 10 sawal ke baad Adsterra popup ad (free mode mein)
+// Har 10 sawal ke baad Social Bar unit trigger (AdZilla jaisa chhota popup)
 if (userPlan === 'free' && questionsPlayed > 0 && questionsPlayed % 10 === 0) {
-    // Adsterra popup code (tumhara Adsterra script ID daal do)
+    // Social Bar ko force reload/trigger karo (script reload se popup aayega)
     (function() {
         var s = document.createElement('script');
         s.type = 'text/javascript';
         s.async = true;
-        s.src = '//www.highperformanceformat.com/tumhara_adsterra_key/invoke.js'; // yahan tumhara Adsterra key daal do
+        s.src = 'https://pl28712423.effectivegatecpm.com/e8/d4/74/e8d4747620e17e5817130756fb7c22ff.js';
         document.body.appendChild(s);
     })();
-    console.log("Adsterra popup triggered at sawal:", questionsPlayed);
+    console.log("Social Bar (AdZilla) popup triggered at sawal:", questionsPlayed);
 }
 // Lock button event
 document.addEventListener('DOMContentLoaded', () => {
