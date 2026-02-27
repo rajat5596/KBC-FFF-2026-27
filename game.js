@@ -38,70 +38,52 @@ async function loadQuestions() {
     else if (userPlan === 'platinum') fileName = 'platinum_questions.json';
 
     try {
-        console.log("Loading:", fileName);
         const res = await fetch(fileName + '?v=' + Date.now());
-        if (!res.ok) throw new Error('File issue: ' + res.status);
-        
-        let data = await res.json();
+        if (!res.ok) {
+            throw new Error('File not found: ' + fileName);
+        }
+        const data = await res.json();
         currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-        console.log("Raw questions:", currentQuestionsPool.length);
+        console.log("Sawal load hue:", currentQuestionsPool.length);
 
+        // Simple normalize for Hindi format (platinum/gold/silver)
         currentQuestionsPool = currentQuestionsPool.map(item => {
-            let questionText = (item['प्रश्न'] || item.q || item.question || '').trim().replace(/\s+/g, ' ');
-            let optionsInput = item['विकल्प'] || item.options || [];
-            let isObjectFormat = !Array.isArray(optionsInput) && typeof optionsInput === 'object';
-            let optionsArr = isObjectFormat ? Object.values(optionsInput) : optionsInput;
-
-            let correctAns = (item['उत्तर'] || item.a || item.correct || item.output || '').trim();
-
-            if (!questionText || optionsArr.length < 3 || !correctAns) {
-                console.warn("Skipped invalid question");
-                return null;
-            }
+            const q = item['प्रश्न'] || item.q || item.question || 'Question missing';
+            const optsArr = item['विकल्प'] || item.options || [];
+            const ans = item['उत्तर'] || item.correct || item.a || '';
 
             const opts = {};
-            if (isObjectFormat) {
-                Object.keys(optionsInput).forEach(key => {
-                    opts[key.toUpperCase()] = optionsInput[key].trim();
+            if (Array.isArray(optsArr)) {
+                optsArr.forEach((opt, i) => {
+                    if (opt) opts[String.fromCharCode(65 + i)] = opt.trim();
                 });
-            } else {
-                optionsArr.forEach((opt, idx) => {
-                    if (opt) opts[String.fromCharCode(65 + idx)] = opt.trim();
-                });
-            }
-
-            let correctLetters = '';
-            if (isObjectFormat) {
-                correctLetters = correctAns.toUpperCase();
-            } else {
-                const parts = correctAns.split(',').map(s => s.trim().toLowerCase());
-                parts.forEach(part => {
-                    const idx = optionsArr.findIndex(opt => opt && opt.trim().toLowerCase() === part);
-                    if (idx !== -1) correctLetters += String.fromCharCode(65 + idx);
+            } else if (typeof optsArr === 'object') {
+                Object.keys(optsArr).forEach(k => {
+                    opts[k.toUpperCase()] = optsArr[k].trim();
                 });
             }
 
-            if (!correctLetters) correctLetters = 'ABCD';
+            let correct = ans.toUpperCase();
+            if (!correct || correct.length < 1) correct = 'ABCD';
 
             return {
-                question: questionText,
+                question: q.trim(),
                 options: opts,
-                correct: correctLetters
+                correct: correct
             };
-        }).filter(q => q !== null && Object.keys(q.options).length >= 3);
+        }).filter(q => q.question !== 'Question missing' && Object.keys(q.options).length >= 3);
 
-        console.log("Valid questions:", currentQuestionsPool.length);
+        console.log("Valid sawal:", currentQuestionsPool.length);
 
         if (currentQuestionsPool.length === 0) {
-            alert("सवाल लोड नहीं हो रहे! Free मोड ट्राई करें।");
+            alert("Koi sawal nahi mila! Free mode chal raha hai.");
             loadFreeFallback();
-            return;
+        } else {
+            loadNewQuestion();
         }
-
-        loadNewQuestion();
     } catch (err) {
-        console.error("Error:", err);
-        alert("सवाल लोड नहीं हो रहे! Free मोड ट्राई करो।");
+        console.error("Error:", err.message);
+        alert("File load nahi ho rahi! Free mode mein ja rahe hain.");
         loadFreeFallback();
     }
 }
@@ -111,10 +93,15 @@ function loadFreeFallback() {
         {
             "प्रश्न": "इन तिथियों को वर्ष में पहले से बाद के क्रम में लगाएं:",
             "विकल्प": ["15 अगस्त", "26 जनवरी", "2 अक्टूबर", "14 नवंबर"],
-            "उत्तर": "26 जनवरी, 15 अगस्त, 2 अक्टूबर, 14 नवंबर"
+            "उत्तर": "BACD"
         },
-        // Baaki 9 add kar do (purane se copy kar le)
-        // Example ke liye 1 daala hai, baaki daal le
+        {
+            "प्रश्न": "इन क्रिकेट खिलाड़ियों को उनके पदार्पण के हिसाब से पुराने से नए क्रम में लगाएं:",
+            "विकल्प": ["विराट कोहली", "एमएस धोनी", "सचिन तेंदुलकर", "शुभमन गिल"],
+            "उत्तर": "CBAD"
+        },
+        // Baaki 8 sawal add kar lo (purane free_questions.json se copy kar ke same format mein daal do)
+        // Agar jaldi test karna hai to sirf 2-3 daal do
     ];
     currentQuestionsPool = freeQs.sort(() => Math.random() - 0.5);
     loadNewQuestion();
