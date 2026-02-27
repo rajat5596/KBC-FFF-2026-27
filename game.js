@@ -46,61 +46,53 @@ async function loadQuestions() {
         
         let data = await res.json();
         currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-        console.log("Raw questions:", currentQuestionsPool.length);
+        console.log("Raw count:", currentQuestionsPool.length);
 
-        // Hindi format (प्रश्न, विकल्प, उत्तर) ke liye special handling
-        currentQuestionsPool = currentQuestionsPool.map(item => {
-            // Question text
-            let questionText = (item['प्रश्न'] || item.q || item.question || '').trim();
-            
-            // Options array
-            let optionsArr = item['विकल्प'] || item.options || [];
-            
-            // Correct answer (comma separated text)
-            let correctAns = (item['उत्तर'] || item.a || item.correct || item.output || '').trim();
+        if (userPlan === 'platinum' || userPlan === 'gold') {
+            // Platinum/Gold Hindi format ONLY
+            currentQuestionsPool = currentQuestionsPool.map(item => {
+                let questionText = (item['प्रश्न'] || '').trim();
+                let optionsArr = item['विकल्प'] || [];
+                let correctAns = (item['उत्तर'] || '').trim();
 
-            // Agar kuch missing to skip
-            if (!questionText || !Array.isArray(optionsArr) || optionsArr.length < 3 || !correctAns) {
-                console.warn("Skipped:", item);
-                return null;
-            }
-
-            // Options ko A/B/C/D banao
-            const opts = {};
-            optionsArr.forEach((opt, idx) => {
-                if (opt && opt.trim()) {
-                    opts[String.fromCharCode(65 + idx)] = opt.trim();
+                if (!questionText || !Array.isArray(optionsArr) || optionsArr.length < 3 || !correctAns) {
+                    return null;
                 }
-            });
 
-            // Correct answer match (trim aur lower case ignore)
-            let correctLetters = '';
-            const correctParts = correctAns.split(',').map(s => s.trim().toLowerCase());
-            correctParts.forEach(part => {
-                const foundIdx = optionsArr.findIndex(opt => opt && opt.trim().toLowerCase() === part);
-                if (foundIdx !== -1) {
-                    correctLetters += String.fromCharCode(65 + foundIdx);
-                }
-            });
+                const opts = {};
+                optionsArr.forEach((opt, idx) => {
+                    if (opt && opt.trim()) {
+                        opts[String.fromCharCode(65 + idx)] = opt.trim();
+                    }
+                });
 
-            // Fallback agar match na mile
-            if (!correctLetters) correctLetters = 'ABCD';
+                let correctLetters = '';
+                const parts = correctAns.split(',').map(s => s.trim().toLowerCase());
+                parts.forEach(part => {
+                    const idx = optionsArr.findIndex(opt => opt && opt.trim().toLowerCase() === part);
+                    if (idx !== -1) correctLetters += String.fromCharCode(65 + idx);
+                });
 
-            return {
-                question: questionText,
-                options: opts,
-                correct: correctLetters
-            };
-        }).filter(q => q !== null && Object.keys(q.options).length >= 3);
+                if (!correctLetters) correctLetters = 'ABCD';
 
-        console.log("Valid Hindi questions:", currentQuestionsPool.length);
+                return {
+                    question: questionText,
+                    options: opts,
+                    correct: correctLetters
+                };
+            }).filter(q => q !== null && Object.keys(q.options).length >= 3);
 
-        if (currentQuestionsPool.length === 0) {
-            console.error("No valid questions");
-            alert("Platinum के सवाल लोड नहीं हो रहे। Free मोड ट्राई करें।");
+            console.log("Platinum/Gold valid:", currentQuestionsPool.length);
+        } else {
+            // Free/Silver - old format, no change
+            console.log("Free/Silver mode - no normalize");
+        }
+
+        if (currentQuestionsPool.length === 0 && (userPlan === 'platinum' || userPlan === 'gold')) {
+            alert("Platinum/Gold सवाल लोड नहीं हो रहे। Free मोड ट्राई करें।");
             loadFreeFallback();
         } else {
-            loadNewQuestion();  // Yeh line question show karegi
+            loadNewQuestion();
         }
 
     } catch (err) {
