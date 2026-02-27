@@ -40,7 +40,7 @@ async function loadQuestions() {
     else if (userPlan === 'platinum') fileName = 'platinum_questions.json';
 
     try {
-        console.log("Loading:", fileName);
+        console.log("Loading file:", fileName);
         const res = await fetch(fileName + '?v=' + Date.now());
         if (!res.ok) throw new Error('File issue: ' + res.status);
         
@@ -48,30 +48,41 @@ async function loadQuestions() {
         currentQuestionsPool = data.sort(() => Math.random() - 0.5);
         console.log("Raw questions count:", currentQuestionsPool.length);
 
-        // All plans ab same Hindi format mein hain - sirf yeh handle karo
+        // Hindi format strict handling (प्रश्न, विकल्प, उत्तर)
         currentQuestionsPool = currentQuestionsPool.map(item => {
+            // Question text (trim extra space)
             let questionText = (item['प्रश्न'] || item.q || item.question || '').trim();
-            let optionsArr = item['विकल्प'] || item.options || [];
+
+            // Options array (trim each option)
+            let optionsArr = (item['विकल्प'] || item.options || []).map(opt => opt ? opt.trim() : '');
+
+            // Correct answer (trim)
             let correctAns = (item['उत्तर'] || item.a || item.correct || item.output || '').trim();
 
-            if (!questionText || !Array.isArray(optionsArr) || optionsArr.length < 3 || !correctAns) {
-                console.warn("Invalid question skipped");
+            // Skip if missing critical fields
+            if (!questionText || optionsArr.length < 3 || !correctAns || optionsArr.some(opt => !opt)) {
+                console.warn("Skipped invalid - missing or empty");
                 return null;
             }
 
             const opts = {};
             optionsArr.forEach((opt, idx) => {
-                if (opt && opt.trim()) opts[String.fromCharCode(65 + idx)] = opt.trim();
+                if (opt) opts[String.fromCharCode(65 + idx)] = opt;
             });
 
+            // Loose match for correct (remove punctuation, extra spaces, lower case)
+            let cleanCorrect = correctAns.replace(/[\s,]+/g, ',').trim().toLowerCase();
             let correctLetters = '';
-            const parts = correctAns.split(',').map(s => s.trim().toLowerCase());
-            parts.forEach(part => {
-                const idx = optionsArr.findIndex(opt => opt && opt.trim().toLowerCase() === part);
+            const correctParts = cleanCorrect.split(',').filter(p => p);
+            correctParts.forEach(part => {
+                const idx = optionsArr.findIndex(opt => opt && opt.toLowerCase().trim() === part);
                 if (idx !== -1) correctLetters += String.fromCharCode(65 + idx);
             });
 
-            if (!correctLetters) correctLetters = 'ABCD';
+            if (!correctLetters) {
+                console.warn("No match for correct answer:", correctAns);
+                correctLetters = 'ABCD';
+            }
 
             return {
                 question: questionText,
@@ -80,18 +91,19 @@ async function loadQuestions() {
             };
         }).filter(q => q !== null && Object.keys(q.options).length >= 3);
 
-        console.log("Valid questions:", currentQuestionsPool.length);
+        console.log("Valid questions after filter:", currentQuestionsPool.length);
 
         if (currentQuestionsPool.length === 0) {
-            alert("सवाल लोड नहीं हो रहे! Free मोड ट्राई करें।");
+            console.error("No valid questions for plan:", userPlan);
+            alert("सवाल लोड नहीं हो रहे (format issue)! Free मोड ट्राई करें।");
             loadFreeFallback();
         } else {
             loadNewQuestion();
         }
 
     } catch (err) {
-        console.error("Error:", err);
-        alert("सवाल लोड नहीं हो रहे! Free मोड ट्राई करो।");
+        console.error("Fetch error:", err.message);
+        alert("फाइल लोड नहीं हो रही! Free मोड ट्राई करो।");
         loadFreeFallback();
     }
 }
