@@ -40,63 +40,83 @@ async function loadQuestions() {
     else if (userPlan === 'platinum') fileName = 'platinum_questions.json';
 
     try {
-        console.log("Loading:", fileName);
+        console.log("Loading file:", fileName);
         const res = await fetch(fileName + '?v=' + Date.now());
         if (!res.ok) throw new Error('File issue: ' + res.status);
         
         let data = await res.json();
         currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-        console.log("Questions loaded:", currentQuestionsPool.length);
+        console.log("Raw questions loaded:", currentQuestionsPool.length);
 
-        // Silver/Gold/Platinum format को normalize करो (options array → A/B/C/D object, correct text → letters)
-        // Sab plans ke liye normalize (Hindi + English + mixed keys handle)
-currentQuestionsPool = currentQuestionsPool.map(item => {
-    // Flexible keys with trim
-    let questionText = (item.q || item['प्रश्न'] || item.question || item['प्रश्न '] || '').trim();
-    let optionsArr = item.options || item['विकल्प'] || item.options || [];
-    let correctAns = (item.a || item['उत्तर'] || item.output || item.correct || item['उत्तर '] || '').trim();
+        // ==== SAB FORMATS HANDLE KAREGA (FREE + SILVER + GOLD + PLATINUM) ====
+        currentQuestionsPool = currentQuestionsPool.map(item => {
+            // Question text (sab keys support)
+            let questionText = (item.question || item.q || item['प्रश्न'] || item['प्रश्न '] || '').trim();
 
-    if (!questionText || !Array.isArray(optionsArr) || optionsArr.length < 3 || !correctAns) {
-        console.warn("Invalid question skipped:", item);
-        return null;
-    }
+            // Options (object ya array dono)
+            let optionsInput = item.options || item['विकल्प'] || [];
+            let isObjectFormat = !Array.isArray(optionsInput) && typeof optionsInput === 'object';
+            let optionsArr = isObjectFormat ? Object.values(optionsInput) : optionsInput;
 
-    // Options A/B/C/D
-    const opts = {};
-    optionsArr.forEach((opt, idx) => {
-        if (opt && opt.trim()) {
-            opts[String.fromCharCode(65 + idx)] = opt.trim();
+            // Correct answer (sab keys)
+            let correctAns = (item.correct || item.a || item['उत्तर'] || item.output || '').trim();
+
+            if (!questionText || optionsArr.length < 3 || !correctAns) {
+                console.warn("Skipped invalid question");
+                return null;
+            }
+
+            const opts = {};
+            if (isObjectFormat) {
+                // Free format (already A/B/C/D)
+                Object.keys(optionsInput).forEach(key => {
+                    opts[key] = optionsInput[key].trim();
+                });
+            } else {
+                // Silver/Gold/Platinum format (array → A/B/C/D)
+                optionsArr.forEach((opt, idx) => {
+                    if (opt) opts[String.fromCharCode(65 + idx)] = opt.trim();
+                });
+            }
+
+            // Correct letters banao
+            let correctLetters = '';
+            if (isObjectFormat) {
+                // Free format mein already "BACD" jaisa hota hai
+                correctLetters = correctAns.toUpperCase().replace(/[^ABCD]/g, '');
+            } else {
+                // Text match (Hindi keys wale)
+                const correctParts = correctAns.split(',').map(s => s.trim().toLowerCase());
+                correctParts.forEach(part => {
+                    const foundIdx = optionsArr.findIndex(opt => opt && opt.trim().toLowerCase() === part);
+                    if (foundIdx !== -1) correctLetters += String.fromCharCode(65 + foundIdx);
+                });
+            }
+            if (!correctLetters) correctLetters = 'ABCD';
+
+            return {
+                question: questionText,
+                options: opts,
+                correct: correctLetters
+            };
+        }).filter(q => q !== null && Object.keys(q.options).length >= 3);
+
+        console.log("Final valid questions after normalize:", currentQuestionsPool.length);
+
+        if (currentQuestionsPool.length === 0) {
+            console.error("No valid questions for", userPlan);
+            alert("इस प्लान में सवाल उपलब्ध नहीं हैं! Free मोड ट्राई करें।");
+            loadFreeFallback();
+            return;
         }
-    });
 
-    // Correct letters with loose match (trim + lower case)
-    const correctParts = correctAns.split(',').map(s => s.trim());
-    let correctLetters = '';
-    correctParts.forEach(part => {
-        const foundIdx = optionsArr.findIndex(opt => opt && opt.trim().toLowerCase() === part.toLowerCase());
-        if (foundIdx !== -1) {
-            correctLetters += String.fromCharCode(65 + foundIdx);
-        }
-    });
+        loadNewQuestion();   // ← yeh line zaroori hai
 
-    // Fallback
-    if (!correctLetters && correctParts.length > 0) {
-        correctLetters = 'ABCD';
+    } catch (err) {
+        console.error("Error:", err);
+        alert("सवाल लोड नहीं हो रहे! Free मोड ट्राई करो।");
+        loadFreeFallback();
     }
-
-    return {
-        question: questionText,
-        options: opts,
-        correct: correctLetters
-    };
-}).filter(q => q !== null && Object.keys(q.options).length >= 3);
-
-console.log("Total valid questions after normalize:", currentQuestionsPool.length);
-
-if (currentQuestionsPool.length === 0) {
-    console.error("No valid questions found for plan:", userPlan);
-    alert("इस प्लान के सवाल उपलब्ध नहीं हैं या format में समस्या है! Free मोड ट्राई करें।");
-    useHardcodedFreeQuestions();
 }
 
 function loadFreeFallback() {
