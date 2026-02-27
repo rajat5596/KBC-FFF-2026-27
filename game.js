@@ -89,13 +89,7 @@ function loadFreeFallback() {
 }
 
 function loadNewQuestion() {
-    if (userPlan === 'free' && questionsPlayed >= 10) {
-        alert("10 free सवाल खत्म! Upgrade करो।");
-        window.location.href = "/";
-        return;
-    }
-
-    if (currentQuestionsPool.length === 0) {
+        if (currentQuestionsPool.length === 0) {
         alert("सभी सवाल खत्म!");
         window.location.href = "/";
         return;
@@ -191,7 +185,18 @@ function startTimer() {
         }
     }, 1000);
 }
-
+// Har 10 sawal ke baad Adsterra popup ad (free mode mein)
+if (userPlan === 'free' && questionsPlayed > 0 && questionsPlayed % 10 === 0) {
+    // Adsterra popup code (tumhara Adsterra script ID daal do)
+    (function() {
+        var s = document.createElement('script');
+        s.type = 'text/javascript';
+        s.async = true;
+        s.src = '//www.highperformanceformat.com/tumhara_adsterra_key/invoke.js'; // yahan tumhara Adsterra key daal do
+        document.body.appendChild(s);
+    })();
+    console.log("Adsterra popup triggered at sawal:", questionsPlayed);
+}
 // Lock button event
 document.addEventListener('DOMContentLoaded', () => {
     const lockBtn = document.getElementById('lock-answer-btn');
