@@ -40,58 +40,50 @@ async function loadQuestions() {
     else if (userPlan === 'platinum') fileName = 'platinum_questions.json';
 
     try {
-        console.log("Loading file:", fileName);
+        console.log("Loading:", fileName);
         const res = await fetch(fileName + '?v=' + Date.now());
         if (!res.ok) throw new Error('File issue: ' + res.status);
         
         let data = await res.json();
         currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-        console.log("Raw questions loaded:", currentQuestionsPool.length);
+        console.log("Raw questions:", currentQuestionsPool.length);
 
-        // ==== SAB FORMATS HANDLE KAREGA (FREE + SILVER + GOLD + PLATINUM) ====
+        // Hindi format (प्रश्न, विकल्प, उत्तर) ke liye special handling
         currentQuestionsPool = currentQuestionsPool.map(item => {
-            // Question text (sab keys support)
-            let questionText = (item.question || item.q || item['प्रश्न'] || item['प्रश्न '] || '').trim();
+            // Question text
+            let questionText = (item['प्रश्न'] || item.q || item.question || '').trim();
+            
+            // Options array
+            let optionsArr = item['विकल्प'] || item.options || [];
+            
+            // Correct answer (comma separated text)
+            let correctAns = (item['उत्तर'] || item.a || item.correct || item.output || '').trim();
 
-            // Options (object ya array dono)
-            let optionsInput = item.options || item['विकल्प'] || [];
-            let isObjectFormat = !Array.isArray(optionsInput) && typeof optionsInput === 'object';
-            let optionsArr = isObjectFormat ? Object.values(optionsInput) : optionsInput;
-
-            // Correct answer (sab keys)
-            let correctAns = (item.correct || item.a || item['उत्तर'] || item.output || '').trim();
-
-            if (!questionText || optionsArr.length < 3 || !correctAns) {
-                console.warn("Skipped invalid question");
+            // Agar kuch missing to skip
+            if (!questionText || !Array.isArray(optionsArr) || optionsArr.length < 3 || !correctAns) {
+                console.warn("Skipped:", item);
                 return null;
             }
 
+            // Options ko A/B/C/D banao
             const opts = {};
-            if (isObjectFormat) {
-                // Free format (already A/B/C/D)
-                Object.keys(optionsInput).forEach(key => {
-                    opts[key] = optionsInput[key].trim();
-                });
-            } else {
-                // Silver/Gold/Platinum format (array → A/B/C/D)
-                optionsArr.forEach((opt, idx) => {
-                    if (opt) opts[String.fromCharCode(65 + idx)] = opt.trim();
-                });
-            }
+            optionsArr.forEach((opt, idx) => {
+                if (opt && opt.trim()) {
+                    opts[String.fromCharCode(65 + idx)] = opt.trim();
+                }
+            });
 
-            // Correct letters banao
+            // Correct answer match (trim aur lower case ignore)
             let correctLetters = '';
-            if (isObjectFormat) {
-                // Free format mein already "BACD" jaisa hota hai
-                correctLetters = correctAns.toUpperCase().replace(/[^ABCD]/g, '');
-            } else {
-                // Text match (Hindi keys wale)
-                const correctParts = correctAns.split(',').map(s => s.trim().toLowerCase());
-                correctParts.forEach(part => {
-                    const foundIdx = optionsArr.findIndex(opt => opt && opt.trim().toLowerCase() === part);
-                    if (foundIdx !== -1) correctLetters += String.fromCharCode(65 + foundIdx);
-                });
-            }
+            const correctParts = correctAns.split(',').map(s => s.trim().toLowerCase());
+            correctParts.forEach(part => {
+                const foundIdx = optionsArr.findIndex(opt => opt && opt.trim().toLowerCase() === part);
+                if (foundIdx !== -1) {
+                    correctLetters += String.fromCharCode(65 + foundIdx);
+                }
+            });
+
+            // Fallback agar match na mile
             if (!correctLetters) correctLetters = 'ABCD';
 
             return {
@@ -101,16 +93,15 @@ async function loadQuestions() {
             };
         }).filter(q => q !== null && Object.keys(q.options).length >= 3);
 
-        console.log("Final valid questions after normalize:", currentQuestionsPool.length);
+        console.log("Valid Hindi questions:", currentQuestionsPool.length);
 
         if (currentQuestionsPool.length === 0) {
-            console.error("No valid questions for", userPlan);
-            alert("इस प्लान में सवाल उपलब्ध नहीं हैं! Free मोड ट्राई करें।");
+            console.error("No valid questions");
+            alert("Platinum के सवाल लोड नहीं हो रहे। Free मोड ट्राई करें।");
             loadFreeFallback();
-            return;
+        } else {
+            loadNewQuestion();  // Yeh line question show karegi
         }
-
-        loadNewQuestion();   // ← yeh line zaroori hai
 
     } catch (err) {
         console.error("Error:", err);
@@ -118,7 +109,6 @@ async function loadQuestions() {
         loadFreeFallback();
     }
 }
-
 function loadFreeFallback() {
     // Hardcoded 10 free questions (tumhare पुराने से copy कर लेना, example):
     const freeQs = [
@@ -143,7 +133,7 @@ function loadNewQuestion() {
     }
 
     currentQuestion = currentQuestionsPool.shift();
-    userSequence = "";
+    userSeuence = "";
     timeLeft = 20;
 
     document.getElementById('timer').innerText = timeLeft;
