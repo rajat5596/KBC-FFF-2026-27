@@ -46,50 +46,44 @@ async function loadQuestions() {
         
         let data = await res.json();
         currentQuestionsPool = data.sort(() => Math.random() - 0.5);
-        console.log("Raw count:", currentQuestionsPool.length);
+        console.log("Raw questions count:", currentQuestionsPool.length);
 
-        if (userPlan === 'platinum' || userPlan === 'gold') {
-            // Platinum/Gold Hindi format ONLY
-            currentQuestionsPool = currentQuestionsPool.map(item => {
-                let questionText = (item['प्रश्न'] || '').trim();
-                let optionsArr = item['विकल्प'] || [];
-                let correctAns = (item['उत्तर'] || '').trim();
+        // All plans ab same Hindi format mein hain - sirf yeh handle karo
+        currentQuestionsPool = currentQuestionsPool.map(item => {
+            let questionText = (item['प्रश्न'] || item.q || item.question || '').trim();
+            let optionsArr = item['विकल्प'] || item.options || [];
+            let correctAns = (item['उत्तर'] || item.a || item.correct || item.output || '').trim();
 
-                if (!questionText || !Array.isArray(optionsArr) || optionsArr.length < 3 || !correctAns) {
-                    return null;
-                }
+            if (!questionText || !Array.isArray(optionsArr) || optionsArr.length < 3 || !correctAns) {
+                console.warn("Invalid question skipped");
+                return null;
+            }
 
-                const opts = {};
-                optionsArr.forEach((opt, idx) => {
-                    if (opt && opt.trim()) {
-                        opts[String.fromCharCode(65 + idx)] = opt.trim();
-                    }
-                });
+            const opts = {};
+            optionsArr.forEach((opt, idx) => {
+                if (opt && opt.trim()) opts[String.fromCharCode(65 + idx)] = opt.trim();
+            });
 
-                let correctLetters = '';
-                const parts = correctAns.split(',').map(s => s.trim().toLowerCase());
-                parts.forEach(part => {
-                    const idx = optionsArr.findIndex(opt => opt && opt.trim().toLowerCase() === part);
-                    if (idx !== -1) correctLetters += String.fromCharCode(65 + idx);
-                });
+            let correctLetters = '';
+            const parts = correctAns.split(',').map(s => s.trim().toLowerCase());
+            parts.forEach(part => {
+                const idx = optionsArr.findIndex(opt => opt && opt.trim().toLowerCase() === part);
+                if (idx !== -1) correctLetters += String.fromCharCode(65 + idx);
+            });
 
-                if (!correctLetters) correctLetters = 'ABCD';
+            if (!correctLetters) correctLetters = 'ABCD';
 
-                return {
-                    question: questionText,
-                    options: opts,
-                    correct: correctLetters
-                };
-            }).filter(q => q !== null && Object.keys(q.options).length >= 3);
+            return {
+                question: questionText,
+                options: opts,
+                correct: correctLetters
+            };
+        }).filter(q => q !== null && Object.keys(q.options).length >= 3);
 
-            console.log("Platinum/Gold valid:", currentQuestionsPool.length);
-        } else {
-            // Free/Silver - old format, no change
-            console.log("Free/Silver mode - no normalize");
-        }
+        console.log("Valid questions:", currentQuestionsPool.length);
 
-        if (currentQuestionsPool.length === 0 && (userPlan === 'platinum' || userPlan === 'gold')) {
-            alert("Platinum/Gold सवाल लोड नहीं हो रहे। Free मोड ट्राई करें।");
+        if (currentQuestionsPool.length === 0) {
+            alert("सवाल लोड नहीं हो रहे! Free मोड ट्राई करें।");
             loadFreeFallback();
         } else {
             loadNewQuestion();
