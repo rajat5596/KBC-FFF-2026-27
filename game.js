@@ -48,40 +48,43 @@ async function loadQuestions() {
         currentQuestionsPool = data.sort(() => Math.random() - 0.5);
         console.log("Raw questions count:", currentQuestionsPool.length);
 
-        // Hindi format strict handling (प्रश्न, विकल्प, उत्तर)
+        // All Hindi format files (platinum/gold/silver) ke liye
         currentQuestionsPool = currentQuestionsPool.map(item => {
-            // Question text (trim extra space)
+            // Flexible question key
             let questionText = (item['प्रश्न'] || item.q || item.question || '').trim();
 
-            // Options array (trim each option)
-            let optionsArr = (item['विकल्प'] || item.options || []).map(opt => opt ? opt.trim() : '');
+            // Options - array
+            let optionsArr = item['विकल्प'] || item.options || [];
+            if (!Array.isArray(optionsArr)) optionsArr = [];
 
-            // Correct answer (trim)
+            // Correct - flexible key
             let correctAns = (item['उत्तर'] || item.a || item.correct || item.output || '').trim();
 
-            // Skip if missing critical fields
-            if (!questionText || optionsArr.length < 3 || !correctAns || optionsArr.some(opt => !opt)) {
-                console.warn("Skipped invalid - missing or empty");
+            if (!questionText || optionsArr.length < 3 || !correctAns) {
+                console.warn("Skipped - missing/empty");
                 return null;
             }
 
             const opts = {};
             optionsArr.forEach((opt, idx) => {
-                if (opt) opts[String.fromCharCode(65 + idx)] = opt;
+                if (opt && opt.trim()) opts[String.fromCharCode(65 + idx)] = opt.trim();
             });
 
-            // Loose match for correct (remove punctuation, extra spaces, lower case)
-            let cleanCorrect = correctAns.replace(/[\s,]+/g, ',').trim().toLowerCase();
+            // Very loose matching for correct answer
+            let cleanAns = correctAns.replace(/[\s,।;:'"()]+/g, ' ').trim().toLowerCase();
             let correctLetters = '';
-            const correctParts = cleanCorrect.split(',').filter(p => p);
-            correctParts.forEach(part => {
-                const idx = optionsArr.findIndex(opt => opt && opt.toLowerCase().trim() === part);
-                if (idx !== -1) correctLetters += String.fromCharCode(65 + idx);
+            const ansWords = cleanAns.split(' ').filter(w => w.length > 2); // ignore small words like "का", "के"
+            optionsArr.forEach((opt, idx) => {
+                if (opt) {
+                    let cleanOpt = opt.trim().toLowerCase().replace(/[\s,।;:'"()]+/g, ' ');
+                    if (ansWords.some(word => cleanOpt.includes(word))) {
+                        correctLetters += String.fromCharCode(65 + idx);
+                    }
+                }
             });
 
-            if (!correctLetters) {
-                console.warn("No match for correct answer:", correctAns);
-                correctLetters = 'ABCD';
+            if (correctLetters.length < correctAns.split(',').length) {
+                correctLetters = 'ABCD'; // fallback if partial match
             }
 
             return {
@@ -91,18 +94,18 @@ async function loadQuestions() {
             };
         }).filter(q => q !== null && Object.keys(q.options).length >= 3);
 
-        console.log("Valid questions after filter:", currentQuestionsPool.length);
+        console.log("Valid questions:", currentQuestionsPool.length);
 
         if (currentQuestionsPool.length === 0) {
-            console.error("No valid questions for plan:", userPlan);
-            alert("सवाल लोड नहीं हो रहे (format issue)! Free मोड ट्राई करें।");
+            console.error("No valid questions - likely match fail");
+            alert("सवाल लोड नहीं हो रहे (matching problem)! Free मोड ट्राई करें।");
             loadFreeFallback();
         } else {
             loadNewQuestion();
         }
 
     } catch (err) {
-        console.error("Fetch error:", err.message);
+        console.error("Error:", err.message);
         alert("फाइल लोड नहीं हो रही! Free मोड ट्राई करो।");
         loadFreeFallback();
     }
