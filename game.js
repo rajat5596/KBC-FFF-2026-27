@@ -40,7 +40,13 @@ async function loadQuestions() {
     console.log("📥 Loading:", fileName, "for plan:", userPlan);
 
     try {
-        const res = await fetch(fileName + '?v=' + Date.now());
+        // Important: Add cache busting
+        const url = fileName + '?v=' + Date.now();
+        console.log("📥 Fetching from:", url);
+        
+        const res = await fetch(url);
+        console.log("📥 Response status:", res.status);
+        
         if (!res.ok) {
             throw new Error('File not found: ' + fileName + ' (Status: ' + res.status + ')');
         }
@@ -48,50 +54,26 @@ async function loadQuestions() {
         const data = await res.json();
         console.log("📦 Raw data loaded, items:", data.length);
         
+        // Agar data empty hai
+        if (!data || data.length === 0) {
+            throw new Error('File is empty');
+        }
+        
         // Convert to standard format
         currentQuestionsPool = data.map((item, index) => {
-            // Extract question
-            let question = item['प्रश्न'] || item.question || item.q || '';
-            
-            // Extract options
-            let options = {};
-            if (item['विकल्प'] && Array.isArray(item['विकल्प'])) {
-                // Hindi format: ["A", "B", "C", "D"]
-                const letters = ['A', 'B', 'C', 'D'];
-                item['विकल्प'].forEach((opt, i) => {
-                    if (opt && i < letters.length) {
-                        options[letters[i]] = opt;
-                    }
-                });
-            } else if (item.options && typeof item.options === 'object') {
-                // Standard format
-                options = item.options;
-            }
-            
-            // Extract correct answer
-            let correct = item['उत्तर'] || item.correct || item.a || '';
-            if (typeof correct === 'string') {
-                correct = correct.toUpperCase().replace(/[^A-D]/g, '');
-            }
-            
-            return {
-                question: question,
-                options: options,
-                correct: correct || 'ABCD'
-            };
+            // ... rest of your conversion code ...
         }).filter(q => q.question && Object.keys(q.options).length === 4);
         
         console.log(`✅ Valid questions: ${currentQuestionsPool.length}/${data.length}`);
         
+        if (currentQuestionsPool.length === 0) {
+            throw new Error('No valid questions after conversion');
+        }
+        
         // Shuffle
         currentQuestionsPool = currentQuestionsPool.sort(() => Math.random() - 0.5);
-
-        if (currentQuestionsPool.length === 0) {
-            console.log("⚠️ No valid questions, using fallback");
-            loadFreeFallback();
-        } else {
-            loadNewQuestion();
-        }
+        loadNewQuestion();
+        
     } catch (err) {
         console.error("❌ Error loading questions:", err);
         alert("फाइल लोड नहीं हो रही! फ्री मोड में जा रहे हैं।");
