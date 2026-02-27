@@ -236,3 +236,14 @@ function logout() {
         window.location.replace("index.html");
     });
                         }
+// यह सुनिश्चित करो कि DOM लोड होने के बाद इवेंट लगे
+window.addEventListener('load', function() {
+    const lockBtn = document.getElementById('lock-answer-btn');
+    if (lockBtn) {
+        // पुराने event listeners हटाओ
+        lockBtn.replaceWith(lockBtn.cloneNode(true));
+        // नया listener लगाओ
+        document.getElementById('lock-answer-btn').addEventListener('click', lockAnswer);
+        console.log("✅ Lock button event listener attached");
+    }
+});
