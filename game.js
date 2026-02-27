@@ -13,23 +13,117 @@ let questionsPlayed = 0;
 let currentQuestionsPool = []; 
 let userPlan = 'free'; 
 
-// Plan detection
+// --- प्लान दिखाने का फंक्शन ---
+function updatePlanDisplay(plan, expiryDate) {
+    const planDisplay = document.getElementById('user-plan-display');
+    if (!planDisplay) return;
+    
+    const icons = { silver: '🥈', gold: '🥇', platinum: '💎', free: '🎯' };
+    const icon = icons[plan] || '🎯';
+    
+    let displayText = `${icon} ${plan.toUpperCase()} प्लान`;
+    if (expiryDate && plan !== 'free') {
+        const date = new Date(expiryDate).toLocaleDateString('hi-IN');
+        displayText += ` | वैधता: ${date}`;
+    }
+    planDisplay.innerHTML = displayText;
+    
+    const colors = {
+        silver: 'linear-gradient(135deg, #808080, #C0C0C0)',
+        gold: 'linear-gradient(135deg, #B8860B, #FFD700)',
+        platinum: 'linear-gradient(135deg, #4a4a4a, #E5E4E2)',
+        free: 'linear-gradient(135deg, #27ae60, #2ecc71)'
+    };
+    planDisplay.style.background = colors[plan] || colors.free;
+}
+
+// --- पेज लोड होते ही ---
 window.addEventListener('load', () => {
     console.log("🎯 Game शुरू...");
     
-    // localStorage से plan लोड करो
-    const savedPlan = localStorage.getItem('user_plan_type');
-    if (savedPlan) {
-        userPlan = savedPlan.toLowerCase().trim();
-        console.log("✅ User plan loaded:", userPlan);
+    // Firebase auth check
+    if (typeof firebase !== 'undefined') {
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                const cleanPhone = user.phoneNumber.replace(/\D/g, '').slice(-10);
+                console.log("✅ User logged in:", cleanPhone);
+                
+                try {
+                    const snapshot = await firebase.database().ref('users/' + cleanPhone).once('value');
+                    const userData = snapshot.val();
+                    console.log("📦 Firebase data:", userData);
+                    
+                    if (userData && userData.status === 'active') {
+                        const expiryDate = new Date(userData.expiry);
+                        if (expiryDate > new Date()) {
+                            userPlan = userData.plan.toLowerCase().trim();
+                            console.log("💎 Premium plan detected:", userPlan);
+                            updatePlanDisplay(userPlan, userData.expiry);
+                            
+                            // Save to localStorage
+                            localStorage.setItem('user_plan_status', 'premium');
+                            localStorage.setItem('user_plan_type', userPlan);
+                        } else {
+                            console.log("⚠️ Plan expired");
+                            userPlan = 'free';
+                            updatePlanDisplay('free');
+                            localStorage.setItem('user_plan_status', 'free');
+                            localStorage.removeItem('user_plan_type');
+                        }
+                    } else {
+                        console.log("ℹ️ Free user");
+                        userPlan = 'free';
+                        updatePlanDisplay('free');
+                        localStorage.setItem('user_plan_status', 'free');
+                        localStorage.removeItem('user_plan_type');
+                    }
+                } catch (err) {
+                    console.log("Firebase error:", err);
+                    // Try localStorage as fallback
+                    const savedPlan = localStorage.getItem('user_plan_type');
+                    if (savedPlan) {
+                        userPlan = savedPlan;
+                        console.log("✅ Using localStorage plan:", userPlan);
+                        updatePlanDisplay(userPlan);
+                    } else {
+                        userPlan = 'free';
+                        updatePlanDisplay('free');
+                    }
+                }
+            } else {
+                // No user logged in
+                console.log("No user logged in");
+                const savedPlan = localStorage.getItem('user_plan_type');
+                if (savedPlan) {
+                    userPlan = savedPlan;
+                    console.log("✅ Using localStorage plan (no user):", userPlan);
+                    updatePlanDisplay(userPlan);
+                } else {
+                    userPlan = 'free';
+                    updatePlanDisplay('free');
+                }
+            }
+            
+            // Load questions
+            loadQuestions();
+        });
     } else {
-        console.log("ℹ️ No plan found, using free");
-        userPlan = 'free';
+        // Firebase not available
+        console.log("Firebase not available");
+        const savedPlan = localStorage.getItem('user_plan_type');
+        if (savedPlan) {
+            userPlan = savedPlan;
+            console.log("✅ Using localStorage plan (no Firebase):", userPlan);
+            updatePlanDisplay(userPlan);
+        } else {
+            userPlan = 'free';
+            updatePlanDisplay('free');
+        }
+        loadQuestions();
     }
-
-    loadQuestions();
 });
 
+// --- सवाल लोड करने का मुख्य फंक्शन ---
 async function loadQuestions() {
     let fileName = 'free_questions.json';
     
@@ -40,7 +134,6 @@ async function loadQuestions() {
     console.log("📥 Loading:", fileName, "for plan:", userPlan);
 
     try {
-        // Important: Add cache busting
         const url = fileName + '?v=' + Date.now();
         console.log("📥 Fetching from:", url);
         
@@ -54,23 +147,79 @@ async function loadQuestions() {
         const data = await res.json();
         console.log("📦 Raw data loaded, items:", data.length);
         
-        // Agar data empty hai
         if (!data || data.length === 0) {
             throw new Error('File is empty');
         }
         
-        // Convert to standard format
-        currentQuestionsPool = data.map((item, index) => {
-            // ... rest of your conversion code ...
-        }).filter(q => q.question && Object.keys(q.options).length === 4);
-        
-        console.log(`✅ Valid questions: ${currentQuestionsPool.length}/${data.length}`);
+        // Convert to standard format based on plan
+        if (userPlan === 'gold' || userPlan === 'platinum') {
+            // Hindi format conversion (प्रश्न, विकल्प, उत्तर)
+            currentQuestionsPool = data.map(item => {
+                // Extract question
+                const questionText = item['प्रश्न'] || '';
+                
+                // Extract options (should be array)
+                const optionsArray = item['विकल्प'] || [];
+                
+                // Extract correct answer string
+                const correctAnswerStr = item['उत्तर'] || '';
+                
+                // Convert options array to object with A, B, C, D keys
+                const optionsObj = {};
+                const letters = ['A', 'B', 'C', 'D'];
+                optionsArray.forEach((opt, index) => {
+                    if (index < letters.length) {
+                        optionsObj[letters[index]] = opt;
+                    }
+                });
+                
+                // Convert correct answer string to letter sequence
+                let correctLetters = '';
+                const answerParts = correctAnswerStr.split(',').map(s => s.trim());
+                
+                answerParts.forEach(part => {
+                    const index = optionsArray.findIndex(opt => opt === part);
+                    if (index !== -1) {
+                        correctLetters += letters[index];
+                    }
+                });
+                
+                // Fallback if conversion fails
+                if (correctLetters.length !== 4) {
+                    correctLetters = 'ABCD';
+                }
+                
+                return {
+                    question: questionText,
+                    options: optionsObj,
+                    correct: correctLetters
+                };
+            }).filter(q => q.question && Object.keys(q.options).length === 4);
+            
+            console.log(`✅ ${userPlan} questions converted:`, currentQuestionsPool.length);
+        } else {
+            // Silver/Free - assume standard format (question, options with A,B,C,D, correct)
+            currentQuestionsPool = data.map(item => {
+                // Try different possible formats
+                const question = item.question || item.q || '';
+                const options = item.options || {};
+                const correct = item.correct || item.a || '';
+                
+                return {
+                    question: question,
+                    options: options,
+                    correct: correct
+                };
+            }).filter(q => q.question && Object.keys(q.options).length === 4);
+            
+            console.log(`✅ ${userPlan} questions loaded:`, currentQuestionsPool.length);
+        }
         
         if (currentQuestionsPool.length === 0) {
             throw new Error('No valid questions after conversion');
         }
         
-        // Shuffle
+        // Shuffle questions
         currentQuestionsPool = currentQuestionsPool.sort(() => Math.random() - 0.5);
         loadNewQuestion();
         
@@ -81,6 +230,7 @@ async function loadQuestions() {
     }
 }
 
+// --- फ्री फॉलबैक सवाल (अगर JSON न मिले) ---
 function loadFreeFallback() {
     console.log("📝 Using free fallback questions");
     const freeQs = [
@@ -93,23 +243,38 @@ function loadFreeFallback() {
             question: "इन क्रिकेट खिलाड़ियों को उनके पदार्पण के हिसाब से पुराने से नए क्रम में लगाएं:",
             options: { A: "विराट कोहली", B: "एमएस धोनी", C: "सचिन तेंदुलकर", D: "शुभमन गिल" },
             correct: "CBAD"
+        },
+        {
+            question: "इन सोशल मीडिया ऐप्स को उनकी लोकप्रियता के हिसाब से क्रम में लगाएं:",
+            options: { A: "इंस्टाग्राम", B: "फेसबुक", C: "व्हाट्सएप", D: "यूट्यूब" },
+            correct: "DCBA"
+        },
+        {
+            question: "इन रंगों को इंद्रधनुष के क्रम में लगाएं:",
+            options: { A: "पीला", B: "लाल", C: "बैंगनी", D: "हरा" },
+            correct: "CDAB"
         }
     ];
     currentQuestionsPool = freeQs.sort(() => Math.random() - 0.5);
     loadNewQuestion();
 }
 
+// --- नया सवाल लोड करना ---
 function loadNewQuestion() {
-    // Check if user is free and limit reached
-    if (userPlan === 'free' && questionsPlayed >= 2) { // Testing ke liye 2 rakha hai, baad me 10 kar dena
-        alert("🎯 2 मुफ्त सवाल पूरे! प्रीमियम लें?");
-        window.location.href = "https://rzp.io/rzp/I5geGyLS";
+    // Check if user is free and limit reached (10 questions for free)
+    if (userPlan === 'free' && questionsPlayed >= 10) {
+        const upgrade = confirm("🎯 10 मुफ्त सवाल पूरे! प्रीमियम प्लान लेकर 500+ सवाल खेलें?");
+        if (upgrade) {
+            window.location.href = "https://rzp.io/rzp/I5geGyLS";
+        } else {
+            window.location.href = "index.html";
+        }
         return;
     }
 
     if (!currentQuestionsPool || currentQuestionsPool.length === 0) {
         alert("❌ सभी सवाल खत्म!");
-        window.location.href = "/";
+        window.location.href = "index.html";
         return;
     }
 
@@ -131,11 +296,18 @@ function loadNewQuestion() {
     Object.keys(currentQuestion.options).forEach(key => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
-        btn.id = 'btn-' + key;  // Simple ID: btn-A, btn-B, etc.
+        btn.id = 'btn-' + key;
         btn.innerHTML = key + ": " + currentQuestion.options[key];
         btn.onclick = () => selectOption(key);
         optionsContainer.appendChild(btn);
     });
+
+    // Enable lock button
+    const lockBtn = document.getElementById('lock-answer-btn');
+    if (lockBtn) {
+        lockBtn.disabled = false;
+        lockBtn.innerHTML = '🔒 उत्तर लॉक करें';
+    }
 
     // Play background music
     bgMusic.currentTime = 0;
@@ -144,6 +316,7 @@ function loadNewQuestion() {
     startTimer();
 }
 
+// --- ऑप्शन चुनना ---
 function selectOption(key) {
     if (!userSequence.includes(key) && userSequence.length < 4) {
         userSequence += key;
@@ -158,10 +331,17 @@ function selectOption(key) {
     }
 }
 
+// --- उत्तर लॉक करना ---
 function lockAnswer() {
     if (userSequence.length < 4) {
         alert("⚠️ सभी 4 विकल्प चुनें!");
         return;
+    }
+    
+    const lockBtn = document.getElementById('lock-answer-btn');
+    if (lockBtn) {
+        lockBtn.disabled = true;
+        lockBtn.innerHTML = '⏳ चेक हो रहा है...';
     }
     
     clearInterval(timerId);
@@ -172,6 +352,7 @@ function lockAnswer() {
     checkSequence();
 }
 
+// --- जवाब चेक करना ---
 function checkSequence() {
     const resultPara = document.getElementById('result');
     
@@ -203,6 +384,7 @@ function checkSequence() {
     setTimeout(loadNewQuestion, 3000);
 }
 
+// --- टाइमर शुरू करना ---
 function startTimer() {
     if (timerId) clearInterval(timerId);
     
@@ -229,21 +411,29 @@ function startTimer() {
     }, 1000);
 }
 
-// Logout function
+// --- लॉगआउट फंक्शन ---
 function logout() {
     localStorage.clear();
-    firebase.auth().signOut().then(() => {
+    if (typeof firebase !== 'undefined') {
+        firebase.auth().signOut().then(() => {
+            window.location.replace("index.html");
+        }).catch(() => {
+            window.location.replace("index.html");
+        });
+    } else {
         window.location.replace("index.html");
-    });
-                        }
-// यह सुनिश्चित करो कि DOM लोड होने के बाद इवेंट लगे
+    }
+}
+
+// --- लॉक बटन के लिए इवेंट लिस्टनर ---
 window.addEventListener('load', function() {
     const lockBtn = document.getElementById('lock-answer-btn');
     if (lockBtn) {
-        // पुराने event listeners हटाओ
-        lockBtn.replaceWith(lockBtn.cloneNode(true));
-        // नया listener लगाओ
-        document.getElementById('lock-answer-btn').addEventListener('click', lockAnswer);
+        // Remove old event listeners
+        const newBtn = lockBtn.cloneNode(true);
+        lockBtn.parentNode.replaceChild(newBtn, lockBtn);
+        // Add new listener
+        newBtn.addEventListener('click', lockAnswer);
         console.log("✅ Lock button event listener attached");
     }
 });
