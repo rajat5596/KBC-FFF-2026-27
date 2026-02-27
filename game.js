@@ -135,96 +135,71 @@ async function loadQuestions() {
 
     try {
         const url = fileName + '?v=' + Date.now();
-        console.log("📥 Fetching from:", url);
-        
         const res = await fetch(url);
-        console.log("📥 Response status:", res.status);
         
         if (!res.ok) {
-            throw new Error('File not found: ' + fileName + ' (Status: ' + res.status + ')');
+            throw new Error('File not found: ' + fileName);
         }
         
         const data = await res.json();
         console.log("📦 Raw data loaded, items:", data.length);
         
-        if (!data || data.length === 0) {
-            throw new Error('File is empty');
-        }
-        
-        // Convert to standard format based on plan
-        if (userPlan === 'gold' || userPlan === 'platinum') {
-            // Hindi format conversion (प्रश्न, विकल्प, उत्तर)
+        // Platinum के लिए हिंदी फॉर्मेट कन्वर्जन
+        if (userPlan === 'platinum' || userPlan === 'gold') {
             currentQuestionsPool = data.map(item => {
-                // Extract question
-                const questionText = item['प्रश्न'] || '';
-                
-                // Extract options (should be array)
+                // हिंदी फॉर्मेट से डेटा निकालो
+                const question = item['प्रश्न'] || '';
                 const optionsArray = item['विकल्प'] || [];
+                const answerStr = item['उत्तर'] || '';
                 
-                // Extract correct answer string
-                const correctAnswerStr = item['उत्तर'] || '';
-                
-                // Convert options array to object with A, B, C, D keys
-                const optionsObj = {};
-                const letters = ['A', 'B', 'C', 'D'];
-                optionsArray.forEach((opt, index) => {
-                    if (index < letters.length) {
-                        optionsObj[letters[index]] = opt;
-                    }
-                });
-                
-                // Convert correct answer string to letter sequence
-                let correctLetters = '';
-                const answerParts = correctAnswerStr.split(',').map(s => s.trim());
-                
-                answerParts.forEach(part => {
-                    const index = optionsArray.findIndex(opt => opt === part);
-                    if (index !== -1) {
-                        correctLetters += letters[index];
-                    }
-                });
-                
-                // Fallback if conversion fails
-                if (correctLetters.length !== 4) {
-                    correctLetters = 'ABCD';
-                }
-                
-                return {
-                    question: questionText,
-                    options: optionsObj,
-                    correct: correctLetters
+                // ऑप्शन को A,B,C,D में बदलो
+                const options = {
+                    A: optionsArray[0] || '',
+                    B: optionsArray[1] || '',
+                    C: optionsArray[2] || '',
+                    D: optionsArray[3] || ''
                 };
-            }).filter(q => q.question && Object.keys(q.options).length === 4);
-            
-            console.log(`✅ ${userPlan} questions converted:`, currentQuestionsPool.length);
-        } else {
-            // Silver/Free - assume standard format (question, options with A,B,C,D, correct)
-            currentQuestionsPool = data.map(item => {
-                // Try different possible formats
-                const question = item.question || item.q || '';
-                const options = item.options || {};
-                const correct = item.correct || item.a || '';
+                
+                // उत्तर को ABCD फॉर्मेट में बदलो
+                let correct = '';
+                if (answerStr) {
+                    const parts = answerStr.split(',').map(p => p.trim());
+                    parts.forEach(part => {
+                        const index = optionsArray.findIndex(opt => opt === part);
+                        if (index !== -1) {
+                            correct += String.fromCharCode(65 + index);
+                        }
+                    });
+                }
                 
                 return {
                     question: question,
                     options: options,
-                    correct: correct
+                    correct: correct || 'ABCD'
                 };
             }).filter(q => q.question && Object.keys(q.options).length === 4);
-            
-            console.log(`✅ ${userPlan} questions loaded:`, currentQuestionsPool.length);
+        } 
+        // Silver/Free के लिए सीधा फॉर्मेट
+        else {
+            currentQuestionsPool = data.map(item => ({
+                question: item.question || '',
+                options: item.options || {},
+                correct: item.correct || ''
+            })).filter(q => q.question && Object.keys(q.options).length === 4);
         }
+        
+        console.log(`✅ Valid questions: ${currentQuestionsPool.length}`);
         
         if (currentQuestionsPool.length === 0) {
-            throw new Error('No valid questions after conversion');
+            throw new Error('No valid questions');
         }
         
-        // Shuffle questions
+        // Shuffle
         currentQuestionsPool = currentQuestionsPool.sort(() => Math.random() - 0.5);
         loadNewQuestion();
         
     } catch (err) {
-        console.error("❌ Error loading questions:", err);
+        console.error("❌ Error:", err);
         alert("फाइल लोड नहीं हो रही! फ्री मोड में जा रहे हैं।");
         loadFreeFallback();
     }
