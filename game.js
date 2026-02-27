@@ -136,6 +136,7 @@ function loadNewQuestion() {
         window.location.href = "/";
         return;
     }
+
     if (currentQuestionsPool.length === 0) {
         alert("सभी सवाल खत्म!");
         window.location.href = "/";
@@ -147,22 +148,42 @@ function loadNewQuestion() {
     timeLeft = 20;
 
     document.getElementById('timer').innerText = timeLeft;
-    document.getElementById('question-text').innerText = currentQuestion.question || "Question missing!";
+    document.getElementById('question-text').innerText = currentQuestion.q || currentQuestion['प्रश्न'] || currentQuestion.question || "Question missing!";
     document.getElementById('result').innerText = "";
 
     const optsDiv = document.getElementById('options-container');
     optsDiv.innerHTML = "";
 
-    Object.keys(currentQuestion.options).forEach(key => {
-        const btn = document.createElement('button');
-        btn.className = 'option-btn';
-        btn.id = 'btn-' + key;
-        btn.innerHTML = key + ": " + currentQuestion.options[key];
-        btn.onclick = () => selectOption(key);
-        optsDiv.appendChild(btn);
-    });
+    // Yeh line important hai – options को A, B, C, D में convert करो
+    let options = currentQuestion.options || {};
+    if (Array.isArray(currentQuestion['विकल्प'])) {
+        // Hindi format array → A B C D object
+        const letters = ['A', 'B', 'C', 'D'];
+        currentQuestion['विकल्प'].forEach((opt, i) => {
+            if (opt) {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.id = 'btn-' + letters[i];
+                btn.innerHTML = letters[i] + ": " + opt;
+                btn.addEventListener('click', () => selectOption(letters[i]));
+                optsDiv.appendChild(btn);
+            }
+        });
+    } else if (typeof options === 'object' && Object.keys(options).length > 0) {
+        // Free format object {A:..., B:...}
+        Object.keys(options).forEach(key => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.id = 'btn-' + key;
+            btn.innerHTML = key + ": " + options[key];
+            btn.addEventListener('click', () => selectOption(key));
+            optsDiv.appendChild(btn);
+        });
+    } else {
+        alert("Options missing in question!");
+    }
 
-    bgMusic.play().catch(e => {});
+    bgMusic.play().catch(() => {});
     startTimer();
 }
 
