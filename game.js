@@ -135,63 +135,99 @@ async function loadQuestions() {
 
     try {
         const url = fileName + '?v=' + Date.now();
+        console.log("📥 Fetching from:", url);
+        
         const res = await fetch(url);
+        console.log("📥 Response status:", res.status);
         
         if (!res.ok) {
-            throw new Error('File not found: ' + fileName);
+            throw new Error('File not found: ' + fileName + ' (Status: ' + res.status + ')');
         }
         
         const data = await res.json();
         console.log("📦 Raw data loaded, items:", data.length);
         
-        // Platinum के लिए हिंदी फॉर्मेट कन्वर्जन
-        if (userPlan === 'platinum' || userPlan === 'gold') {
-            currentQuestionsPool = data.map(item => {
-                // हिंदी फॉर्मेट से डेटा निकालो
-                const question = item['प्रश्न'] || '';
-                const optionsArray = item['विकल्प'] || [];
-                const answerStr = item['उत्तर'] || '';
-                
-                // ऑप्शन को A,B,C,D में बदलो
-                const options = {
-                    A: optionsArray[0] || '',
-                    B: optionsArray[1] || '',
-                    C: optionsArray[2] || '',
-                    D: optionsArray[3] || ''
-                };
-                
-                // उत्तर को ABCD फॉर्मेट में बदलो
-                let correct = '';
-                if (answerStr) {
-                    const parts = answerStr.split(',').map(p => p.trim());
-                    parts.forEach(part => {
-                        const index = optionsArray.findIndex(opt => opt === part);
-                        if (index !== -1) {
-                            correct += String.fromCharCode(65 + index);
-                        }
-                    });
-                }
-                
-                return {
-                    question: question,
-                    options: options,
-                    correct: correct || 'ABCD'
-                };
-            }).filter(q => q.question && Object.keys(q.options).length === 4);
-        } 
-        // Silver/Free के लिए सीधा फॉर्मेट
-        else {
-            currentQuestionsPool = data.map(item => ({
-                question: item.question || '',
-                options: item.options || {},
-                correct: item.correct || ''
-            })).filter(q => q.question && Object.keys(q.options).length === 4);
+        if (!data || data.length === 0) {
+            throw new Error('File is empty');
         }
         
-        console.log(`✅ Valid questions: ${currentQuestionsPool.length}`);
+        // यहाँ सबसे महत्वपूर्ण हिस्सा - हिंदी फॉर्मेट कन्वर्जन
+        const convertedQuestions = [];
+        
+        for (let i = 0; i < data.length; i++) {
+            const item = data[i];
+            
+            // 1. प्रश्न निकालो
+            let question = item['प्रश्न'] || item.question || '';
+            
+            // 2. विकल्प निकालो
+            let options = {};
+            
+            // अगर 'विकल्प' है (हिंदी फॉर्मेट)
+            if (item['विकल्प'] && Array.isArray(item['विकल्प'])) {
+                const opts = item['विकल्प'];
+                if (opts.length >= 4) {
+                    options = {
+                        A: opts[0] || '',
+                        B: opts[1] || '',
+                        C: opts[2] || '',
+                        D: opts[3] || ''
+                    };
+                }
+            }
+            // अगर 'options' है (स्टैंडर्ड फॉर्मेट)
+            else if (item.options) {
+                options = item.options;
+            }
+            
+            // 3. उत्तर निकालो और ABCD फॉर्मेट में बदलो
+            let correct = '';
+            let answerStr = item['उत्तर'] || item.correct || '';
+            
+            if (answerStr) {
+                // अगर उत्तर में कॉमा है (हिंदी फॉर्मेट)
+                if (answerStr.includes(',')) {
+                    const parts = answerStr.split(',').map(p => p.trim());
+                    const optsArray = item['विकल्प'] || [];
+                    
+                    for (let j = 0; j < parts.length; j++) {
+                        const part = parts[j];
+                        const index = optsArray.findIndex(opt => opt === part);
+                        if (index !== -1) {
+                            correct += String.fromCharCode(65 + index); // A, B, C, D
+                        }
+                    }
+                }
+                // अगर उत्तर सीधा ABCD है
+                else if (/^[A-D]{4}$/.test(answerStr)) {
+                    correct = answerStr;
+                }
+                // अगर उत्तर 'BACD' जैसा है
+                else if (answerStr.length === 4) {
+                    correct = answerStr;
+                }
+            }
+            
+            // फॉलबैक
+            if (correct.length !== 4) {
+                correct = 'ABCD';
+            }
+            
+            // सिर्फ वैध सवाल जोड़ो
+            if (question && Object.keys(options).length === 4) {
+                convertedQuestions.push({
+                    question: question,
+                    options: options,
+                    correct: correct
+                });
+            }
+        }
+        
+        currentQuestionsPool = convertedQuestions;
+        console.log(`✅ Valid questions: ${currentQuestionsPool.length}/${data.length}`);
         
         if (currentQuestionsPool.length === 0) {
-            throw new Error('No valid questions');
+            throw new Error('No valid questions after conversion');
         }
         
         // Shuffle
@@ -199,7 +235,7 @@ async function loadQuestions() {
         loadNewQuestion();
         
     } catch (err) {
-        console.error("❌ Error:", err);
+        console.error("❌ Error loading questions:", err);
         alert("फाइल लोड नहीं हो रही! फ्री मोड में जा रहे हैं।");
         loadFreeFallback();
     }
