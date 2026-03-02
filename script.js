@@ -79,24 +79,33 @@ function sendOTP() {
 // 2. OTP वेरीफाई करने का फंक्शन
 function verifyOTP() {
     const code = document.getElementById('otp-code').value.trim();
-
-    if (code.length !== 6) {
-        alert("❌ कृपया 6 अंकों का OTP डालें");
-        return;
-    }
+    if (code.length !== 6) { alert("❌ कृपया 6 अंकों का OTP डालें"); return; }
 
     window.confirmationResult.confirm(code).then(async (result) => {
         const user = result.user;
-        const phone = user.phoneNumber.replace(/\D/g, '').slice(-10);
+        const phone = user.phoneNumber.replace(/\D/g, '').slice(-10); // Mobile number nikaala
         localStorage.setItem('kbc_phone', phone);
         
+        // --- YAHAN DATA SAVE HOGA ---
+        // Phone number ke path par data save/update karein
+        await database.ref('users/' + phone).update({
+            name: localStorage.getItem('kbc_user'),
+            plan: 'free', // Naye user ke liye default
+            status: 'active',
+            expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 din ki validity
+        }).then(() => {
+            console.log("✅ Data successfully saved in DB for phone: " + phone);
+        });
+
         const name = localStorage.getItem('kbc_user') || "यूजर";
         showMenu(name);
         await loadUserPlan(user);
     }).catch((error) => {
         alert("❌ गलत OTP!");
+        console.error("OTP Error:", error);
     });
 }
+
 
 // 3. मेनू दिखाने का फंक्शन
 function showMenu(name) {
