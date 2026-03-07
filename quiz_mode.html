@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>फ्री क्विज़ मोड - FFF मास्टर</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Quiz Specific Styles */
+        #timer { font-size: 2.5rem; color: #ffd700; text-shadow: 0 0 15px #ffd700; padding: 8px 15px; background: rgba(0,0,0,0.3); border-radius: 50px; border: 2px solid #ffd700; text-align: center; width: fit-content; margin: 0 auto 10px; }
+        #question-text { font-size: 1.2rem; margin: 15px 0; padding: 15px; background: rgba(0,0,0,0.6); border-radius: 12px; border: 2px solid #00d4ff; text-align: center; color: white; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        #options-container { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 15px 0; }
+        .option-btn { background: linear-gradient(145deg, #2c3e50, #3498db); color: white; border: 2px solid #ffd700; padding: 15px; font-size: 1rem; border-radius: 10px; cursor: pointer; transition: 0.3s; text-align: center; }
+        .option-btn.selected { background: #ffd700 !important; color: black !important; font-weight: bold; }
+        .option-btn.correct { background: #2ecc71 !important; border-color: white; }
+        .option-btn.wrong { background: #e74c3c !important; border-color: white; }
+        .lock-btn { background: linear-gradient(145deg, #ffd700, #ffa500); color: black; border: none; padding: 12px 40px; font-size: 1.1rem; font-weight: bold; border-radius: 40px; cursor: pointer; box-shadow: 0 0 15px #ffd700; display: block; margin: 20px auto; width: 80%; }
+        .nav-footer { display: flex; justify-content: space-between; margin-top: 20px; }
+        .home-btn { background: #2c3e50; color: white; border: 1px solid #ffd700; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="main-container" style="padding: 10px;">
+        <div id="top-ad" style="margin: 10px auto; text-align: center; min-height: 50px;">
+            <script type="text/javascript">
+                atOptions = { 'key' : '8bb7bd31447ffb74a3ebec1be09202fe', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
+            </script>
+            <script type="text/javascript" src="https://www.highperformanceformat.com/8bb7bd31447ffb74a3ebec1be09202fe/invoke.js"></script>
+        </div>
+
+        <div id="timer">20</div>
+        <div id="question-text">सवाल लोड हो रहा है...</div>
+        <div id="options-container"></div>
+        
+        <button id="lock-btn" class="lock-btn" onclick="checkAnswer()">🔒 उत्तर लॉक करें</button>
+        <div id="result-msg" style="text-align: center; font-weight: bold; margin-top: 10px;"></div>
+
+        <div id="bottom-ad" style="margin: 20px auto; text-align: center; min-height: 50px;">
+            <script type="text/javascript">
+                atOptions = { 'key' : '8bb7bd31447ffb74a3ebec1be09202fe', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
+            </script>
+            <script type="text/javascript" src="https://www.highperformanceformat.com/8bb7bd31447ffb74a3ebec1be09202fe/invoke.js"></script>
+        </div>
+
+        <div class="nav-footer">
+            <button onclick="window.location.href='index.html'" class="home-btn">🏠 होम</button>
+        </div>
+    </div>
+
+    <script src="https://pl28712423.effectivegatecpm.com/e8/d4/74/e8d4747620e17e5817130756fb7c22ff.js"></script>
+    <script src="quiz_logic.js"></script>
+</body>
+</html>
