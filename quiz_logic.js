@@ -4,6 +4,11 @@ let timer;
 let timeLeft = 20;
 let selectedOption = null;
 
+// Audio Objects - Updated with your exact file names
+const tickAudio = new Audio('audio/clock.mp3'); 
+const correctAudio = new Audio('audio/correct.mp3');
+const wrongAudio = new Audio('audio/wrong.mp3');
+
 async function loadQuestions() {
     try {
         const response = await fetch('quiz_questions.json');
@@ -16,6 +21,7 @@ async function loadQuestions() {
 
 function showQuestion() {
     if (currentIdx >= questions.length) {
+        stopAllAudio();
         document.getElementById('question-text').innerText = "क्विज़ समाप्त! आपने शानदार खेला।";
         document.getElementById('options-container').innerHTML = "";
         document.getElementById('lock-btn').style.display = "none";
@@ -46,12 +52,17 @@ function showQuestion() {
 
 function startTimer() {
     clearInterval(timer);
+    tickAudio.currentTime = 0;
+    tickAudio.loop = true;
+    tickAudio.play().catch(e => console.log("Audio play blocked"));
+    
     document.getElementById('timer').innerText = timeLeft;
     timer = setInterval(() => {
         timeLeft--;
         document.getElementById('timer').innerText = timeLeft;
         if (timeLeft <= 0) {
             clearInterval(timer);
+            tickAudio.pause();
             currentIdx++;
             showQuestion();
         }
@@ -62,9 +73,17 @@ function checkAnswer() {
     if (!selectedOption) return alert("कृपया एक उत्तर चुनें!");
     
     clearInterval(timer);
+    tickAudio.pause();
+
     const correct = questions[currentIdx].a;
     const btns = document.querySelectorAll('.option-btn');
     
+    if (selectedOption === correct) {
+        correctAudio.play();
+    } else {
+        wrongAudio.play();
+    }
+
     btns.forEach(btn => {
         if (btn.innerText === correct) btn.classList.add('correct');
         else if (btn.innerText === selectedOption) btn.classList.add('wrong');
@@ -74,7 +93,13 @@ function checkAnswer() {
     setTimeout(() => {
         currentIdx++;
         showQuestion();
-    }, 2000);
+    }, 3000);
+}
+
+function stopAllAudio() {
+    tickAudio.pause();
+    correctAudio.pause();
+    wrongAudio.pause();
 }
 
 loadQuestions();
