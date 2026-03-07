@@ -9,15 +9,21 @@ const tickAudio = new Audio('audio/clock.mp3');
 const correctAudio = new Audio('audio/correct.mp3');
 const wrongAudio = new Audio('audio/wrong.mp3');
 
+// Is function ko replace karein
 async function loadQuestions() {
     try {
         const response = await fetch('quiz_questions.json');
-        questions = await response.json();
+        const data = await response.json();
+        
+        // Sawalon ko random karne ka logic (Fisher-Yates Shuffle)
+        questions = data.sort(() => Math.random() - 0.5); 
+        
         showQuestion();
     } catch (e) {
         document.getElementById('question-text').innerText = "सवाल लोड नहीं हो पाए!";
     }
 }
+
 
 function showQuestion() {
     if (currentIdx >= questions.length) {
