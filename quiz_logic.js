@@ -1,10 +1,3 @@
-// ऑडियो
-const bgMusic = new Audio('audio/background.mp3');
-const clockSound = new Audio('audio/clock.mp3');
-const lockSound = new Audio('audio/lock.mp3');
-const correctSound = new Audio('audio/correct.mp3');
-const wrongSound = new Audio('audio/wrong.mp3');
-
 let questions = [];
 let currentIdx = 0;
 let timer;
