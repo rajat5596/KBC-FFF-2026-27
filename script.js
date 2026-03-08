@@ -291,22 +291,19 @@ function checkLocalStorage() {
     console.log("user_plan_type:", localStorage.getItem('user_plan_type'));
     console.log("kbc_phone:", localStorage.getItem('kbc_phone'));
 }
-function loginAsGuest() {
-    // Button ko disable karein taaki bar-bar click na ho
-    const btn = document.getElementById('guestBtn');
-    btn.disabled = true;
-    btn.innerText = "Connecting...";
+// Function ko 'window' object ke sath jodein taaki HTML ise pehchan sake
+window.loginAsGuest = function() {
+    console.log("Guest login button clicked");
 
+    // Check karein ki Anonymous Auth enabled hai ya nahi
     signInAnonymously(auth)
         .then(() => {
             console.log("Guest Login Successful");
-            // Yahan apne main page ka sahi naam likhein
+            // Yahan check karein ki aapka main quiz page ka naam sahi hai
             window.location.href = "quiz_mode.html"; 
         })
         .catch((error) => {
-            btn.disabled = false;
-            btn.innerText = "Play as Guest (Bina Login)";
-            console.error("Auth Error:", error);
-            alert("Rukaawat ke liye khed hai: " + error.message);
+            console.error("Guest Auth Error:", error.code, error.message);
+            alert("Error: " + error.message);
         });
-}
+};
