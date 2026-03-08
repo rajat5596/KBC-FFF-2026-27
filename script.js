@@ -293,17 +293,13 @@ function checkLocalStorage() {
 }
 // Function ko 'window' object ke sath jodein taaki HTML ise pehchan sake
 window.loginAsGuest = function() {
-    console.log("Guest login button clicked");
-
-    // Check karein ki Anonymous Auth enabled hai ya nahi
     signInAnonymously(auth)
         .then(() => {
             console.log("Guest Login Successful");
-            // Yahan check karein ki aapka main quiz page ka naam sahi hai
+            // Ise 'game.html' ke bajaye 'quiz_mode.html' karein
             window.location.href = "quiz_mode.html"; 
         })
         .catch((error) => {
-            console.error("Guest Auth Error:", error.code, error.message);
-            alert("Error: " + error.message);
+            console.error("Error:", error.message);
         });
 };
