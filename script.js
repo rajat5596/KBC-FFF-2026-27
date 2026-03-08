@@ -297,7 +297,7 @@ window.loginAsGuest = function() {
         .then(() => {
             console.log("Guest Login Successful");
             // Ise 'game.html' ke bajaye 'quiz_mode.html' karein
-            window.location.href = "quiz_mode.html"; 
+            window.location.href = "game.html"; 
         })
         .catch((error) => {
             console.error("Error:", error.message);
