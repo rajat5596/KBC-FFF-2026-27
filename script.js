@@ -291,14 +291,22 @@ function checkLocalStorage() {
     console.log("user_plan_type:", localStorage.getItem('user_plan_type'));
     console.log("kbc_phone:", localStorage.getItem('kbc_phone'));
 }
-// Guest Button click par ye function chale
-function playAsGuest() {
+function loginAsGuest() {
+    // Button ko disable karein taaki bar-bar click na ho
+    const btn = document.getElementById('guestBtn');
+    btn.disabled = true;
+    btn.innerText = "Connecting...";
+
     signInAnonymously(auth)
         .then(() => {
-            // User ko dashboard ya quiz page par bhej dein
-            window.location.href = "game.html"; 
+            console.log("Guest Login Successful");
+            // Yahan apne main page ka sahi naam likhein
+            window.location.href = "quiz_mode.html"; 
         })
         .catch((error) => {
-            console.error("Guest access error: ", error);
+            btn.disabled = false;
+            btn.innerText = "Play as Guest (Bina Login)";
+            console.error("Auth Error:", error);
+            alert("Rukaawat ke liye khed hai: " + error.message);
         });
 }
