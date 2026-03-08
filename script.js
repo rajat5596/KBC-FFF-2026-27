@@ -291,3 +291,14 @@ function checkLocalStorage() {
     console.log("user_plan_type:", localStorage.getItem('user_plan_type'));
     console.log("kbc_phone:", localStorage.getItem('kbc_phone'));
 }
+// Guest Button click par ye function chale
+function playAsGuest() {
+    signInAnonymously(auth)
+        .then(() => {
+            // User ko dashboard ya quiz page par bhej dein
+            window.location.href = "game.html"; 
+        })
+        .catch((error) => {
+            console.error("Guest access error: ", error);
+        });
+}
