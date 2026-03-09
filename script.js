@@ -293,17 +293,35 @@ function checkLocalStorage() {
 }
 // Function ko 'window' object ke sath jodein taaki HTML ise pehchan sake
 window.loginAsGuest = function() {
-    console.log("Guest button clicked!");  // console में दिखेगा कि क्लिक हुआ
+    console.log("Guest button clicked!");
 
-    // गेस्ट फ्लैग सेट कर दो (ऑप्शनल, बाद में यूज कर सकते हो)
+    // गेस्ट फ्लैग सेट करो
     localStorage.setItem('isGuest', 'true');
+    localStorage.setItem('user_plan_type', 'free');  // गेस्ट को फ्री प्लान दो
+    localStorage.setItem('user_plan_status', 'active');  // एक्टिव रखो
 
-    // होम पर ही रहो या रिफ्रेश करो
+    // लॉगिन स्क्रीन छुपाओ और मेन्यू दिखाओ
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('menu-section').style.display = 'block';
+
+    // वेलकम मैसेज अपडेट करो
+    document.getElementById('welcome-msg').innerText = "स्वागत है, Guest User!";
+
+    // प्लान डिस्प्ले अपडेट करो
+    document.getElementById('user-plan-display').innerHTML = `
+        <span style="color: #00ff00;">FREE एक्टिव</span><br>
+        Guest Mode - सभी फ्री फीचर्स उपलब्ध
+    `;
+
+    // Logout बटन को "Exit Guest Mode" कर दो (ऑप्शनल)
+    document.querySelector('.logout-btn').innerText = "Exit Guest Mode";
+    document.querySelector('.logout-btn').onclick = function() {
+        localStorage.clear();
+        location.reload();
+    };
+
+    // प्रीमियम प्लान बटन छुपा दो या डिसेबल कर दो (ऑप्शनल)
+    // document.querySelector('.plans').style.display = 'none';
+
     alert("Guest Mode चालू! Home screen पर ही रहेंगे...");
-
-    // पेज रिफ्रेश करो (home पर ही अपडेट हो जाएगा)
-    location.reload();
-
-    // या अगर रीडायरेक्ट जरूरी हो तो:
-    // window.location.href = "index.html";  // या "./"
 };
