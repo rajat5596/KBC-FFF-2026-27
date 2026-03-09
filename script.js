@@ -293,13 +293,19 @@ function checkLocalStorage() {
 }
 // Function ko 'window' object ke sath jodein taaki HTML ise pehchan sake
 window.loginAsGuest = function() {
+    // Firebase Anonymous Auth trigger karein
     signInAnonymously(auth)
         .then(() => {
-            console.log("Guest Login Successful");
-            // Ise 'game.html' ke bajaye 'quiz_mode.html' karein
-            window.location.href = "game.html"; 
+            console.log("Guest User Entry Successful");
+            
+            /* Aapne kaha ki pehle ye seedhe game chala raha tha. 
+               Isliye hum ise 'quiz_mode.html' par bhej rahe hain 
+               taki user ko saare options (Premium + Free) dikhen.
+            */
+            window.location.href = "quiz_mode.html"; 
         })
         .catch((error) => {
-            console.error("Error:", error.message);
+            console.error("Auth Error Code:", error.code);
+            alert("Error: " + error.message);
         });
 };
