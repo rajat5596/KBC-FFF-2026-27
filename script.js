@@ -293,21 +293,17 @@ function checkLocalStorage() {
 }
 // Function ko 'window' object ke sath jodein taaki HTML ise pehchan sake
 window.loginAsGuest = function() {
-    signInAnonymously(auth)
-        .then(() => {
-            console.log("Guest User Entry Successful");
+    console.log("Guest button clicked!");  // console में दिखेगा कि क्लिक हुआ
 
-            // गेस्ट यूजर को होम पर ही रखो (index.html), quiz_mode पर मत भेजो
-            localStorage.setItem('isGuest', 'true');  // ऑप्शनल: गेस्ट फ्लैग सेट करो
-            alert("Guest Mode Activated! Home page पर जा रहे हैं...");
+    // गेस्ट फ्लैग सेट कर दो (ऑप्शनल, बाद में यूज कर सकते हो)
+    localStorage.setItem('isGuest', 'true');
 
-            // होम पर रीडायरेक्ट (या अगर पहले से होम पर है तो रिफ्रेश)
-            window.location.href = "index.html";  // या "./" या window.location.origin + "/"
-            // अगर होम पर ही रहना है तो ये भी काम करेगा:
-            // location.reload();  // पेज रिफ्रेश करके गेस्ट मोड अपडेट कर देगा
-        })
-        .catch((error) => {
-            console.error("Auth Error Code:", error.code);
-            alert("Error: " + error.message);
-        });
+    // होम पर ही रहो या रिफ्रेश करो
+    alert("Guest Mode चालू! Home screen पर ही रहेंगे...");
+
+    // पेज रिफ्रेश करो (home पर ही अपडेट हो जाएगा)
+    location.reload();
+
+    // या अगर रीडायरेक्ट जरूरी हो तो:
+    // window.location.href = "index.html";  // या "./"
 };
