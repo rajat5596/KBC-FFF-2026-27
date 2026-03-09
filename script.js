@@ -293,16 +293,18 @@ function checkLocalStorage() {
 }
 // Function ko 'window' object ke sath jodein taaki HTML ise pehchan sake
 window.loginAsGuest = function() {
-    // Firebase Anonymous Auth trigger karein
     signInAnonymously(auth)
         .then(() => {
             console.log("Guest User Entry Successful");
-            
-            /* Aapne kaha ki pehle ye seedhe game chala raha tha. 
-               Isliye hum ise 'quiz_mode.html' par bhej rahe hain 
-               taki user ko saare options (Premium + Free) dikhen.
-            */
-            window.location.href = "quiz_mode.html"; 
+
+            // गेस्ट यूजर को होम पर ही रखो (index.html), quiz_mode पर मत भेजो
+            localStorage.setItem('isGuest', 'true');  // ऑप्शनल: गेस्ट फ्लैग सेट करो
+            alert("Guest Mode Activated! Home page पर जा रहे हैं...");
+
+            // होम पर रीडायरेक्ट (या अगर पहले से होम पर है तो रिफ्रेश)
+            window.location.href = "index.html";  // या "./" या window.location.origin + "/"
+            // अगर होम पर ही रहना है तो ये भी काम करेगा:
+            // location.reload();  // पेज रिफ्रेश करके गेस्ट मोड अपडेट कर देगा
         })
         .catch((error) => {
             console.error("Auth Error Code:", error.code);
