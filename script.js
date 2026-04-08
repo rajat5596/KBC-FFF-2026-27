@@ -25,89 +25,76 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const database = firebase.database();
 
-// Global Variables
-let confirmationResult;
+// Google Provider
+const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-// Recaptcha Verifier
+// Global Variables - OTP wale variables hat gaye
+// let confirmationResult; ← ISE HATANA HAI
+
+// Initialize Google Sign-In
 window.onload = function() {
-    if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-            'size': 'invisible'
-        });
-    }
+    // Google Sign-In button render karo
+    google.accounts.id.initialize({
+        client_id: "294360741451-XXXXXXXXXXXX.apps.googleusercontent.com", // ← YEH BADALNA HAI
+        callback: handleGoogleCredentialResponse
+    });
+    google.accounts.id.renderButton(
+        document.getElementById("google-signin-btn"),
+        { theme: "outline", size: "large", text: "continue_with" }
+    );
     
     auth.onAuthStateChanged(async (user) => {
         if (user) {
-            console.log("✅ User Active:", user.phoneNumber);
-            const name = localStorage.getItem('kbc_user') || "यूजर";
+            console.log("✅ User Active:", user.email);
+            const name = localStorage.getItem('kbc_user') || user.displayName || "यूजर";
             showMenu(name);
             await loadUserPlan(user);
         }
     });
 };
 
-// 1. OTP भेजने का फंक्शन
-function sendOTP() {
-    const name = document.getElementById('username').value.trim();
-    let phone = document.getElementById('mobile').value.trim();
-
-    if (!name || phone.length < 10) {
-        alert("❌ कृपया सही नाम और 10 अंकों का मोबाइल नंबर डालें");
-        return;
-    }
-
-    localStorage.setItem('kbc_user', name);
-    phone = phone.replace(/\D/g, '').slice(-10); 
-    const phoneNumber = "+91" + phone;
-
-    auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
-        .then((result) => {
-            window.confirmationResult = result;
-            alert("✅ OTP भेज दिया गया है!");
+// 🔥 GOOGLE SIGN-IN HANDLER (OTP ki jagah)
+function handleGoogleCredentialResponse(response) {
+    const idToken = response.credential;
+    
+    // Google credential se Firebase sign-in
+    const credential = firebase.auth.GoogleAuthProvider.credential(idToken);
+    
+    auth.signInWithCredential(credential)
+        .then(async (result) => {
+            const user = result.user;
+            const email = user.email;
+            const displayName = user.displayName;
             
-            document.getElementById('login-section').innerHTML = `
-                <input type="number" id="otp-code" placeholder="6 अंकों का OTP डालें" style="padding:10px; width:80%; margin-bottom:10px;">
-                <button onclick="verifyOTP()" class="start-btn">✅ वेरीफाई करें</button>
-            `;
-        }).catch((error) => {
-            alert("❌ Error: " + error.message);
-            console.error(error);
-            window.location.reload();
+            // LocalStorage mein save karo
+            const userName = document.getElementById('username').value.trim() || displayName;
+            localStorage.setItem('kbc_user', userName);
+            localStorage.setItem('kbc_email', email);
+            localStorage.setItem('kbc_uid', user.uid);
+            
+            // --- DATABASE MEIN SAVE KARO (phone ki jagah email/uid use karo) ---
+            await database.ref('users/' + user.uid).update({
+                name: userName,
+                email: email,
+                plan: 'free',
+                status: 'active',
+                loginMethod: 'google',
+                expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            }).then(() => {
+                console.log("✅ Data successfully saved in DB for user:", user.uid);
+            });
+            
+            const name = localStorage.getItem('kbc_user') || userName;
+            showMenu(name);
+            await loadUserPlan(user);
+        })
+        .catch((error) => {
+            console.error("Google Sign-In Error:", error);
+            alert("❌ Google Sign-In failed: " + error.message);
         });
 }
 
-// 2. OTP वेरीफाई करने का फंक्शन
-function verifyOTP() {
-    const code = document.getElementById('otp-code').value.trim();
-    if (code.length !== 6) { alert("❌ कृपया 6 अंकों का OTP डालें"); return; }
-
-    window.confirmationResult.confirm(code).then(async (result) => {
-        const user = result.user;
-        const phone = user.phoneNumber.replace(/\D/g, '').slice(-10); // Mobile number nikaala
-        localStorage.setItem('kbc_phone', phone);
-        
-        // --- YAHAN DATA SAVE HOGA ---
-        // Phone number ke path par data save/update karein
-        await database.ref('users/' + phone).update({
-            name: localStorage.getItem('kbc_user'),
-            plan: 'free', // Naye user ke liye default
-            status: 'active',
-            expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 din ki validity
-        }).then(() => {
-            console.log("✅ Data successfully saved in DB for phone: " + phone);
-        });
-
-        const name = localStorage.getItem('kbc_user') || "यूजर";
-        showMenu(name);
-        await loadUserPlan(user);
-    }).catch((error) => {
-        alert("❌ गलत OTP!");
-        console.error("OTP Error:", error);
-    });
-}
-
-
-// 3. मेनू दिखाने का फंक्शन
+// 3. मेनू दिखाने का फंक्शन (SAME)
 function showMenu(name) {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('menu-section').style.display = 'block';
@@ -115,14 +102,14 @@ function showMenu(name) {
     if (welcomeMsg) welcomeMsg.innerHTML = `👋 स्वागत है, <strong>${name}</strong>!`;
 }
 
-// User Plan Load करने के फंक्शन में यह जोड़ो
+// User Plan Load करने का फंक्शन (phone ki jagah uid use karega)
 async function loadUserPlan(user) {
     if (!user) return;
     
-    const phone = user.phoneNumber.replace(/\D/g, '').slice(-10);
+    const userId = user.uid; // Phone ki jagah UID use karo
     
     try {
-        const snapshot = await database.ref('users/' + phone).once('value');
+        const snapshot = await database.ref('users/' + userId).once('value');
         const userData = snapshot.val();
         const planDisplay = document.getElementById('user-plan-display');
         
@@ -141,11 +128,10 @@ async function loadUserPlan(user) {
                 const plan = userData.plan.toLowerCase();
                 const expiryStr = expiryDate.toLocaleDateString('hi-IN');
                 
-                // localStorage में सेव करें
                 localStorage.setItem('user_plan_status', 'premium');
                 localStorage.setItem('user_plan_type', plan);
+                localStorage.setItem('user_id', userId);
 
-                // Active plan button को highlight करो
                 const activeBtn = document.getElementById(`${plan}-plan-btn`);
                 if (activeBtn) {
                     activeBtn.classList.add('active-plan');
@@ -163,17 +149,15 @@ async function loadUserPlan(user) {
                         <small>वैधता: ${expiryStr}</small>
                     </div>`;
             } else {
-                handleExpiredPlan(phone, planDisplay);
+                handleExpiredPlan(userId, planDisplay);
             }
         } else {
-            // Free प्लान
             localStorage.setItem('user_plan_status', 'free');
             localStorage.removeItem('user_plan_type');
             planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
             planDisplay.innerHTML = `🎯 फ्री प्लान (10 सवाल उपलब्ध)`;
         }
 
-        // Fallback display
         if (planDisplay && !planDisplay.innerHTML.trim()) {
             planDisplay.innerHTML = "🎯 फ्री प्लान (10 सवाल उपलब्ध)";
             planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
@@ -188,12 +172,10 @@ async function loadUserPlan(user) {
     }
 }
 
-// लिमिट खत्म होने पर
+// लिमिट खत्म होने पर (SAME)
 function handleLimitReached() {
     const paymentLink = "https://rzp.io/rzp/I5geGyLS";
-
     const userConfirmed = confirm("10 मुफ्त सवाल पूरे हो गए!\nप्रीमियम प्लान लें?");
-
     if (userConfirmed) {
         setTimeout(() => {
             window.open(paymentLink, '_self');
@@ -203,37 +185,27 @@ function handleLimitReached() {
     }
 }
 
-// Buy Plan फंक्शन - Active Plan के हिसाब से काम करेगा
+// Buy Plan फंक्शन (SAME)
 function buyPlan(clickedPlan) {
-    // localStorage से यूजर का स्टेटस और प्लान लोड करो
     const userPlanStatus = localStorage.getItem('user_plan_status');
     const userActivePlan = localStorage.getItem('user_plan_type');
     
     console.log("🔍 Buy Plan Clicked:", clickedPlan);
     console.log("👤 User Status:", userPlanStatus, "Active Plan:", userActivePlan);
     
-    // केस 1: यूजर के पास कोई एक्टिव प्रीमियम प्लान है
     if (userPlanStatus === 'premium' && userActivePlan) {
-        
-        // अगर वही प्लान क्लिक किया जो एक्टिव है
         if (userActivePlan === clickedPlan) {
             console.log("✅ Same plan - starting game");
             window.location.href = "game.html";
             return;
-        }
-        
-        // अगर दूसरा प्लान क्लिक किया (अपग्रेड/डाउनग्रेड)
-        else {
+        } else {
             const confirmMsg = `आपके पास पहले से ${userActivePlan.toUpperCase()} प्लान एक्टिव है।\n${clickedPlan.toUpperCase()} प्लान पर स्विच करें?`;
             if (confirm(confirmMsg)) {
                 window.location.href = "https://rzp.io/rzp/I5geGyLS";
             }
             return;
         }
-    }
-    
-    // केस 2: फ्री यूजर - सीधा पेमेंट पेज
-    else {
+    } else {
         let confirmMsg = '';
         if (clickedPlan === 'silver') {
             confirmMsg = '🥈 सिल्वर प्लान (₹49) लें?\n500 सवाल अनलिमिटेड प्रैक्टिस';
@@ -242,14 +214,13 @@ function buyPlan(clickedPlan) {
         } else if (clickedPlan === 'platinum') {
             confirmMsg = '💎 प्लैटिनम प्लान (₹199) लें?\nअनलिमिटेड सवाल';
         }
-
         if (confirm(confirmMsg)) {
             window.location.href = "https://rzp.io/rzp/I5geGyLS";
         }
     }
 }
 
-// Logout
+// Logout (SAME)
 function logout() {
     localStorage.clear();
     auth.signOut().then(() => {
@@ -257,71 +228,57 @@ function logout() {
     });
 }
 
-// Expired Plan Handler
-function handleExpiredPlan(phone, planDisplay) {
+// Expired Plan Handler (userId parameter ke saath)
+function handleExpiredPlan(userId, planDisplay) {
     localStorage.setItem('user_plan_status', 'expired');
     planDisplay.style.background = "linear-gradient(135deg, #f44336, #c62828)";
     planDisplay.innerHTML = `⚠️ प्लान एक्सपायर हो गया है। कृपया नया प्लान लें।`;
     
-    // Update Firebase
-    database.ref('users/' + phone).update({
+    database.ref('users/' + userId).update({
         status: 'expired'
     }).catch(() => {});
-            }
-// प्रैक्टिस शुरू करें फंक्शन
+}
+
+// प्रैक्टिस शुरू करें फंक्शन (SAME)
 function startPractice() {
     const userPlanStatus = localStorage.getItem('user_plan_status');
     const userActivePlan = localStorage.getItem('user_plan_type');
     
     console.log("Starting practice - Plan status:", userPlanStatus, "Active plan:", userActivePlan);
     
-    // अगर premium user है
     if (userPlanStatus === 'premium' && userActivePlan) {
-        // सीधा game.html खोलो
         window.location.href = "game.html";
     } else {
-        // Free user - 10 सवाल वाला game.html खोलो
         window.location.href = "game.html";
     }
 }
-// डिबग फंक्शन - कंसोल में चलाना
+
+// डिबग फंक्शन (Updated)
 function checkLocalStorage() {
     console.log("🔍 LocalStorage Check:");
     console.log("user_plan_status:", localStorage.getItem('user_plan_status'));
     console.log("user_plan_type:", localStorage.getItem('user_plan_type'));
-    console.log("kbc_phone:", localStorage.getItem('kbc_phone'));
+    console.log("kbc_email:", localStorage.getItem('kbc_email'));
+    console.log("user_id:", localStorage.getItem('user_id'));
 }
-// Function ko 'window' object ke sath jodein taaki HTML ise pehchan sake
+
+// Guest Login (SAME)
 window.loginAsGuest = function() {
     console.log("Guest button clicked!");
-
-    // गेस्ट फ्लैग सेट करो
     localStorage.setItem('isGuest', 'true');
-    localStorage.setItem('user_plan_type', 'free');  // गेस्ट को फ्री प्लान दो
-    localStorage.setItem('user_plan_status', 'active');  // एक्टिव रखो
-
-    // लॉगिन स्क्रीन छुपाओ और मेन्यू दिखाओ
+    localStorage.setItem('user_plan_type', 'free');
+    localStorage.setItem('user_plan_status', 'active');
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('menu-section').style.display = 'block';
-
-    // वेलकम मैसेज अपडेट करो
     document.getElementById('welcome-msg').innerText = "स्वागत है, Guest User!";
-
-    // प्लान डिस्प्ले अपडेट करो
     document.getElementById('user-plan-display').innerHTML = `
         <span style="color: #00ff00;">FREE एक्टिव</span><br>
         Guest Mode - सभी फ्री फीचर्स उपलब्ध
     `;
-
-    // Logout बटन को "Exit Guest Mode" कर दो (ऑप्शनल)
     document.querySelector('.logout-btn').innerText = "Exit Guest Mode";
     document.querySelector('.logout-btn').onclick = function() {
         localStorage.clear();
         location.reload();
     };
-
-    // प्रीमियम प्लान बटन छुपा दो या डिसेबल कर दो (ऑप्शनल)
-    // document.querySelector('.plans').style.display = 'none';
-
     alert("Guest Mode चालू! Home screen पर ही रहेंगे...");
 };
