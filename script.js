@@ -28,20 +28,31 @@ const database = firebase.database();
 // Google Provider
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-// Global Variables - OTP wale variables hat gaye
-// let confirmationResult; ← ISE HATANA HAI
-
-// Initialize Google Sign-In
+// Initialize everything when page loads
 window.onload = function() {
-    // Google Sign-In button render karo
-    google.accounts.id.initialize({
-        client_id: "294360741451-XXXXXXXXXXXX.apps.googleusercontent.com", // ← YEH BADALNA HAI
-        callback: handleGoogleCredentialResponse
-    });
-    google.accounts.id.renderButton(
-        document.getElementById("google-signin-btn"),
-        { theme: "outline", size: "large", text: "continue_with" }
-    );
+    console.log("Page loaded, initializing...");
+    
+    // ✅ Google Sign-In Button Initialize Karein ✅
+    // IMPORTANT: Apni REAL Google Client ID yahan daalein
+    // Yeh client ID temporary hai, aapko apni banani padegi
+    if (typeof google !== 'undefined' && google.accounts) {
+        google.accounts.id.initialize({
+            client_id: "294360741451-5a4a6ac0838f8542fabfce.apps.googleusercontent.com", // ← YEH BADAL SAKTA HAI
+            callback: handleGoogleCredentialResponse
+        });
+        google.accounts.id.renderButton(
+            document.getElementById("google-signin-btn"),
+            { theme: "outline", size: "large", text: "continue_with", width: "250" }
+        );
+        console.log("✅ Google Sign-In button rendered");
+    } else {
+        console.error("❌ Google Identity Services not loaded!");
+        // Fallback: Manual Google button
+        const googleBtnDiv = document.getElementById("google-signin-btn");
+        if (googleBtnDiv) {
+            googleBtnDiv.innerHTML = '<button onclick="manualGoogleSignIn()" style="padding:12px 30px; background:#4285F4; color:white; border:none; border-radius:8px; font-size:16px; cursor:pointer;">🔐 Google Sign In</button>';
+        }
+    }
     
     auth.onAuthStateChanged(async (user) => {
         if (user) {
@@ -53,11 +64,11 @@ window.onload = function() {
     });
 };
 
-// 🔥 GOOGLE SIGN-IN HANDLER (OTP ki jagah)
+// 🔥 GOOGLE SIGN-IN HANDLER (Main)
 function handleGoogleCredentialResponse(response) {
+    console.log("Google credential received");
     const idToken = response.credential;
     
-    // Google credential se Firebase sign-in
     const credential = firebase.auth.GoogleAuthProvider.credential(idToken);
     
     auth.signInWithCredential(credential)
@@ -66,26 +77,25 @@ function handleGoogleCredentialResponse(response) {
             const email = user.email;
             const displayName = user.displayName;
             
-            // LocalStorage mein save karo
-            const userName = document.getElementById('username').value.trim() || displayName;
+            const userName = document.getElementById('username').value.trim() || displayName || email.split('@')[0];
             localStorage.setItem('kbc_user', userName);
             localStorage.setItem('kbc_email', email);
             localStorage.setItem('kbc_uid', user.uid);
             
-            // --- DATABASE MEIN SAVE KARO (phone ki jagah email/uid use karo) ---
+            // Database mein save karo
             await database.ref('users/' + user.uid).update({
                 name: userName,
                 email: email,
                 plan: 'free',
                 status: 'active',
                 loginMethod: 'google',
+                createdAt: new Date().toISOString(),
                 expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
             }).then(() => {
-                console.log("✅ Data successfully saved in DB for user:", user.uid);
+                console.log("✅ Data saved for user:", user.uid);
             });
             
-            const name = localStorage.getItem('kbc_user') || userName;
-            showMenu(name);
+            showMenu(userName);
             await loadUserPlan(user);
         })
         .catch((error) => {
@@ -94,7 +104,41 @@ function handleGoogleCredentialResponse(response) {
         });
 }
 
-// 3. मेनू दिखाने का फंक्शन (SAME)
+// 🔥 Manual Google Sign-In (Fallback agar automatic button kaam na kare)
+window.manualGoogleSignIn = function() {
+    console.log("Manual Google Sign-In triggered");
+    
+    auth.signInWithPopup(googleProvider)
+        .then(async (result) => {
+            const user = result.user;
+            const email = user.email;
+            const displayName = user.displayName;
+            
+            const userName = document.getElementById('username').value.trim() || displayName || email.split('@')[0];
+            localStorage.setItem('kbc_user', userName);
+            localStorage.setItem('kbc_email', email);
+            localStorage.setItem('kbc_uid', user.uid);
+            
+            await database.ref('users/' + user.uid).update({
+                name: userName,
+                email: email,
+                plan: 'free',
+                status: 'active',
+                loginMethod: 'google',
+                createdAt: new Date().toISOString(),
+                expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            });
+            
+            showMenu(userName);
+            await loadUserPlan(user);
+        })
+        .catch((error) => {
+            console.error("Popup Sign-In Error:", error);
+            alert("❌ Sign-In Failed: " + error.message);
+        });
+};
+
+// 3. मेनू दिखाने का फंक्शन
 function showMenu(name) {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('menu-section').style.display = 'block';
@@ -102,11 +146,11 @@ function showMenu(name) {
     if (welcomeMsg) welcomeMsg.innerHTML = `👋 स्वागत है, <strong>${name}</strong>!`;
 }
 
-// User Plan Load करने का फंक्शन (phone ki jagah uid use karega)
+// User Plan Load करने का फंक्शन
 async function loadUserPlan(user) {
     if (!user) return;
     
-    const userId = user.uid; // Phone ki jagah UID use karo
+    const userId = user.uid;
     
     try {
         const snapshot = await database.ref('users/' + userId).once('value');
@@ -155,7 +199,7 @@ async function loadUserPlan(user) {
             localStorage.setItem('user_plan_status', 'free');
             localStorage.removeItem('user_plan_type');
             planDisplay.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
-            planDisplay.innerHTML = `🎯 फ्री प्लान (10 सवाल उपलब्ध)`;
+            planDisplay.innerHTML = `🎯 फ्री प्लान (10 सवाल उपलब्ध) <span class="plan-badge free-badge">फ्री</span>`;
         }
 
         if (planDisplay && !planDisplay.innerHTML.trim()) {
@@ -172,7 +216,7 @@ async function loadUserPlan(user) {
     }
 }
 
-// लिमिट खत्म होने पर (SAME)
+// लिमिट खत्म होने पर
 function handleLimitReached() {
     const paymentLink = "https://rzp.io/rzp/I5geGyLS";
     const userConfirmed = confirm("10 मुफ्त सवाल पूरे हो गए!\nप्रीमियम प्लान लें?");
@@ -185,7 +229,7 @@ function handleLimitReached() {
     }
 }
 
-// Buy Plan फंक्शन (SAME)
+// Buy Plan फंक्शन
 function buyPlan(clickedPlan) {
     const userPlanStatus = localStorage.getItem('user_plan_status');
     const userActivePlan = localStorage.getItem('user_plan_type');
@@ -220,7 +264,7 @@ function buyPlan(clickedPlan) {
     }
 }
 
-// Logout (SAME)
+// Logout
 function logout() {
     localStorage.clear();
     auth.signOut().then(() => {
@@ -228,18 +272,18 @@ function logout() {
     });
 }
 
-// Expired Plan Handler (userId parameter ke saath)
+// Expired Plan Handler
 function handleExpiredPlan(userId, planDisplay) {
     localStorage.setItem('user_plan_status', 'expired');
     planDisplay.style.background = "linear-gradient(135deg, #f44336, #c62828)";
-    planDisplay.innerHTML = `⚠️ प्लान एक्सपायर हो गया है। कृपया नया प्लान लें।`;
+    planDisplay.innerHTML = `⚠️ प्लान एक्सपायर हो गया है। कृपया नया प्लान लें। <span class="plan-badge expired-badge">एक्सपायर्ड</span>`;
     
     database.ref('users/' + userId).update({
         status: 'expired'
     }).catch(() => {});
 }
 
-// प्रैक्टिस शुरू करें फंक्शन (SAME)
+// प्रैक्टिस शुरू करें
 function startPractice() {
     const userPlanStatus = localStorage.getItem('user_plan_status');
     const userActivePlan = localStorage.getItem('user_plan_type');
@@ -249,11 +293,11 @@ function startPractice() {
     if (userPlanStatus === 'premium' && userActivePlan) {
         window.location.href = "game.html";
     } else {
-        window.location.href = "game.html";
+        window.location.href = "game.html?mode=free";
     }
 }
 
-// डिबग फंक्शन (Updated)
+// डिबग फंक्शन
 function checkLocalStorage() {
     console.log("🔍 LocalStorage Check:");
     console.log("user_plan_status:", localStorage.getItem('user_plan_status'));
@@ -262,7 +306,7 @@ function checkLocalStorage() {
     console.log("user_id:", localStorage.getItem('user_id'));
 }
 
-// Guest Login (SAME)
+// Guest Login
 window.loginAsGuest = function() {
     console.log("Guest button clicked!");
     localStorage.setItem('isGuest', 'true');
@@ -270,15 +314,21 @@ window.loginAsGuest = function() {
     localStorage.setItem('user_plan_status', 'active');
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('menu-section').style.display = 'block';
-    document.getElementById('welcome-msg').innerText = "स्वागत है, Guest User!";
+    document.getElementById('welcome-msg').innerHTML = "👋 स्वागत है, <strong>Guest User</strong>!";
     document.getElementById('user-plan-display').innerHTML = `
-        <span style="color: #00ff00;">FREE एक्टिव</span><br>
-        Guest Mode - सभी फ्री फीचर्स उपलब्ध
+        <div style="padding:10px;">
+            🎯 <b>GUEST MODE एक्टिव</b><br>
+            <small>सभी फ्री फीचर्स उपलब्ध</small>
+        </div>
     `;
-    document.querySelector('.logout-btn').innerText = "Exit Guest Mode";
-    document.querySelector('.logout-btn').onclick = function() {
-        localStorage.clear();
-        location.reload();
-    };
-    alert("Guest Mode चालू! Home screen पर ही रहेंगे...");
+    document.getElementById('user-plan-display').style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
+    
+    const logoutBtn = document.querySelector('.logout-btn');
+    if (logoutBtn) {
+        logoutBtn.innerText = "Exit Guest Mode";
+        logoutBtn.onclick = function() {
+            localStorage.clear();
+            location.reload();
+        };
+    }
 };
