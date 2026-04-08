@@ -71,18 +71,21 @@
         <h1 class="logo">KBC 2026</h1>
         <h2 class="title">Fastest Finger First मास्टर</h2>
         
-        <div id="login-section">
-    <input type="text" id="username" placeholder="अपना नाम लिखें" required>
-    <input type="number" id="mobile" placeholder="मोबाइल नंबर" required>
-    <div id="recaptcha-container"></div>
-    
-    <button id="auth-btn" onclick="sendOTP()" class="start-btn">OTP भेजें</button>
+        <!-- Recaptcha container hatana hai -->
+<!-- <div id="recaptcha-container"></div> -->
 
-    <div style="margin-top: 15px; text-align: center;">
-        <span style="display: block; margin-bottom: 10px; color: #666; font-size: 14px;">--- या ---</span>
-        <button type="button" onclick="loginAsGuest()" class="start-btn" style="background-color: #6c757d; border-color: #6c757d;">
-    Bina Login ke Kheliye
-        </button>
+<!-- Iski jagah Google Sign-In button add karo -->
+<div id="login-section">
+    <div class="login-container">
+        <h2>🔥 Fatehpur Hubs 🔥</h2>
+        <input type="text" id="username" placeholder="आपका नाम" style="padding:10px; width:80%; margin-bottom:10px;">
+        
+        <!-- Google Sign-In Button -->
+        <div id="google-signin-btn" style="display: flex; justify-content: center; margin: 20px 0;"></div>
+        
+        <div class="guest-btn-container">
+            <button onclick="loginAsGuest()" class="guest-btn">👥 Guest Mode</button>
+        </div>
     </div>
 </div>
 
